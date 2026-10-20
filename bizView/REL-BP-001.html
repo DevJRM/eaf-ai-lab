@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=1280, initial-scale=1.0" name="viewport"/>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+    <title>REL-BP-001 BP – Lead</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+        .burgundy-bg { background-color: #800020; }
+        .burgundy-text { color: #800020; }
+        .card { background-color: white; border: 1px solid rgba(229, 231, 235, 0.5); border-radius: 0.5rem; }
+        .section-title { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #f3f4f6; }
+        .section-title i { color: #c4284a; font-size: 1.125rem; }
+        .pill { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+        .conv-track { background-color: #f3f4f6; border-radius: 9999px; height: 8px; overflow: hidden; }
+        .conv-fill { background-color: #800020; height: 100%; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; }
+        tr.lead-row:hover { background-color: #fdf2f4; }
+    </style>
+</head>
+<body>
+  <div class="burgundy-bg text-white px-8 py-5">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="text-xs opacity-75 mono">
+            <a class="text-white hover:underline" href="index.html">reports</a> /
+            <a class="text-white hover:underline" href="leads.html">leads</a>
+            · REL-BP-001 · 17 of 29</div>
+          <h1 class="text-2xl font-semibold mt-1"><a class="text-white hover:underline" href="BP.html">BP</a><span class="pill bg-white bg-opacity-25 text-white ml-2">NEW</span></h1>
+          <div class="text-sm opacity-90 mt-1">
+            relationship · term lending · immediate
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-xl font-semibold">unsized</div>
+          <div class="text-xs opacity-75">materiality · state: new</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-5xl mx-auto px-8 py-6">
+    
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-building"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Counterparty</h3></div>
+      <table class="w-full text-xs text-gray-700">
+        <tr><td class="py-1 text-gray-500 w-32">Group</td><td class="font-semibold">BP</td></tr>
+        <tr><td class="py-1 text-gray-500">As received</td><td>BP PLC</td></tr>
+        <tr><td class="py-1 text-gray-500">Resolution</td><td>tier 1 · confidence 0.9</td></tr>
+        
+        
+      </table>
+      
+    </div>
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-file-lines"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Evidence (1)</h3></div>
+      <div class="text-xs text-gray-500 mb-4 pb-3 border-b border-gray-200">
+        <span class="font-medium text-gray-600">Materiality:</span> <span class="text-gray-500 italic">unsized</span> — `deterioration_eur` = 2800000000 but the fire declares no unit. The suffix cannot be trusted: the same `_eur` suffix is unit-denominated on EAF22 and millions-denominated on EAF27 in these fixtures. Declare units in the fire log — see ORIGINATION_WORKFLOW_PROPOSAL.md §5.
+         <span class="text-gray-400">(relative + absolute — **fixed** — condition 1 was a bare sign test (`FCF &lt; 0`), firing on a €1 deficit; now gated on deficit-vs-revenue)</span>
+      </div>
+      
+        <div class="pb-5 mb-5 border-b border-gray-200 last:border-0 last:mb-0 last:pb-0">
+          <div class="flex justify-between items-baseline mb-1">
+            <span class="font-semibold burgundy-text text-base">
+              EAF28
+               &middot; Free cash flow deficit against disclosed capex</span>
+            <span class="pill bg-gray-100 text-gray-700">opened</span>
+          </div>
+          <div class="text-sm text-gray-700 mb-2">Operating cash flow minus capex is negative, or has deteriorated materially, while capex itself is flat or rising.</div>
+          <div class="text-xs text-gray-600 mb-2 leading-relaxed">A client spending more on capex than it generates from operations cannot fund its investment program
+from its own cash flow alone — it must draw down cash reserves, raise debt, or raise equity. This is
+the cleanest, most standard calculation available to confirm a financing need is real rather than
+optional, and the free-cash-flow deficit itself is a rough proxy for the size of the gap.</div>
+          <div class="text-xs text-gray-500">
+            <span class="font-medium text-gray-600">S1</span> ·
+            identified in <span class="mono">annual_report_cash_flow_statement</span> ·
+            fired 2026-10-20
+          </div>
+          
+              <div class="mt-3">
+                <div class="text-xs font-medium text-gray-500 mb-1">Source text</div>
+                <blockquote class="text-xs text-gray-700 bg-gray-50 border-l-2 border-gray-300
+                    rounded p-3 leading-relaxed whitespace-pre-wrap">0-F
+2025
+«
+See glossary on
+page
+375
+Pages 127-128 have been removed as they do not form part of bp’s Annual Report on Form 20-F as filed with the SEC.
+bp Annual Report and Form 20-F
+2025
+129
+Financial statements
+Consolidated financial statements of the bp group
+Independent auditor&#x27;s reports (PCAOB ID
+)
+149
+Group statement of changes in equity
+157
+Group income statement
+155
+Group balance sheet
+158
+Group statement of comprehensive income
+156
+Group cash flow statement
+159
+Notes on financial statements
+1.
+Significant accounting policies
+160
+22.
+Trade and other payables
+203
+2.
+Non-current assets held for sale
+181
+23.
+Provisions
+204
+3.
+Business combinations
+182
+24.
+Pensions and other post-employment
+benefits
+205
+4.
+Disposals and impairment
+182
+5.
+Segmental analysis
+185
+25.
+Cash and cash equivalents
+211
+6.
+Sales and other operating revenues
+189
+26.
+Finance debt
+211
+7.
+Income statement analysis</blockquote>
+              </div>
+          <div class="mt-3">
+            <div class="text-xs font-medium text-gray-500 mb-1">Extracted</div>
+            <table class="w-full text-xs"><tr class="border-b border-gray-50 last:border-0">
+                <td class="py-1 pr-3 text-gray-500 mono">deterioration_eur</td>
+                <td class="py-1 mono text-gray-800">2800000000</td></tr><tr class="border-b border-gray-50 last:border-0">
+                <td class="py-1 pr-3 text-gray-500 mono">metric</td>
+                <td class="py-1 mono text-gray-800">free_cash_flow</td></tr></table>
+          </div>
+          <div class="mt-2 text-xs text-gray-500"><span class='text-amber-700'>Sizing field present but no unit declared — not used for ranking</span></div>
+          <div class="mt-3 pt-3 border-t border-gray-100">
+      <div class="text-xs font-medium text-gray-500 mb-2">Why it fired</div>
+      <div class="mb-2 last:mb-0">
+          <div class="text-xs font-mono text-gray-400 mb-1">fact_annual_report_metric.block</div>
+          <div><div class="text-xs text-gray-400 mb-0.5">all of:</div>
+              <ul class="text-xs space-y-0.5 pl-0 list-none">
+                  <li class="text-green-700">
+                    <span class="font-semibold">✓</span>
+                    <span class="mono">metric</span> =
+                    <span class="mono font-medium">free_cash_flow</span>
+                    &nbsp;==&nbsp;
+                    <span class="mono">free_cash_flow</span>
+                  </li>
+                  <li class="text-gray-400">
+                    <span class="font-semibold">✗</span>
+                    <span class="mono">current_value</span> =
+                    <span class="mono font-medium"></span>
+                    &nbsp;&lt;&nbsp;
+                    <span class="mono">0</span>
+                  </li>
+                  <li class="text-gray-400">
+                    <span class="font-semibold">✗</span>
+                    <span class="mono">deficit_vs_revenue_pct</span> =
+                    <span class="mono font-medium"></span>
+                    &nbsp;&gt;=&nbsp;
+                    <span class="mono">0.02</span>
+                  </li>
+                  <li class="text-gray-400">
+                    <span class="font-semibold">✗</span>
+                    <span class="mono">capex_trend</span> =
+                    <span class="mono font-medium"></span>
+                    &nbsp;in&nbsp;
+                    <span class="mono">[&#x27;flat&#x27;, &#x27;increasing&#x27;]</span>
+                  </li></ul></div><div class="text-xs text-gray-400 my-1 text-center">— OR —</div><div><div class="text-xs text-gray-400 mb-0.5">all of:</div>
+              <ul class="text-xs space-y-0.5 pl-0 list-none">
+                  <li class="text-green-700">
+                    <span class="font-semibold">✓</span>
+                    <span class="mono">metric</span> =
+                    <span class="mono font-medium">free_cash_flow</span>
+                    &nbsp;==&nbsp;
+                    <span class="mono">free_cash_flow</span>
+                  </li>
+                  <li class="text-green-700">
+                    <span class="font-semibold">✓</span>
+                    <span class="mono">deterioration_eur</span> =
+                    <span class="mono font-medium">2800000000</span>
+                    &nbsp;&gt;=&nbsp;
+                    <span class="mono">50000000</span>
+                  </li></ul></div></div>
+    </div>
+          <div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-600">
+            <span class="font-medium text-gray-500">Products this could lead to:</span>
+            Term lending, RCF, or buyer&#x27;s/supplier&#x27;s credit depending on what the capex is for (cross-check EAF08/EAF21/EAF29)</div>
+        </div>
+    </div>
+    <div class="mt-6 pt-2 text-xs text-gray-400 uppercase tracking-wide">Procedural</div>
+    
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-gauge-high"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Conviction — 0.505</h3></div>
+      <div class="text-xs text-gray-500 mb-3">A single sort key, nothing more — the weighted sum
+        of the four rows below. Procedural; the case for the lead is in Evidence above.</div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead class="text-gray-400 text-left">
+            <tr><th class="py-1 pr-3">Factor</th><th class="py-1 pr-3">Score</th>
+                <th class="py-1 pr-3">Weight</th><th class="py-1">What it means</th></tr>
+          </thead>
+          <tbody>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">corroboration</td>
+          <td class="py-2 pr-3 mono align-top">0.300</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.4</td>
+          <td class="py-2 text-gray-600 align-top">how independent the evidence is. Multiple cards reading the SAME document count as one piece of evidence, not several — see the document count below.
+            <div class="mt-0.5 text-gray-500">distinct_documents: 1 · distinct_source_types: 1 · distinct_cards: 1 · double_counting_avoided: 0</div></td>
+        </tr>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">materiality</td>
+          <td class="py-2 pr-3 mono align-top">0.500</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.25</td>
+          <td class="py-2 text-gray-600 align-top">how large the opportunity is in EUR, on a log scale (~0 at EUR 1m, ~1.0 at EUR 1bn). Unsized leads get a neutral 0.5, not a zero — a ratio-sized card is not a smaller opportunity, just an unmeasured one.
+            <div class="mt-0.5 text-gray-500">basis: no EUR magnitude available · reason: `deterioration_eur` = 2800000000 but the fire declares no unit. The suffix cannot be trusted: the same `_eur` suffix is unit-denominated on EAF22 and millions-denominated on EAF27 in these fixtures. Declare units in the fire log — see ORIGINATION_WORKFLOW_PROPOSAL.md §5.</div></td>
+        </tr>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">horizon</td>
+          <td class="py-2 pr-3 mono align-top">1.000</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.2</td>
+          <td class="py-2 text-gray-600 align-top">how soon the underlying event plays out: immediate (this quarter), near_term, or pipeline (a structural fact with no clock on it).
+            <div class="mt-0.5 text-gray-500">band: immediate</div></td>
+        </tr>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">relationship</td>
+          <td class="py-2 pr-3 mono align-top">0.400</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.15</td>
+          <td class="py-2 text-gray-600 align-top">whether any evidence came from the bank's own internal records (S4) — internal visibility is the strongest base for a conversation, and the most sensitive under §6.5's governance line.
+            <div class="mt-0.5 text-gray-500">internal_evidence: False</div></td>
+        </tr></tbody>
+        </table>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">
+        documents: <span class="mono">annual_report_cash_flow_statement</span>
+      </div>
+      
+        <div class="mt-3 text-xs text-gray-500 italic">
+          priors set by argument, not by outcome data — see proposal §5
+        </div>
+    </div>
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-route"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Routing &amp; lifecycle</h3></div>
+      <table class="w-full text-xs text-gray-700">
+        <tr><td class="py-1 text-gray-500 w-32">State</td><td><span class="pill bg-gray-100 text-gray-800">new</span></td></tr>
+        <tr><td class="py-1 text-gray-500">Owner</td><td><span class='mono'>eaf.corporate_lending</span></td></tr>
+        <tr><td class="py-1 text-gray-500">Routed by</td><td class="text-gray-500">by_product_family: term_lending</td></tr>
+        <tr><td class="py-1 text-gray-500">Horizon</td><td>immediate</td></tr>
+        <tr><td class="py-1 text-gray-500">First seen</td><td>2026-10-20</td></tr>
+        <tr><td class="py-1 text-gray-500">Expires</td><td>2027-01-18</td></tr>
+      </table>
+      
+      
+    </div>
+    <div class="mt-4 text-center">
+      <a class="text-xs burgundy-text hover:underline" href="leads.html">&larr; back to the queue</a>
+      &nbsp;·&nbsp;<a class="text-xs burgundy-text hover:underline" href="BP.html">company report</a>
+    </div>
+  </div>
+</body>
+</html>

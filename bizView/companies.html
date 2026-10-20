@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=1280, initial-scale=1.0" name="viewport"/>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+    <title>Company reports</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+        .burgundy-bg { background-color: #800020; }
+        .burgundy-text { color: #800020; }
+        .card { background-color: white; border: 1px solid rgba(229, 231, 235, 0.5); border-radius: 0.5rem; }
+        .section-title { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #f3f4f6; }
+        .section-title i { color: #c4284a; font-size: 1.125rem; }
+        .pill { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+        .conv-track { background-color: #f3f4f6; border-radius: 9999px; height: 8px; overflow: hidden; }
+        .conv-fill { background-color: #800020; height: 100%; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; }
+        tr.lead-row:hover { background-color: #fdf2f4; }
+
+        /* One typographic scale for every lead page, so a reader never has to re-calibrate what
+           a given font size/weight/spacing means from one section to the next - the specific
+           complaint this scale exists to fix: ad hoc text-xs/text-sm/text-base and mb-1/mb-2/
+           mb-5 mixed within a single block, with no visual logic to the mixture. */
+        .lead-eyebrow { font-size: 0.6875rem; font-weight: 600; color: #9ca3af;
+                        text-transform: uppercase; letter-spacing: 0.04em; }
+        .lead-headline { font-size: 0.9375rem; font-weight: 600; color: #1f2937; line-height: 1.5; }
+        .lead-body { font-size: 0.8125rem; color: #374151; line-height: 1.65; }
+        .lead-meta { font-size: 0.75rem; color: #6b7280; line-height: 1.6; }
+        .evidence-block { padding-bottom: 1.25rem; margin-bottom: 1.25rem;
+                          border-bottom: 1px solid #e5e7eb; }
+        .evidence-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                      gap: 1rem; }
+        .stat-item .lead-eyebrow { margin-bottom: 0.25rem; }
+        .stat-item .stat-value { font-size: 0.9375rem; font-weight: 600; color: #1f2937; }
+        .fact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+                     gap: 0.625rem 1.25rem; }
+        .fact-item .lead-eyebrow { margin-bottom: 0.125rem; }
+        .fact-item .fact-value { font-size: 0.8125rem; color: #1f2937; font-weight: 500; }
+        details.tech { margin-top: 0.75rem; }
+        details.tech > summary { font-size: 0.6875rem; color: #9ca3af; cursor: pointer;
+                                 list-style: none; }
+        details.tech > summary::-webkit-details-marker { display: none; }
+        details.tech > summary:before { content: '\25b8  '; }
+        details.tech[open] > summary:before { content: '\25be  '; }
+        details.tech > summary:hover { color: #6b7280; }
+        details.tech > .tech-body { margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+  <div class="burgundy-bg text-white px-8 py-5">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-xs opacity-75 mono mb-1">
+        <a class="text-white hover:underline" href="index.html">reports</a> / companies</div>
+      <h1 class="text-2xl font-semibold">Company reports</h1>
+      <div class="text-sm opacity-90 mt-1">generated 2026-10-20 · every company run through
+          this pipeline, old iterations and new ones together</div>
+      <div class="text-xs opacity-75 mt-2">
+        28 companies · 25 with at least one fired card ·
+        28 lead(s) assembled ·
+        <a class="text-white hover:underline" href="leads.html">view the ranked lead queue &rarr;</a>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-6xl mx-auto px-8 py-6">
+    <div class="card p-3 mb-4 flex gap-2 flex-wrap items-center">
+      <span class="text-xs text-gray-500 mr-1">Filter</span>
+      <select id="f_status" onchange="applyFilters()" class="text-xs border border-gray-300 rounded px-2 py-1">
+        <option value="">Status (all)</option><option value="fixture">fixture</option><option value="investor_relations">investor relations</option><option value="sec_filer">sec filer</option><option value="unreachable">unreachable</option></select>
+      <select id="f_country" onchange="applyFilters()" class="text-xs border border-gray-300 rounded px-2 py-1">
+        <option value="">Country (all)</option><option value="Canada">Canada</option><option value="France">France</option><option value="Germany">Germany</option><option value="Italy">Italy</option><option value="Spain">Spain</option><option value="Switzerland">Switzerland</option><option value="United Kingdom">United Kingdom</option><option value="United States">United States</option><option value="United States / United Kingdom">United States / United Kingdom</option></select>
+      <button onclick="clearFilters()" class="text-xs text-gray-500 hover:underline ml-2">clear</button>
+      <span id="count" class="text-xs text-gray-400 ml-auto"></span>
+    </div>
+    <div class="card overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+          <tr>
+            <th class="py-2 px-2 text-left">Company</th><th class="py-2 px-2 text-left">Country</th>
+            <th class="py-2 px-2 text-left">Status</th><th class="py-2 px-2 text-left">Source document</th>
+            <th class="py-2 px-2 text-center">Fired / attempted</th><th class="py-2 px-2 text-left">Fired cards</th>
+            <th class="py-2 px-2 text-center">Leads</th><th class="py-2 px-2 text-right">Sized total</th>
+          </tr>
+        </thead>
+        <tbody>
+      <tr class="company-row border-b border-gray-100"
+          data-status="fixture"
+          data-country="—">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Austral_Grid.html">Austral Grid</a></td>
+        <td class="py-2 px-2 text-xs">—</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-amber-100 text-amber-800">hand-verified/synthetic fixture</span></td>
+        <td class="py-2 px-2 text-xs">hand-verified/synthetic fixture</td>
+        <td class="py-2 px-2 text-xs text-center">3/3</td>
+        <td class="py-2 px-2 text-xs mono">EAF03, EAF05, EAF10</td>
+        <td class="py-2 px-2 text-xs text-center">2</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United Kingdom">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="BP.html">BP</a></td>
+        <td class="py-2 px-2 text-xs">United Kingdom</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">20-F 2026-03-06</td>
+        <td class="py-2 px-2 text-xs text-center">1/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF26</td>
+        <td class="py-2 px-2 text-xs text-center">0</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States / United Kingdom">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Carnival.html">Carnival</a></td>
+        <td class="py-2 px-2 text-xs">United States / United Kingdom</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-01-27</td>
+        <td class="py-2 px-2 text-xs text-center">1/26</td>
+        <td class="py-2 px-2 text-xs mono">EAF35</td>
+        <td class="py-2 px-2 text-xs text-center">0</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Caterpillar.html">Caterpillar</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-02-13</td>
+        <td class="py-2 px-2 text-xs text-center">2/24</td>
+        <td class="py-2 px-2 text-xs mono">EAF26, EAF32</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="ConocoPhillips.html">ConocoPhillips</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-02-17</td>
+        <td class="py-2 px-2 text-xs text-center">0/24</td>
+        <td class="py-2 px-2 text-xs mono">—</td>
+        <td class="py-2 px-2 text-xs text-center">0</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Deere.html">Deere</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2025-12-18</td>
+        <td class="py-2 px-2 text-xs text-center">2/24</td>
+        <td class="py-2 px-2 text-xs mono">EAF32, EAF41</td>
+        <td class="py-2 px-2 text-xs text-center">2</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Delta_Air_Lines.html">Delta Air Lines</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-02-11</td>
+        <td class="py-2 px-2 text-xs text-center">3/25</td>
+        <td class="py-2 px-2 text-xs mono">EAF10, EAF13, EAF40</td>
+        <td class="py-2 px-2 text-xs text-center">2</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Duke_Energy.html">Duke Energy</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-02-26</td>
+        <td class="py-2 px-2 text-xs text-center">1/24</td>
+        <td class="py-2 px-2 text-xs mono">EAF26</td>
+        <td class="py-2 px-2 text-xs text-center">0</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="investor_relations"
+          data-country="Italy">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Enel.html">Enel</a></td>
+        <td class="py-2 px-2 text-xs">Italy</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-gray-100 text-gray-600">investor relations</span></td>
+        <td class="py-2 px-2 text-xs">Relazione e Bilancio di Esercizio 2024 (Italian, native, prior year) (investor-relations site, not EDGAR)</td>
+        <td class="py-2 px-2 text-xs text-center">0/22</td>
+        <td class="py-2 px-2 text-xs mono">—</td>
+        <td class="py-2 px-2 text-xs text-center">0</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="Italy">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Eni.html">Eni</a></td>
+        <td class="py-2 px-2 text-xs">Italy</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">20-F 2026-03-23</td>
+        <td class="py-2 px-2 text-xs text-center">2/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF06, EAF41</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Exxon_Mobil.html">Exxon Mobil</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-02-18</td>
+        <td class="py-2 px-2 text-xs text-center">1/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="First_Solar.html">First Solar</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-02-24</td>
+        <td class="py-2 px-2 text-xs text-center">2/24</td>
+        <td class="py-2 px-2 text-xs mono">EAF31, EAF41</td>
+        <td class="py-2 px-2 text-xs text-center">2</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="fixture"
+          data-country="—">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Meridian_Marine_Exports.html">Meridian Marine Exports</a></td>
+        <td class="py-2 px-2 text-xs">—</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-amber-100 text-amber-800">hand-verified/synthetic fixture</span></td>
+        <td class="py-2 px-2 text-xs">hand-verified/synthetic fixture</td>
+        <td class="py-2 px-2 text-xs text-center">1/1</td>
+        <td class="py-2 px-2 text-xs mono">EAF04</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Micron_Technology.html">Micron Technology</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-10-09</td>
+        <td class="py-2 px-2 text-xs text-center">1/24</td>
+        <td class="py-2 px-2 text-xs mono">EAF29</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United Kingdom">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="National_Grid.html">National Grid</a></td>
+        <td class="py-2 px-2 text-xs">United Kingdom</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">20-F 2026-06-03</td>
+        <td class="py-2 px-2 text-xs text-center">1/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF26</td>
+        <td class="py-2 px-2 text-xs text-center">0</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="unreachable"
+          data-country="Switzerland">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Nestlé_S_A.html">Nestlé S A</a></td>
+        <td class="py-2 px-2 text-xs">Switzerland</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-red-100 text-red-800">unreachable</span></td>
+        <td class="py-2 px-2 text-xs">—</td>
+        <td class="py-2 px-2 text-xs text-center">0/0</td>
+        <td class="py-2 px-2 text-xs mono">—</td>
+        <td class="py-2 px-2 text-xs text-center">0</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="Canada">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Novagold_Resources.html">Novagold Resources</a></td>
+        <td class="py-2 px-2 text-xs">Canada</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-01-22</td>
+        <td class="py-2 px-2 text-xs text-center">1/23</td>
+        <td class="py-2 px-2 text-xs mono">EAF39</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="fixture"
+          data-country="—">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Novatide.html">Novatide</a></td>
+        <td class="py-2 px-2 text-xs">—</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-amber-100 text-amber-800">hand-verified/synthetic fixture</span></td>
+        <td class="py-2 px-2 text-xs">hand-verified/synthetic fixture</td>
+        <td class="py-2 px-2 text-xs text-center">6/6</td>
+        <td class="py-2 px-2 text-xs mono">EAF15, EAF16, EAF22, EAF23, EAF24, EAF25</td>
+        <td class="py-2 px-2 text-xs text-center">4</td>
+        <td class="py-2 px-2 text-xs text-right">EUR 7m</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="fixture"
+          data-country="—">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Novatide_Energy_Partners.html">Novatide Energy Partners</a></td>
+        <td class="py-2 px-2 text-xs">—</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-amber-100 text-amber-800">hand-verified/synthetic fixture</span></td>
+        <td class="py-2 px-2 text-xs">hand-verified/synthetic fixture</td>
+        <td class="py-2 px-2 text-xs text-center">1/1</td>
+        <td class="py-2 px-2 text-xs mono">EAF03</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="investor_relations"
+          data-country="Spain">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Repsol.html">Repsol</a></td>
+        <td class="py-2 px-2 text-xs">Spain</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-gray-100 text-gray-600">investor relations</span></td>
+        <td class="py-2 px-2 text-xs">Informe de Gestión Consolidado 2025 (Spanish, native) (investor-relations site, not EDGAR)</td>
+        <td class="py-2 px-2 text-xs text-center">1/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="investor_relations"
+          data-country="Germany">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Siemens_AG.html">Siemens AG</a></td>
+        <td class="py-2 px-2 text-xs">Germany</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-gray-100 text-gray-600">investor relations</span></td>
+        <td class="py-2 px-2 text-xs">Geschäftsbericht 2025 (German, native) (investor-relations site, not EDGAR)</td>
+        <td class="py-2 px-2 text-xs text-center">1/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF29</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="Spain">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Telefónica.html">Telefónica</a></td>
+        <td class="py-2 px-2 text-xs">Spain</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">20-F 2025-02-27</td>
+        <td class="py-2 px-2 text-xs text-center">2/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF02, EAF07</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="The_AES.html">The AES</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-03-02</td>
+        <td class="py-2 px-2 text-xs text-center">2/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF11, EAF26</td>
+        <td class="py-2 px-2 text-xs text-center">0</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="The_Boeing.html">The Boeing</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-01-30</td>
+        <td class="py-2 px-2 text-xs text-center">2/25</td>
+        <td class="py-2 px-2 text-xs mono">EAF29, EAF30</td>
+        <td class="py-2 px-2 text-xs text-center">2</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="France">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="TotalEnergies.html">TotalEnergies</a></td>
+        <td class="py-2 px-2 text-xs">France</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">20-F 2026-03-27</td>
+        <td class="py-2 px-2 text-xs text-center">1/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF28</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="sec_filer"
+          data-country="United States">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Union_Pacific.html">Union Pacific</a></td>
+        <td class="py-2 px-2 text-xs">United States</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-green-100 text-green-800">SEC filer</span></td>
+        <td class="py-2 px-2 text-xs">10-K 2026-02-06</td>
+        <td class="py-2 px-2 text-xs text-center">1/24</td>
+        <td class="py-2 px-2 text-xs mono">EAF28</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="investor_relations"
+          data-country="France">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Vinci.html">Vinci</a></td>
+        <td class="py-2 px-2 text-xs">France</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-gray-100 text-gray-600">investor relations</span></td>
+        <td class="py-2 px-2 text-xs">Document d&#x27;Enregistrement Universel 2025 (French, native) (investor-relations site, not EDGAR)</td>
+        <td class="py-2 px-2 text-xs text-center">1/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr>
+      <tr class="company-row border-b border-gray-100"
+          data-status="investor_relations"
+          data-country="Germany">
+        <td class="py-2 px-2 text-sm font-medium">
+            <a class="burgundy-text hover:underline" href="Volkswagen_AG.html">Volkswagen AG</a></td>
+        <td class="py-2 px-2 text-xs">Germany</td>
+        <td class="py-2 px-2 text-xs"><span class="pill bg-gray-100 text-gray-600">investor relations</span></td>
+        <td class="py-2 px-2 text-xs">Group Management Report + Notes 2025 (English, despite German source) (investor-relations site, not EDGAR)</td>
+        <td class="py-2 px-2 text-xs text-center">1/22</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs text-center">1</td>
+        <td class="py-2 px-2 text-xs text-right">—</td>
+      </tr></tbody>
+      </table>
+    </div>
+    <div class="mt-4 text-xs text-gray-500">
+      One row per company, reusing the same evaluation this run's own heuristics produced — see
+      each company's own page for the full card-by-card breakdown and evidence trail.
+    </div>
+  </div>
+<script>
+const KEYS = ['status','country'];
+function applyFilters() {
+  const want = {};
+  KEYS.forEach(k => { const el = document.getElementById('f_'+k); if (el && el.value) want[k] = el.value; });
+  let shown = 0;
+  document.querySelectorAll('tr.company-row').forEach(tr => {
+    const ok = Object.entries(want).every(([k,v]) => tr.dataset[k] === v);
+    tr.style.display = ok ? '' : 'none';
+    if (ok) shown++;
+  });
+  document.getElementById('count').textContent = shown + ' shown';
+}
+function clearFilters() {
+  KEYS.forEach(k => { const el = document.getElementById('f_'+k); if (el) el.value = ''; });
+  applyFilters();
+}
+applyFilters();
+</script>
+</body>
+</html>

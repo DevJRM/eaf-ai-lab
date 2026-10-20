@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=1280, initial-scale=1.0" name="viewport"/>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+    <title>REL-THEBOEING-001 The Boeing – Lead</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+        .burgundy-bg { background-color: #800020; }
+        .burgundy-text { color: #800020; }
+        .card { background-color: white; border: 1px solid rgba(229, 231, 235, 0.5); border-radius: 0.5rem; }
+        .section-title { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #f3f4f6; }
+        .section-title i { color: #c4284a; font-size: 1.125rem; }
+        .pill { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+        .conv-track { background-color: #f3f4f6; border-radius: 9999px; height: 8px; overflow: hidden; }
+        .conv-fill { background-color: #800020; height: 100%; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; }
+        tr.lead-row:hover { background-color: #fdf2f4; }
+
+        /* One typographic scale for every lead page, so a reader never has to re-calibrate what
+           a given font size/weight/spacing means from one section to the next - the specific
+           complaint this scale exists to fix: ad hoc text-xs/text-sm/text-base and mb-1/mb-2/
+           mb-5 mixed within a single block, with no visual logic to the mixture. */
+        .lead-eyebrow { font-size: 0.6875rem; font-weight: 600; color: #9ca3af;
+                        text-transform: uppercase; letter-spacing: 0.04em; }
+        .lead-headline { font-size: 0.9375rem; font-weight: 600; color: #1f2937; line-height: 1.5; }
+        .lead-body { font-size: 0.8125rem; color: #374151; line-height: 1.65; }
+        .lead-meta { font-size: 0.75rem; color: #6b7280; line-height: 1.6; }
+        .evidence-block { padding-bottom: 1.25rem; margin-bottom: 1.25rem;
+                          border-bottom: 1px solid #e5e7eb; }
+        .evidence-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                      gap: 1rem; }
+        .stat-item .lead-eyebrow { margin-bottom: 0.25rem; }
+        .stat-item .stat-value { font-size: 0.9375rem; font-weight: 600; color: #1f2937; }
+        .fact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+                     gap: 0.625rem 1.25rem; }
+        .fact-item .lead-eyebrow { margin-bottom: 0.125rem; }
+        .fact-item .fact-value { font-size: 0.8125rem; color: #1f2937; font-weight: 500; }
+        details.tech { margin-top: 0.75rem; }
+        details.tech > summary { font-size: 0.6875rem; color: #9ca3af; cursor: pointer;
+                                 list-style: none; }
+        details.tech > summary::-webkit-details-marker { display: none; }
+        details.tech > summary:before { content: '\25b8  '; }
+        details.tech[open] > summary:before { content: '\25be  '; }
+        details.tech > summary:hover { color: #6b7280; }
+        details.tech > .tech-body { margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+  <div class="burgundy-bg text-white px-8 py-5">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="text-xs opacity-75 mono">
+            <a class="text-white hover:underline" href="index.html">reports</a> /
+            <a class="text-white hover:underline" href="leads.html">leads</a>
+            · REL-THEBOEING-001 · 18 of 27</div>
+          <h1 class="text-2xl font-semibold mt-1"><a class="text-white hover:underline" href="The_Boeing.html">The Boeing</a><span class="pill bg-white bg-opacity-25 text-white ml-2">NEW</span></h1>
+          <div class="text-sm opacity-90 mt-1">
+            relationship · term lending · near term
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-xl font-semibold">unsized</div>
+          <div class="text-xs opacity-75">materiality · state: new</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-5xl mx-auto px-8 py-6">
+    
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-building"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Counterparty</h3></div>
+      <table class="w-full text-xs text-gray-700">
+        <tr><td class="py-1 text-gray-500 w-32">Group</td><td class="font-semibold">The Boeing</td></tr>
+        <tr><td class="py-1 text-gray-500">As received</td><td>BOEING CO</td></tr>
+        <tr><td class="py-1 text-gray-500">Resolution</td><td>tier 1 · confidence 0.9</td></tr>
+        
+        
+      </table>
+      
+    </div>
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-lightbulb"></i>
+        <h3 class="text-sm font-semibold text-gray-800">At a glance</h3></div>
+      <div class="mb-3 pb-3 border-b border-gray-100">
+        <div class="lead-eyebrow mb-1">Suggested product</div>
+        <div class="lead-body font-medium text-gray-800">Term lending for the asset under construction; buyer-side lending if construction involves imported equipment (cross-check EAF08)</div>
+      </div>
+      <div class="lead-eyebrow mb-1">What we found</div>
+      <ul class="list-none pl-0"><li class="lead-body mb-1.5 last:mb-0">
+              <span class="font-semibold text-gray-800">EAF29</span>
+               &middot; The PP&amp;E footnote discloses a construction-in-progress or assets-under-construction balance that has grown materially year-on-year.
+            </li></ul>
+      
+    </div>
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-file-lines"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Evidence (1)</h3></div>
+      <div class="lead-meta mb-4 pb-3 border-b border-gray-200">
+        <span class="font-medium text-gray-600">Opportunity size:</span> <span class="text-gray-500 italic">unsized</span> — `cip_balance_eur` = 3631000000 but the fire declares no unit. The suffix cannot be trusted: the same `_eur` suffix is unit-denominated on EAF22 and millions-denominated on EAF27 in these fixtures. Declare units in the fire log — see ORIGINATION_WORKFLOW_PROPOSAL.md §5.
+         <span class="text-gray-400">(relative only — CIP growth %; absolute floor worth adding at calibration)</span>
+        &nbsp;&middot;&nbsp;
+        <span class="font-medium text-gray-600">Timing:</span> near term
+      </div>
+      
+        <div class="evidence-block">
+          <div class="flex justify-between items-baseline mb-2">
+            <span class="lead-headline">
+              EAF29
+               &middot; Construction-in-progress / assets-under-construction growth</span>
+            <span class="pill bg-gray-100 text-gray-700">opened</span>
+          </div>
+          <div class="lead-eyebrow mb-0.5">Signal</div><div class="lead-body">The PP&amp;E footnote discloses a construction-in-progress or assets-under-construction balance that has grown materially year-on-year.</div>
+          <div class="lead-eyebrow mt-2 mb-0.5">Why it matters</div><div class="lead-body text-gray-600">A capital project that is physically under construction, not just announced or contracted, confirms
+real, ongoing capital spending — complementary to EAF21 (a contractual commitment, forward-looking)
+and EAF08 (management sentiment, also forward-looking): this is the asset actually being built,
+mid-stream, the most concrete of the three.</div>
+          <div class="lead-meta mt-2">
+            Company&#x27;s own financial statements · annual report ppe footnote · fired 2026-10-20
+          </div>
+          
+              <div class="mt-3">
+                <div class="lead-eyebrow mb-1">Source text</div>
+                <blockquote class="lead-body bg-gray-50 border-l-2 border-gray-300
+                    rounded p-3 whitespace-pre-wrap">ows for operating leases over the next five years and thereafter are as follows:
+Year 1
+$
+40
+Year 2
+34
+Year 3
+32
+Year 4
+13
+Year 5
+Thereafter
+Total financing receipts
+119
+Less imputed interest
+Total
+$
+119
+84
+Table of Co
+ntents
+Note 12 –
+Property, Plant and Equipment
+Property, plant and equipment at December 31 consisted of the following:
+2025
+2024
+Land
+$
+443
+$
+353
+Buildings and land improvements
+16,565
+14,985
+Machinery and equipment
+18,335
+16,660
+Construction in progress
+3,631
+2,339
+Gross property, plant and equipment
+38,974
+34,337
+Less accumulated depreciation
+(
+23,613
+)
+(
+22,925
+)
+Total
+$
+15,361
+$
+11,412
+A
+t December 31, 2025 and 2024, Property, plant and equipment included $
+519
+and $
+370
+of gross right-of-use assets and $
+196
+and $
+154
+of accumulated depreciation on finance leases.
+Depreciation expense was $
+1,413
+, $
+1,349
+and $
+1,328
+for 2025, 2024 and 2023, respectively.
+During 202</blockquote>
+              </div>
+          <div class="mt-3">
+        <div class="lead-eyebrow mb-1.5">The numbers behind it</div>
+        <div class="fact-grid"><div class="fact-item">
+              <div class="lead-eyebrow">cip balance</div>
+              <div class="fact-value">EUR 3.63bn</div>
+            </div><div class="fact-item">
+              <div class="lead-eyebrow">prior cip balance</div>
+              <div class="fact-value">EUR 2.34bn</div>
+            </div><div class="fact-item">
+              <div class="lead-eyebrow">cip balance yoy change</div>
+              <div class="fact-value">+55.2%</div>
+            </div></div>
+      </div>
+          <div class="mt-2 lead-meta"><span class='text-amber-700'>Sizing field present but no unit declared — not used for ranking</span></div>
+          <details class="tech">
+      <summary>Why it fired — the exact trigger logic</summary>
+      <div class="tech-body"><div class="mb-2 last:mb-0">
+          <div class="text-xs font-mono text-gray-400 mb-1">fact_annual_report_footnote.content</div>
+          <div><div class="text-xs text-gray-400 mb-0.5">condition:</div>
+              <ul class="text-xs space-y-0.5 pl-0 list-none">
+                  <li class="text-green-700">
+                    <span class="font-semibold">✓</span>
+                    <span class="mono">cip_balance_yoy_change_pct</span> =
+                    <span class="mono font-medium">0.5523728088926891</span>
+                    &nbsp;&gt;=&nbsp;
+                    <span class="mono">0.3</span>
+                  </li></ul></div></div></div>
+    </details>
+          <div class="mt-3 pt-3 border-t border-gray-100">
+            <div class="lead-eyebrow mb-1">Could lead to</div>
+            <div class="lead-body">Term lending for the asset under construction; buyer-side lending if construction involves imported equipment (cross-check EAF08)</div></div>
+        </div>
+    </div>
+    <div class="mt-6 pt-2 text-xs text-gray-400 uppercase tracking-wide">Procedural</div>
+    
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-gauge-high"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Conviction — 0.445</h3></div>
+      <div class="text-xs text-gray-500 mb-3">A single sort key, nothing more — the weighted sum
+        of the four rows below. Procedural; the case for the lead is in Evidence above.</div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead class="text-gray-400 text-left">
+            <tr><th class="py-1 pr-3">Factor</th><th class="py-1 pr-3">Score</th>
+                <th class="py-1 pr-3">Weight</th><th class="py-1">What it means</th></tr>
+          </thead>
+          <tbody>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">corroboration</td>
+          <td class="py-2 pr-3 mono align-top">0.300</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.4</td>
+          <td class="py-2 text-gray-600 align-top">how independent the evidence is. Multiple cards reading the SAME document count as one piece of evidence, not several — see the document count below.
+            <div class="mt-0.5 text-gray-500">distinct_documents: 1 · distinct_source_types: 1 · distinct_cards: 1 · double_counting_avoided: 0</div></td>
+        </tr>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">materiality</td>
+          <td class="py-2 pr-3 mono align-top">0.500</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.25</td>
+          <td class="py-2 text-gray-600 align-top">how large the opportunity is in EUR, on a log scale (~0 at EUR 1m, ~1.0 at EUR 1bn). Unsized leads get a neutral 0.5, not a zero — a ratio-sized card is not a smaller opportunity, just an unmeasured one.
+            <div class="mt-0.5 text-gray-500">basis: no EUR magnitude available · reason: `cip_balance_eur` = 3631000000 but the fire declares no unit. The suffix cannot be trusted: the same `_eur` suffix is unit-denominated on EAF22 and millions-denominated on EAF27 in these fixtures. Declare units in the fire log — see ORIGINATION_WORKFLOW_PROPOSAL.md §5.</div></td>
+        </tr>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">horizon</td>
+          <td class="py-2 pr-3 mono align-top">0.700</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.2</td>
+          <td class="py-2 text-gray-600 align-top">how soon the underlying event plays out: immediate (this quarter), near_term, or pipeline (a structural fact with no clock on it).
+            <div class="mt-0.5 text-gray-500">band: near_term</div></td>
+        </tr>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">relationship</td>
+          <td class="py-2 pr-3 mono align-top">0.400</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.15</td>
+          <td class="py-2 text-gray-600 align-top">whether any evidence came from the bank's own internal records (S4) — internal visibility is the strongest base for a conversation, and the most sensitive under §6.5's governance line.
+            <div class="mt-0.5 text-gray-500">internal_evidence: False</div></td>
+        </tr></tbody>
+        </table>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">
+        documents: <span class="mono">annual_report_ppe_footnote</span>
+      </div>
+      
+        <div class="mt-3 text-xs text-gray-500 italic">
+          priors set by argument, not by outcome data — see proposal §5
+        </div>
+    </div>
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-route"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Routing &amp; lifecycle</h3></div>
+      <table class="w-full text-xs text-gray-700">
+        <tr><td class="py-1 text-gray-500 w-32">State</td><td><span class="pill bg-gray-100 text-gray-800">new</span></td></tr>
+        <tr><td class="py-1 text-gray-500">Owner</td><td><span class='mono'>eaf.corporate_lending</span></td></tr>
+        <tr><td class="py-1 text-gray-500">Routed by</td><td class="text-gray-500">by_product_family: term_lending</td></tr>
+        <tr><td class="py-1 text-gray-500">Horizon</td><td>near term</td></tr>
+        <tr><td class="py-1 text-gray-500">First seen</td><td>2026-10-20</td></tr>
+        <tr><td class="py-1 text-gray-500">Expires</td><td>2027-04-18</td></tr>
+      </table>
+      
+      
+    </div>
+    <div class="mt-4 text-center">
+      <a class="text-xs burgundy-text hover:underline" href="leads.html">&larr; back to the queue</a>
+      &nbsp;·&nbsp;<a class="text-xs burgundy-text hover:underline" href="The_Boeing.html">company report</a>
+    </div>
+  </div>
+</body>
+</html>

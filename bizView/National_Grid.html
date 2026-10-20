@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=1280, initial-scale=1.0" name="viewport"/>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+    <title>National Grid – Company Report</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+        .burgundy-bg { background-color: #800020; }
+        .burgundy-text { color: #800020; }
+        .card { background-color: white; border: 1px solid rgba(229, 231, 235, 0.5); border-radius: 0.5rem; }
+        .section-title { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #f3f4f6; }
+        .section-title i { color: #c4284a; font-size: 1.125rem; }
+        .pill { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+        .conv-track { background-color: #f3f4f6; border-radius: 9999px; height: 8px; overflow: hidden; }
+        .conv-fill { background-color: #800020; height: 100%; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; }
+        tr.lead-row:hover { background-color: #fdf2f4; }
+
+        /* One typographic scale for every lead page, so a reader never has to re-calibrate what
+           a given font size/weight/spacing means from one section to the next - the specific
+           complaint this scale exists to fix: ad hoc text-xs/text-sm/text-base and mb-1/mb-2/
+           mb-5 mixed within a single block, with no visual logic to the mixture. */
+        .lead-eyebrow { font-size: 0.6875rem; font-weight: 600; color: #9ca3af;
+                        text-transform: uppercase; letter-spacing: 0.04em; }
+        .lead-headline { font-size: 0.9375rem; font-weight: 600; color: #1f2937; line-height: 1.5; }
+        .lead-body { font-size: 0.8125rem; color: #374151; line-height: 1.65; }
+        .lead-meta { font-size: 0.75rem; color: #6b7280; line-height: 1.6; }
+        .evidence-block { padding-bottom: 1.25rem; margin-bottom: 1.25rem;
+                          border-bottom: 1px solid #e5e7eb; }
+        .evidence-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                      gap: 1rem; }
+        .stat-item .lead-eyebrow { margin-bottom: 0.25rem; }
+        .stat-item .stat-value { font-size: 0.9375rem; font-weight: 600; color: #1f2937; }
+        .fact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+                     gap: 0.625rem 1.25rem; }
+        .fact-item .lead-eyebrow { margin-bottom: 0.125rem; }
+        .fact-item .fact-value { font-size: 0.8125rem; color: #1f2937; font-weight: 500; }
+        details.tech { margin-top: 0.75rem; }
+        details.tech > summary { font-size: 0.6875rem; color: #9ca3af; cursor: pointer;
+                                 list-style: none; }
+        details.tech > summary::-webkit-details-marker { display: none; }
+        details.tech > summary:before { content: '\25b8  '; }
+        details.tech[open] > summary:before { content: '\25be  '; }
+        details.tech > summary:hover { color: #6b7280; }
+        details.tech > .tech-body { margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+  <div class="burgundy-bg text-white px-8 py-5">
+    <div class="max-w-5xl mx-auto flex justify-between items-start">
+      <div>
+        <div class="text-xs opacity-75 mono">
+          <a class="text-white hover:underline" href="index.html">reports</a> /
+          <a class="text-white hover:underline" href="companies.html">companies</a>
+          · generated 2026-10-20</div>
+        <h1 class="text-2xl font-semibold mt-1">National Grid</h1>
+        <div class="text-sm opacity-90 mt-1">queried as "National Grid"</div>
+      </div>
+      <div class="text-right">
+        <div class="text-3xl font-semibold">—</div>
+        <div class="text-xs opacity-75">top conviction · 1 card(s) fired</div>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-5xl mx-auto px-8 py-6">
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Resolution</h2>
+    
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="card p-4">
+        <div class="section-title"><i class="fas fa-brain"></i>
+          <h3 class="text-sm font-semibold text-gray-800">Model canonicalization (prior)</h3></div>
+        <table class="w-full text-xs text-gray-700">
+          <tr><td class="py-1 text-gray-500 w-32">Legal name</td><td>National Grid plc</td></tr>
+          <tr><td class="py-1 text-gray-500">Country</td><td>United Kingdom</td></tr>
+          <tr><td class="py-1 text-gray-500">Exchange</td><td>London Stock Exchange</td></tr>
+          <tr><td class="py-1 text-gray-500">Tickers</td><td>NG., NGG</td></tr>
+          <tr><td class="py-1 text-gray-500">Sector</td><td>Utilities</td></tr>
+        </table>
+        <div class="text-xs text-gray-500 mt-2 italic">National Grid plc maintains an American Depositary Receipt (ADR) program listed on the NYSE, requiring it to file Form 20-F with the SEC.</div>
+      </div>
+      <div class="card p-4">
+        <div class="section-title"><i class="fas fa-landmark"></i>
+          <h3 class="text-sm font-semibold text-gray-800">EDGAR (ground truth)</h3></div>
+        <table class="w-full text-xs text-gray-700">
+          <tr><td class="py-1 text-gray-500 w-32">CIK</td><td class="mono">0001004315</td></tr>
+          <tr><td class="py-1 text-gray-500">Canonical name</td><td>NATIONAL GRID PLC</td></tr>
+          <tr><td class="py-1 text-gray-500">SEC-reporting</td>
+              <td><span class="pill bg-green-100 text-green-800">yes</span></td></tr>
+          <tr><td class="py-1 text-gray-500">Source document</td>
+              <td>20-F 2026-06-03</td></tr>
+        </table>
+        <div class='text-xs text-gray-500 mt-2'>EDGAR entities considered: NATIONAL GRID PLC, NATIONAL GRID PLC, NATIONAL GRID PLC, NATIONAL GRID PLC, NATIONAL GRID PLC, NATIONAL GRID PLC</div>
+      </div>
+    </div>
+    
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 mt-6">Coverage</h2>
+    
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-table-list"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Card coverage — all 45</h3></div>
+      <div class="text-xs text-gray-500 mb-3">1 fired · 21 evaluated, no fire · 6 not evaluable · 17 not attempted</div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+            <tr><th class="py-1.5 px-2 text-left">Card</th><th class="py-1.5 px-2 text-left">Title</th>
+                <th class="py-1.5 px-2 text-left">Role</th><th class="py-1.5 px-2 text-left">Result</th>
+                <th class="py-1.5 px-2 text-left">Reason</th></tr>
+          </thead>
+          <tbody>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF01</td>
+          <td class="py-1.5 px-2 text-xs">Company-disclosed early-stage government program engagement</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">needs the company&#x27;s own press-release/newsroom feed - a separate fetch this command does not make (no reliable, uniform way to find a company&#x27;s newsroom URL from a name alone)</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF02</td>
+          <td class="py-1.5 px-2 text-xs">Company-disclosed country / counterparty concentration risk</td>
+          <td class="py-1.5 px-2 text-xs">parameter</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF03</td>
+          <td class="py-1.5 px-2 text-xs">Project Database equipment-package match</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">named external registry (S3) - the §6.3 connector is deliberately out of scope this round</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF04</td>
+          <td class="py-1.5 px-2 text-xs">Contract award — company disclosure or registry match</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">needs the company&#x27;s own press-release/newsroom feed - a separate fetch this command does not make (no reliable, uniform way to find a company&#x27;s newsroom URL from a name alone)</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF05</td>
+          <td class="py-1.5 px-2 text-xs">Fleet, vessel, or aircraft order</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">needs the company&#x27;s own press-release/newsroom feed - a separate fetch this command does not make (no reliable, uniform way to find a company&#x27;s newsroom URL from a name alone)</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF06</td>
+          <td class="py-1.5 px-2 text-xs">Material change in outstanding financial debt</td>
+          <td class="py-1.5 px-2 text-xs">qualifier</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">AND: a block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF07</td>
+          <td class="py-1.5 px-2 text-xs">Disclosed cost / structure of outstanding debt</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class="bg-gray-50 border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF08</td>
+          <td class="py-1.5 px-2 text-xs">Management sentiment on internationally-sourced capex</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-question text-gray-500"></i>
+              <span class="text-gray-500 font-medium">not evaluable</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">no earnings-call transcript available for this company via Alpha Vantage</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF09</td>
+          <td class="py-1.5 px-2 text-xs">Exporter order backlog growth</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">primary block did not fire (enrichment blocks do not gate)</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF10</td>
+          <td class="py-1.5 px-2 text-xs">Credit rating / outlook change</td>
+          <td class="py-1.5 px-2 text-xs">qualifier</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">named rating agency (S3) - confirmed in §6.7 that the public sites 403 a direct fetch; needs a licensed feed</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF11</td>
+          <td class="py-1.5 px-2 text-xs">Evolving financial covenants — new terms, amendments, waivers</td>
+          <td class="py-1.5 px-2 text-xs">qualifier</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF12</td>
+          <td class="py-1.5 px-2 text-xs">Debt maturity wall approaching</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF13</td>
+          <td class="py-1.5 px-2 text-xs">Disclosed FX exposure mismatch</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF15</td>
+          <td class="py-1.5 px-2 text-xs">Export-finance activity in internal trade systems</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">bank-internal system (S4) - out of reach for this command, and gated on the §6.5 governance sign-off regardless</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF16</td>
+          <td class="py-1.5 px-2 text-xs">Product white-space versus the bank&#x27;s own relationship</td>
+          <td class="py-1.5 px-2 text-xs">benchmark</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">bank-internal system (S4) - out of reach for this command, and gated on the §6.5 governance sign-off regardless</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF18</td>
+          <td class="py-1.5 px-2 text-xs">Major customer/supplier concentration disclosure</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF20</td>
+          <td class="py-1.5 px-2 text-xs">Sovereign rating or outlook change in a disclosed key market</td>
+          <td class="py-1.5 px-2 text-xs">qualifier</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">named rating agency (S3) - confirmed in §6.7 that the public sites 403 a direct fetch; needs a licensed feed</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF21</td>
+          <td class="py-1.5 px-2 text-xs">Contracted capital commitments disclosed</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF22</td>
+          <td class="py-1.5 px-2 text-xs">Unscheduled prepayment on an existing facility</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">bank-internal system (S4) - out of reach for this command, and gated on the §6.5 governance sign-off regardless</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF23</td>
+          <td class="py-1.5 px-2 text-xs">Revolving facility used as structural, not seasonal, debt</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">bank-internal system (S4) - out of reach for this command, and gated on the §6.5 governance sign-off regardless</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF24</td>
+          <td class="py-1.5 px-2 text-xs">Sustained operating cash balance accumulation</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">bank-internal system (S4) - out of reach for this command, and gated on the §6.5 governance sign-off regardless</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF25</td>
+          <td class="py-1.5 px-2 text-xs">First-time activity in a new transaction currency</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">bank-internal system (S4) - out of reach for this command, and gated on the §6.5 governance sign-off regardless</td>
+        </tr>
+        <tr class="bg-green-50 border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF26</td>
+          <td class="py-1.5 px-2 text-xs">Segment-reported revenue growth in a specific product or technology line</td>
+          <td class="py-1.5 px-2 text-xs">parameter</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-check text-green-700"></i>
+              <span class="text-green-700 font-medium">FIRED</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">prior_period_segment_capex_eur=3289000000, prior_period_segment_revenue_eur=6689000000, prior_period_total_company_revenue_eur=18378000000, segment_capex_eur=3428000000, segment_name=New York, segment_revenue_eur=7618000000, total_company_revenue_eur=17687000000, segment_revenue_yoy_change_pct=0.139, total_company_revenue_yoy_change_pct=-0.038, gap_vs_total_company_growth_pp=17.648</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF27</td>
+          <td class="py-1.5 px-2 text-xs">Government grant received</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF28</td>
+          <td class="py-1.5 px-2 text-xs">Free cash flow deficit against disclosed capex</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF29</td>
+          <td class="py-1.5 px-2 text-xs">Construction-in-progress / assets-under-construction growth</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class="bg-gray-50 border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF30</td>
+          <td class="py-1.5 px-2 text-xs">Order backlog outpacing customer advance payments</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-question text-gray-500"></i>
+              <span class="text-gray-500 font-medium">not evaluable</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">structurally unsupported: the &#x27;funding_gap_pp&#x27; row writes op/value as siblings of metric rather than nested under a field name - a dialect unique to this one card, introduced by the §9.1 redesign. Not worth a generic special case for one card; evaluate by hand.</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF31</td>
+          <td class="py-1.5 px-2 text-xs">Rising expected-credit-loss allowance on trade receivables</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF32</td>
+          <td class="py-1.5 px-2 text-xs">Material new lease (right-of-use asset) additions</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF33</td>
+          <td class="py-1.5 px-2 text-xs">Cross-border acquisition disclosed in business-combinations footnote</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class="bg-gray-50 border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF34</td>
+          <td class="py-1.5 px-2 text-xs">Multi-period cost of debt trend</td>
+          <td class="py-1.5 px-2 text-xs">qualifier</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-question text-gray-500"></i>
+              <span class="text-gray-500 font-medium">not evaluable</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">requires multi-period retention (§6.9): cost-of-debt trend over trend_periods&gt;=3 - not available from a single filing fetch</td>
+        </tr>
+        <tr class="bg-gray-50 border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF35</td>
+          <td class="py-1.5 px-2 text-xs">Multi-period net debt / EBITDA trajectory</td>
+          <td class="py-1.5 px-2 text-xs">qualifier</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-question text-gray-500"></i>
+              <span class="text-gray-500 font-medium">not evaluable</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">requires multi-period retention (§6.9): net debt / EBITDA trajectory over trend_periods&gt;=3 - not available from a single filing fetch</td>
+        </tr>
+        <tr class="bg-gray-50 border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF36</td>
+          <td class="py-1.5 px-2 text-xs">Interest coverage ratio trend</td>
+          <td class="py-1.5 px-2 text-xs">qualifier</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-question text-gray-500"></i>
+              <span class="text-gray-500 font-medium">not evaluable</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">requires multi-period retention (§6.9): interest coverage trend - not available from a single filing fetch</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF37</td>
+          <td class="py-1.5 px-2 text-xs">Days Sales Outstanding lengthening: receivables finance opportunity</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF38</td>
+          <td class="py-1.5 px-2 text-xs">Disclosed supplier finance program</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class="bg-gray-50 border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF39</td>
+          <td class="py-1.5 px-2 text-xs">Management-stated financing intent on an earnings call</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-question text-gray-500"></i>
+              <span class="text-gray-500 font-medium">not evaluable</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">no earnings-call transcript available for this company via Alpha Vantage</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF40</td>
+          <td class="py-1.5 px-2 text-xs">Undrawn committed facility headroom against disclosed capex</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF41</td>
+          <td class="py-1.5 px-2 text-xs">Strategic raw-material or critical-input dependency</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">OR: no block fired</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF42</td>
+          <td class="py-1.5 px-2 text-xs">Sovereign-linked borrower whose own rating blocks the loan</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF43</td>
+          <td class="py-1.5 px-2 text-xs">Recurring fragmented procurement from one country</td>
+          <td class="py-1.5 px-2 text-xs">aggregator</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">named external registry (S3) - the §6.3 connector is deliberately out of scope this round</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF44</td>
+          <td class="py-1.5 px-2 text-xs">Co-financing gap alongside a confirmed multilateral or ECA</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">named external registry (S3) - the §6.3 connector is deliberately out of scope this round</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF45</td>
+          <td class="py-1.5 px-2 text-xs">Pre-tender window, before suppliers are selected</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">named external registry (S3) - the §6.3 connector is deliberately out of scope this round</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF47</td>
+          <td class="py-1.5 px-2 text-xs">Guarantee and bonding capacity consuming credit lines</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-circle-minus text-gray-400"></i>
+              <span class="text-gray-400 font-medium">no fire</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">single block did not fire</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF48</td>
+          <td class="py-1.5 px-2 text-xs">Senior finance leadership change</td>
+          <td class="py-1.5 px-2 text-xs">timing</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">needs the company&#x27;s own press-release/newsroom feed - a separate fetch this command does not make (no reliable, uniform way to find a company&#x27;s newsroom URL from a name alone)</td>
+        </tr>
+        <tr class=" border-b border-gray-100">
+          <td class="py-1.5 px-2 text-xs mono">EAF49</td>
+          <td class="py-1.5 px-2 text-xs">Supplier payment timing deteriorating in the bank&#x27;s own records</td>
+          <td class="py-1.5 px-2 text-xs">lead</td>
+          <td class="py-1.5 px-2 text-xs"><i class="fas fa-ban text-gray-400"></i>
+              <span class="text-gray-400 font-medium">not attempted</span></td>
+          <td class="py-1.5 px-2 text-xs text-gray-500">bank-internal system (S4) - out of reach for this command, and gated on the §6.5 governance sign-off regardless</td>
+        </tr></tbody>
+        </table>
+      </div>
+    </div>
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 mt-6">Leads</h2>
+    
+    <div class="card p-4 mb-4 text-center text-sm text-gray-500">
+      No leads this run. See Card coverage above for why.
+    </div>
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 mt-6">Caveats</h2>
+    
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-circle-info"></i>
+        <h3 class="text-sm font-semibold text-gray-800">What this run could not do</h3></div>
+      <ul class="text-xs text-gray-600 list-disc pl-4"><li class='mb-1'><strong>company_ir_disclosure</strong>: needs the company&#x27;s own press-release/newsroom feed - a separate fetch this command does not make (no reliable, uniform way to find a company&#x27;s newsroom URL from a name alone)</li><li class='mb-1'><strong>earnings_call_transcript</strong>: other</li><li class='mb-1'><strong>internal_account_balances, internal_account_transactions, internal_crm_vs_s5_benchmark, internal_loan_servicing, internal_payment_records, internal_revolver_utilization, internal_trade_finance_system</strong>: bank-internal system (S4) - out of reach for this command, and gated on the §6.5 governance sign-off regardless</li><li class='mb-1'><strong>procurement_registry, project_database, project_database_aggregated</strong>: named external registry (S3) - the §6.3 connector is deliberately out of scope this round</li><li class='mb-1'><strong>rating_agency_feed_corporate, rating_agency_feed_sovereign</strong>: named rating agency (S3) - confirmed in §6.7 that the public sites 403 a direct fetch; needs a licensed feed</li><li class='mb-1'>Conviction weights are declared priors, not calibrated — see <span class='mono'>calibrate_conviction.py</span>.</li></ul>
+    </div>
+  </div>
+</body>
+</html>

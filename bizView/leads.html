@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=1280, initial-scale=1.0" name="viewport"/>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+    <title>Origination queue</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+        .burgundy-bg { background-color: #800020; }
+        .burgundy-text { color: #800020; }
+        .card { background-color: white; border: 1px solid rgba(229, 231, 235, 0.5); border-radius: 0.5rem; }
+        .section-title { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #f3f4f6; }
+        .section-title i { color: #c4284a; font-size: 1.125rem; }
+        .pill { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+        .conv-track { background-color: #f3f4f6; border-radius: 9999px; height: 8px; overflow: hidden; }
+        .conv-fill { background-color: #800020; height: 100%; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; }
+        tr.lead-row:hover { background-color: #fdf2f4; }
+
+        /* One typographic scale for every lead page, so a reader never has to re-calibrate what
+           a given font size/weight/spacing means from one section to the next - the specific
+           complaint this scale exists to fix: ad hoc text-xs/text-sm/text-base and mb-1/mb-2/
+           mb-5 mixed within a single block, with no visual logic to the mixture. */
+        .lead-eyebrow { font-size: 0.6875rem; font-weight: 600; color: #9ca3af;
+                        text-transform: uppercase; letter-spacing: 0.04em; }
+        .lead-headline { font-size: 0.9375rem; font-weight: 600; color: #1f2937; line-height: 1.5; }
+        .lead-body { font-size: 0.8125rem; color: #374151; line-height: 1.65; }
+        .lead-meta { font-size: 0.75rem; color: #6b7280; line-height: 1.6; }
+        .evidence-block { padding-bottom: 1.25rem; margin-bottom: 1.25rem;
+                          border-bottom: 1px solid #e5e7eb; }
+        .evidence-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                      gap: 1rem; }
+        .stat-item .lead-eyebrow { margin-bottom: 0.25rem; }
+        .stat-item .stat-value { font-size: 0.9375rem; font-weight: 600; color: #1f2937; }
+        .fact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+                     gap: 0.625rem 1.25rem; }
+        .fact-item .lead-eyebrow { margin-bottom: 0.125rem; }
+        .fact-item .fact-value { font-size: 0.8125rem; color: #1f2937; font-weight: 500; }
+        details.tech { margin-top: 0.75rem; }
+        details.tech > summary { font-size: 0.6875rem; color: #9ca3af; cursor: pointer;
+                                 list-style: none; }
+        details.tech > summary::-webkit-details-marker { display: none; }
+        details.tech > summary:before { content: '\25b8  '; }
+        details.tech[open] > summary:before { content: '\25be  '; }
+        details.tech > summary:hover { color: #6b7280; }
+        details.tech > .tech-body { margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+  <div class="burgundy-bg text-white px-8 py-5">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-xs opacity-75 mono mb-1">
+        <a class="text-white hover:underline" href="index.html">reports</a> / leads</div>
+      <h1 class="text-2xl font-semibold">Origination queue</h1>
+      <div class="text-sm opacity-90 mt-1">generated 2026-10-20 · one page per lead, never per fire · 24 real companies plus the hand-verified/synthetic fixtures this pipeline was built against</div>
+      <div class="text-xs opacity-75 mt-2">
+        27 leads · 1 sized, totalling EUR 7m
+        · 0 unrouted
+      </div>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto px-8 py-6">
+    <div class="card p-3 mb-4 flex gap-2 flex-wrap items-center">
+      <span class="text-xs text-gray-500 mr-1">Filter</span>
+      <select id="f_owner" onchange="applyFilters()" class="text-xs border border-gray-300 rounded px-2 py-1"><option value="">Owner (all)</option><option value="eaf.asset_finance">eaf.asset finance</option><option value="eaf.corporate_lending">eaf.corporate lending</option><option value="eaf.coverage">eaf.coverage</option><option value="eaf.frameworks">eaf.frameworks</option><option value="eaf.markets">eaf.markets</option><option value="eaf.structured_trade">eaf.structured trade</option><option value="eaf.working_capital">eaf.working capital</option></select><select id="f_product_family" onchange="applyFilters()" class="text-xs border border-gray-300 rounded px-2 py-1"><option value="">Product (all)</option><option value="asset_backed_term_lending">asset backed term lending</option><option value="buyer_or_supplier_credit">buyer or supplier credit</option><option value="fx_and_cash_management">fx and cash management</option><option value="fx_hedging">fx hedging</option><option value="receivables_finance">receivables finance</option><option value="refinancing">refinancing</option><option value="relationship_retention">relationship retention</option><option value="supplier_side_lending">supplier side lending</option><option value="term_lending">term lending</option><option value="trade_finance">trade finance</option><option value="untied_facility">untied facility</option></select>
+      <select id="f_state" onchange="applyFilters()" class="text-xs border border-gray-300 rounded px-2 py-1"><option value="">State (all)</option><option value="new">new</option></select><select id="f_horizon" onchange="applyFilters()" class="text-xs border border-gray-300 rounded px-2 py-1"><option value="">Horizon (all)</option><option value="immediate">immediate</option><option value="near_term">near term</option><option value="pipeline">pipeline</option></select>
+      <button onclick="clearFilters()" class="text-xs text-gray-500 hover:underline ml-2">clear</button>
+      <span id="count" class="text-xs text-gray-400 ml-auto"></span>
+    </div>
+    <div class="card overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+          <tr>
+            <th class="py-2 px-2 text-left">#</th><th class="py-2 px-2 text-left">Conviction</th>
+            <th class="py-2 px-2 text-left">Counterparty</th><th class="py-2 px-2 text-left">Product</th>
+            <th class="py-2 px-2 text-left">Type</th><th class="py-2 px-2 text-left">Horizon</th>
+            <th class="py-2 px-2 text-right">Size</th><th class="py-2 px-2 text-left">Evidence</th>
+            <th class="py-2 px-2 text-left">Owner</th><th class="py-2 px-2 text-left">State</th>
+            <th class="py-2 px-2 text-left">Expires</th><th class="py-2 px-2"></th>
+          </tr>
+        </thead>
+        <tbody>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.structured_trade"
+          data-product_family="buyer_or_supplier_credit"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">1</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:70%"></div></div>
+            <span class="mono ml-2">0.705</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="TXN-AUSTRALGRI-002.html">Austral Grid</a>
+            <div class="text-xs text-gray-400 mono">TXN-AUSTRALGRI-002</div></td>
+        <td class="py-2 px-2 text-xs">buyer or supplier credit</td>
+        <td class="py-2 px-2 text-xs">transaction</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF03 <span class="text-gray-400">+EAF10</span></td>
+        <td class="py-2 px-2 text-xs mono">eaf.structured_trade</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.asset_finance"
+          data-product_family="asset_backed_term_lending"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">2</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:70%"></div></div>
+            <span class="mono ml-2">0.705</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-AUSTRALGRI-003.html">Austral Grid</a>
+            <div class="text-xs text-gray-400 mono">REL-AUSTRALGRI-003</div></td>
+        <td class="py-2 px-2 text-xs">asset backed term lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF05 <span class="text-gray-400">+EAF10</span></td>
+        <td class="py-2 px-2 text-xs mono">eaf.asset_finance</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.coverage"
+          data-product_family="relationship_retention"
+          data-state="new"
+          data-horizon="immediate">
+        <td class="py-2 px-2 text-xs text-gray-400">3</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:62%"></div></div>
+            <span class="mono ml-2">0.625</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-NOVATIDE-015.html">Novatide</a>
+            <div class="text-xs text-gray-400 mono">REL-NOVATIDE-015</div></td>
+        <td class="py-2 px-2 text-xs">relationship retention</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">immediate</td>
+        <td class="py-2 px-2 text-xs text-right">EUR 7m</td>
+        <td class="py-2 px-2 text-xs mono">EAF22, EAF24</td>
+        <td class="py-2 px-2 text-xs mono">eaf.coverage</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-01-18</td>
+        <td class="py-2 px-2"><i class="fas fa-triangle-exclamation text-amber-500" title="counterparty ambiguous"></i> </td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.working_capital"
+          data-product_family="trade_finance"
+          data-state="new"
+          data-horizon="immediate">
+        <td class="py-2 px-2 text-xs text-gray-400">4</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:57%"></div></div>
+            <span class="mono ml-2">0.580</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-NOVATIDE-014.html">Novatide</a>
+            <div class="text-xs text-gray-400 mono">REL-NOVATIDE-014</div></td>
+        <td class="py-2 px-2 text-xs">trade finance</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">immediate</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF15</td>
+        <td class="py-2 px-2 text-xs mono">eaf.working_capital</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-01-18</td>
+        <td class="py-2 px-2"><i class="fas fa-triangle-exclamation text-amber-500" title="counterparty ambiguous"></i> </td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.corporate_lending"
+          data-product_family="term_lending"
+          data-state="new"
+          data-horizon="immediate">
+        <td class="py-2 px-2 text-xs text-gray-400">5</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:57%"></div></div>
+            <span class="mono ml-2">0.580</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-NOVATIDE-016.html">Novatide</a>
+            <div class="text-xs text-gray-400 mono">REL-NOVATIDE-016</div></td>
+        <td class="py-2 px-2 text-xs">term lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">immediate</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF23</td>
+        <td class="py-2 px-2 text-xs mono">eaf.corporate_lending</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-01-18</td>
+        <td class="py-2 px-2"><i class="fas fa-triangle-exclamation text-amber-500" title="counterparty ambiguous"></i> </td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.markets"
+          data-product_family="fx_and_cash_management"
+          data-state="new"
+          data-horizon="immediate">
+        <td class="py-2 px-2 text-xs text-gray-400">6</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:57%"></div></div>
+            <span class="mono ml-2">0.580</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-NOVATIDE-017.html">Novatide</a>
+            <div class="text-xs text-gray-400 mono">REL-NOVATIDE-017</div></td>
+        <td class="py-2 px-2 text-xs">fx and cash management</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">immediate</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF25</td>
+        <td class="py-2 px-2 text-xs mono">eaf.markets</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-01-18</td>
+        <td class="py-2 px-2"><i class="fas fa-triangle-exclamation text-amber-500" title="counterparty ambiguous"></i> </td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.structured_trade"
+          data-product_family="buyer_or_supplier_credit"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">7</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:52%"></div></div>
+            <span class="mono ml-2">0.525</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-MERIDIANMA-011.html">Meridian Marine Exports</a>
+            <div class="text-xs text-gray-400 mono">REL-MERIDIANMA-011</div></td>
+        <td class="py-2 px-2 text-xs">buyer or supplier credit</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF04</td>
+        <td class="py-2 px-2 text-xs mono">eaf.structured_trade</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.corporate_lending"
+          data-product_family="term_lending"
+          data-state="new"
+          data-horizon="immediate">
+        <td class="py-2 px-2 text-xs text-gray-400">8</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:50%"></div></div>
+            <span class="mono ml-2">0.505</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-UNIONPACIF-001.html">Union Pacific</a>
+            <div class="text-xs text-gray-400 mono">REL-UNIONPACIF-001</div></td>
+        <td class="py-2 px-2 text-xs">term lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">immediate</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF28</td>
+        <td class="py-2 px-2 text-xs mono">eaf.corporate_lending</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-01-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.corporate_lending"
+          data-product_family="refinancing"
+          data-state="new"
+          data-horizon="immediate">
+        <td class="py-2 px-2 text-xs text-gray-400">9</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:50%"></div></div>
+            <span class="mono ml-2">0.505</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-TELEFNICA-001.html">Telefónica</a>
+            <div class="text-xs text-gray-400 mono">REL-TELEFNICA-001</div></td>
+        <td class="py-2 px-2 text-xs">refinancing</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">immediate</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF07</td>
+        <td class="py-2 px-2 text-xs mono">eaf.corporate_lending</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-01-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.corporate_lending"
+          data-product_family="term_lending"
+          data-state="new"
+          data-horizon="immediate">
+        <td class="py-2 px-2 text-xs text-gray-400">10</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:50%"></div></div>
+            <span class="mono ml-2">0.505</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-TOTALENERG-001.html">TotalEnergies</a>
+            <div class="text-xs text-gray-400 mono">REL-TOTALENERG-001</div></td>
+        <td class="py-2 px-2 text-xs">term lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">immediate</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF28</td>
+        <td class="py-2 px-2 text-xs mono">eaf.corporate_lending</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-01-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.markets"
+          data-product_family="fx_hedging"
+          data-state="new"
+          data-horizon="immediate">
+        <td class="py-2 px-2 text-xs text-gray-400">11</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:50%"></div></div>
+            <span class="mono ml-2">0.505</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-DELTAAIRLI-001.html">Delta Air Lines</a>
+            <div class="text-xs text-gray-400 mono">REL-DELTAAIRLI-001</div></td>
+        <td class="py-2 px-2 text-xs">fx hedging</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">immediate</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF13 <span class="text-gray-400">+EAF10</span></td>
+        <td class="py-2 px-2 text-xs mono">eaf.markets</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-01-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.working_capital"
+          data-product_family="receivables_finance"
+          data-state="new"
+          data-horizon="immediate">
+        <td class="py-2 px-2 text-xs text-gray-400">12</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:50%"></div></div>
+            <span class="mono ml-2">0.505</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-FIRSTSOLAR-001.html">First Solar</a>
+            <div class="text-xs text-gray-400 mono">REL-FIRSTSOLAR-001</div></td>
+        <td class="py-2 px-2 text-xs">receivables finance</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">immediate</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF31</td>
+        <td class="py-2 px-2 text-xs mono">eaf.working_capital</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-01-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.structured_trade"
+          data-product_family="supplier_side_lending"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">13</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:44%"></div></div>
+            <span class="mono ml-2">0.445</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-BOEING-005.html">The Boeing</a>
+            <div class="text-xs text-gray-400 mono">REL-BOEING-005</div></td>
+        <td class="py-2 px-2 text-xs">supplier side lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF30</td>
+        <td class="py-2 px-2 text-xs mono">eaf.structured_trade</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.corporate_lending"
+          data-product_family="term_lending"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">14</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:44%"></div></div>
+            <span class="mono ml-2">0.445</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-NOVAGOLD-013.html">Novagold Resources</a>
+            <div class="text-xs text-gray-400 mono">REL-NOVAGOLD-013</div></td>
+        <td class="py-2 px-2 text-xs">term lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF39</td>
+        <td class="py-2 px-2 text-xs mono">eaf.corporate_lending</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.structured_trade"
+          data-product_family="buyer_or_supplier_credit"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">15</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:44%"></div></div>
+            <span class="mono ml-2">0.445</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="TXN-NOVATIDEEN-018.html">Novatide Energy Partners</a>
+            <div class="text-xs text-gray-400 mono">TXN-NOVATIDEEN-018</div></td>
+        <td class="py-2 px-2 text-xs">buyer or supplier credit</td>
+        <td class="py-2 px-2 text-xs">transaction</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF03</td>
+        <td class="py-2 px-2 text-xs mono">eaf.structured_trade</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"><i class="fas fa-triangle-exclamation text-amber-500" title="counterparty ambiguous"></i> </td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.asset_finance"
+          data-product_family="asset_backed_term_lending"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">16</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:44%"></div></div>
+            <span class="mono ml-2">0.445</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-CATERPILLA-001.html">Caterpillar</a>
+            <div class="text-xs text-gray-400 mono">REL-CATERPILLA-001</div></td>
+        <td class="py-2 px-2 text-xs">asset backed term lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF32</td>
+        <td class="py-2 px-2 text-xs mono">eaf.asset_finance</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.asset_finance"
+          data-product_family="asset_backed_term_lending"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">17</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:44%"></div></div>
+            <span class="mono ml-2">0.445</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-DEERE-001.html">Deere</a>
+            <div class="text-xs text-gray-400 mono">REL-DEERE-001</div></td>
+        <td class="py-2 px-2 text-xs">asset backed term lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF32</td>
+        <td class="py-2 px-2 text-xs mono">eaf.asset_finance</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.corporate_lending"
+          data-product_family="term_lending"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">18</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:44%"></div></div>
+            <span class="mono ml-2">0.445</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-THEBOEING-001.html">The Boeing</a>
+            <div class="text-xs text-gray-400 mono">REL-THEBOEING-001</div></td>
+        <td class="py-2 px-2 text-xs">term lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF29</td>
+        <td class="py-2 px-2 text-xs mono">eaf.corporate_lending</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.corporate_lending"
+          data-product_family="term_lending"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">19</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:44%"></div></div>
+            <span class="mono ml-2">0.445</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-MICRONTECH-001.html">Micron Technology</a>
+            <div class="text-xs text-gray-400 mono">REL-MICRONTECH-001</div></td>
+        <td class="py-2 px-2 text-xs">term lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF29</td>
+        <td class="py-2 px-2 text-xs mono">eaf.corporate_lending</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.corporate_lending"
+          data-product_family="term_lending"
+          data-state="new"
+          data-horizon="near_term">
+        <td class="py-2 px-2 text-xs text-gray-400">20</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:44%"></div></div>
+            <span class="mono ml-2">0.445</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-SIEMENSAG-001.html">Siemens AG</a>
+            <div class="text-xs text-gray-400 mono">REL-SIEMENSAG-001</div></td>
+        <td class="py-2 px-2 text-xs">term lending</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">near term</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF29</td>
+        <td class="py-2 px-2 text-xs mono">eaf.corporate_lending</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-04-18</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.frameworks"
+          data-product_family="untied_facility"
+          data-state="new"
+          data-horizon="pipeline">
+        <td class="py-2 px-2 text-xs text-gray-400">21</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:38%"></div></div>
+            <span class="mono ml-2">0.385</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-DEERE-002.html">Deere</a>
+            <div class="text-xs text-gray-400 mono">REL-DEERE-002</div></td>
+        <td class="py-2 px-2 text-xs">untied facility</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">pipeline</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs mono">eaf.frameworks</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-10-20</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.frameworks"
+          data-product_family="untied_facility"
+          data-state="new"
+          data-horizon="pipeline">
+        <td class="py-2 px-2 text-xs text-gray-400">22</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:38%"></div></div>
+            <span class="mono ml-2">0.385</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-EXXONMOBIL-001.html">Exxon Mobil</a>
+            <div class="text-xs text-gray-400 mono">REL-EXXONMOBIL-001</div></td>
+        <td class="py-2 px-2 text-xs">untied facility</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">pipeline</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs mono">eaf.frameworks</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-10-20</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.frameworks"
+          data-product_family="untied_facility"
+          data-state="new"
+          data-horizon="pipeline">
+        <td class="py-2 px-2 text-xs text-gray-400">23</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:38%"></div></div>
+            <span class="mono ml-2">0.385</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-ENI-001.html">Eni</a>
+            <div class="text-xs text-gray-400 mono">REL-ENI-001</div></td>
+        <td class="py-2 px-2 text-xs">untied facility</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">pipeline</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs mono">eaf.frameworks</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-10-20</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.frameworks"
+          data-product_family="untied_facility"
+          data-state="new"
+          data-horizon="pipeline">
+        <td class="py-2 px-2 text-xs text-gray-400">24</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:38%"></div></div>
+            <span class="mono ml-2">0.385</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-FIRSTSOLAR-002.html">First Solar</a>
+            <div class="text-xs text-gray-400 mono">REL-FIRSTSOLAR-002</div></td>
+        <td class="py-2 px-2 text-xs">untied facility</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">pipeline</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs mono">eaf.frameworks</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-10-20</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.frameworks"
+          data-product_family="untied_facility"
+          data-state="new"
+          data-horizon="pipeline">
+        <td class="py-2 px-2 text-xs text-gray-400">25</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:38%"></div></div>
+            <span class="mono ml-2">0.385</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-VOLKSWAGEN-001.html">Volkswagen AG</a>
+            <div class="text-xs text-gray-400 mono">REL-VOLKSWAGEN-001</div></td>
+        <td class="py-2 px-2 text-xs">untied facility</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">pipeline</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs mono">eaf.frameworks</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-10-20</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.frameworks"
+          data-product_family="untied_facility"
+          data-state="new"
+          data-horizon="pipeline">
+        <td class="py-2 px-2 text-xs text-gray-400">26</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:38%"></div></div>
+            <span class="mono ml-2">0.385</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-REPSOL-001.html">Repsol</a>
+            <div class="text-xs text-gray-400 mono">REL-REPSOL-001</div></td>
+        <td class="py-2 px-2 text-xs">untied facility</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">pipeline</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs mono">eaf.frameworks</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-10-20</td>
+        <td class="py-2 px-2"></td>
+      </tr>
+      <tr class="lead-row border-b border-gray-100"
+          data-owner="eaf.frameworks"
+          data-product_family="untied_facility"
+          data-state="new"
+          data-horizon="pipeline">
+        <td class="py-2 px-2 text-xs text-gray-400">27</td>
+        <td class="py-2 px-2"><div class="conv-track w-16 inline-block align-middle"><div class="conv-fill" style="width:38%"></div></div>
+            <span class="mono ml-2">0.385</span></td>
+        <td class="py-2 px-2 text-sm font-medium"><a class="burgundy-text hover:underline" href="REL-VINCI-001.html">Vinci</a>
+            <div class="text-xs text-gray-400 mono">REL-VINCI-001</div></td>
+        <td class="py-2 px-2 text-xs">untied facility</td>
+        <td class="py-2 px-2 text-xs">relationship</td>
+        <td class="py-2 px-2 text-xs">pipeline</td>
+        <td class="py-2 px-2 text-xs text-right">unsized</td>
+        <td class="py-2 px-2 text-xs mono">EAF41</td>
+        <td class="py-2 px-2 text-xs mono">eaf.frameworks</td>
+        <td class="py-2 px-2 text-xs">new</td>
+        <td class="py-2 px-2 text-xs">2027-10-20</td>
+        <td class="py-2 px-2"></td>
+      </tr></tbody>
+      </table>
+    </div>
+    <div class="mt-4 text-xs text-gray-500">
+      One page per lead, never per fire. Conviction weights are declared priors, not calibrated —
+      see <span class="mono">calibrate_conviction.py</span>.
+    </div>
+  </div>
+<script>
+const KEYS = ['owner','product_family','state','horizon'];
+function applyFilters() {
+  const want = {};
+  KEYS.forEach(k => { const el = document.getElementById('f_'+k); if (el && el.value) want[k] = el.value; });
+  let shown = 0;
+  document.querySelectorAll('tr.lead-row').forEach(tr => {
+    const ok = Object.entries(want).every(([k,v]) => tr.dataset[k] === v);
+    tr.style.display = ok ? '' : 'none';
+    if (ok) shown++;
+  });
+  document.getElementById('count').textContent = shown + ' shown';
+}
+function clearFilters() {
+  KEYS.forEach(k => { const el = document.getElementById('f_'+k); if (el) el.value = ''; });
+  applyFilters();
+}
+applyFilters();
+</script>
+</body>
+</html>

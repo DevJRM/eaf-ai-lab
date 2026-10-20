@@ -1,0 +1,1013 @@
+<!doctype html><html lang=en><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<title>marketView — methodology &amp; data</title><style>
+*{box-sizing:border-box}
+body{margin:0;background:#ffffff;font:14px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
+ color:#6b7280}
+header{background:#800020;color:#fff;padding:20px 32px}
+header h1{margin:0;font-size:20px;font-weight:600}
+header a{color:#f3d7de;font-size:12.5px}
+header .m{margin-top:6px;font-size:12.5px;opacity:.86}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 30px 90px}
+h2{font-size:15.5px;color:#800020;margin:26px 0 8px}
+.lead{font-size:13px;color:#4b5563;margin:0 0 13px;max-width:88ch}
+/* Plain-card register, no coloured left-border bar: a thin neutral border,
+   burgundy reserved for the heading text only - the same restraint as the
+   house report style (bizCompass/reports). */
+.modh{display:flex;align-items:baseline;gap:9px;margin:22px 0 7px;
+ padding-bottom:5px;border-bottom:1px solid #e5e7eb;font:700 13.5px system-ui,sans-serif;
+ color:#374151}
+.modh:first-child{margin-top:2px}
+.modh .tag{color:#800020;font:700 11px ui-monospace,Menlo,monospace;letter-spacing:.3px;
+ white-space:nowrap}
+details.sec{background:#fff;border:1px solid #e5e7eb;
+ border-radius:8px;margin:0 0 9px;overflow:hidden}
+details.sec>summary{font:600 13.5px system-ui,sans-serif;color:#800020;cursor:pointer;
+ padding:12px 18px;list-style:none}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec[open]>summary{border-bottom:1px solid #f3f4f6}
+.sb{padding:4px 20px 15px}
+.sb h4{font:600 11px system-ui,sans-serif;text-transform:uppercase;letter-spacing:.5px;
+ color:#6b7280;margin:13px 0 5px}
+.sb p,.sb li{font:13px/1.62 system-ui,sans-serif;color:#6b7280;margin:0 0 8px}
+.sb ol,.sb ul{margin:0 0 8px;padding-left:20px}
+table.fields{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:12px}
+table.fields th{text-align:left;padding:5px 9px;border-bottom:1px solid #e5e7eb;
+ background:#f9fafb;font-size:11px;text-transform:uppercase;letter-spacing:.4px;
+ color:#6b7280;white-space:nowrap;font-weight:600}
+table.fields td{padding:5px 9px;border-bottom:1px solid #f3f4f6;color:#6b7280}
+table.fields td.c{text-align:center} table.fields td.n{text-align:right;
+ font-variant-numeric:tabular-nums}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:#6b7280}
+.scroll{overflow-x:auto;border:1px solid #e5e7eb;border-radius:8px}
+
+.tilerow{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 18px}
+.tile{background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;
+  padding:12px 16px;min-width:158px;flex:1 1 158px}
+.tk{font:11px system-ui,sans-serif;text-transform:uppercase;letter-spacing:.5px;
+  color:#6b7280}
+.tv{font:600 22px/1.25 system-ui,sans-serif;color:#800020;margin-top:3px;
+  font-variant-numeric:tabular-nums}
+.tn{font:11.5px/1.4 system-ui,sans-serif;color:#6b7280;margin-top:3px}
+.ti{font-size:14px;vertical-align:1px}
+</style></head><body>
+<header><h1>Methodology &amp; Data</h1>
+<a href="index.html">&larr; back to marketView</a>
+<div class="m">The statistical framework behind every view, and the evidence used in each
+borrower's report &#183; synthetic data</div></header>
+<div class="wrap">
+<div class="tilerow"><div class="tile"><div class="tk">parameter recovery</div><div class="tv">87%</div><div class="tn">90% intervals containing truth, target 85% (every miss attributed)</div></div><div class="tile"><div class="tk">walk-forward CRPS</div><div class="tv">16bp</div><div class="tn">vs 23bp for the best baseline</div></div><div class="tile"><div class="tk">M0 vs the WAL shortcut</div><div class="tv">72% lower RMSE</div><div class="tn">7.3bp vs 26.0bp, and unbiased (-0.1bp) where the shortcut is not (-10.6bp)</div></div><div class="tile"><div class="tk">decision-layer breaches</div><div class="tv">0</div><div class="tn">floor violations across 10,000 randomised posteriors</div></div></div>
+<h2>How the model works</h2>
+<p class="lead">Organised the same way the model itself is layered: curve and bond mechanics
+first, then the clearing model, then the floor, then the pricing decision, then the
+forward view. None of this is borrower-specific &mdash; it applies identically to every
+client's dossier.</p>
+<div class="modh"><span class="tag">M0</span><span>Fair value from the borrower&#x27;s own bonds</span></div><details id="m0-ref" class="sec" ><summary>Reference — the short version</summary><div class="sb">
+<p>For a given borrower, currency, average life (WAL) and amortisation profile, M0
+answers one question: <b>what does this borrower's own bond market imply for a loan of
+this exact shape?</b></p>
+<h4>Why a bond spread cannot be read directly off a curve</h4>
+<p>The standard shortcut &mdash; fit a line through an issuer's bond spreads against
+maturity and read it at the loan's average life &mdash; is wrong for a specific,
+mechanical reason. A loan with a 7-year average life that amortises typically matures
+around 13 years, not 7: its principal is repaid progressively, so its exposure to the
+borrower's credit risk is weighted differently across time than a 7-year bullet bond's
+is. Reading a spread curve at the average life treats the two as identical. They are
+not, and the gap between them grows with the steepness of the borrower's own credit
+curve.</p>
+<h4>What we do instead</h4>
+<ol>
+<li>Bootstrap the EUR and USD <b>swap curves</b> from quoted rates &mdash; the standard
+funding-cost reference, not government bonds, for reasons the Tutorial tab covers &mdash;
+so every bond and every loan is discounted consistently.</li>
+<li>Fit a <b>piecewise default-intensity (hazard) curve</b> through the borrower's whole
+bond set &mdash; not a spread curve, a survival-probability curve &mdash; under a stated
+recovery assumption (40%, the long-run senior-unsecured average).</li>
+<li><b>Reprice the loan's actual repayment schedule</b> against that hazard curve: every
+cashflow, on its own date, discounted and survival-weighted individually.</li>
+<li>Solve for the flat spread that makes the repriced loan worth par. That number is the
+loan-equivalent fair value.</li>
+</ol>
+<h4>What this is measured against</h4>
+<p>On held-out test data, this method scores <b>7.3bp RMSE</b> against the
+known truth, versus <b>26.0bp</b> for the shortcut &mdash; a 72%
+reduction. More importantly, the shortcut is <b>biased -10.6bp</b>, meaning it
+is not merely noisier, it is wrong in a consistent direction: too tight, which is the
+direction that destroys capital rather than merely losing a deal. M0 itself is unbiased
+(-0.1bp).</p>
+<h4>Currency and seniority are handled before any fitting happens</h4>
+<p>A hazard curve belongs to the <i>issuer</i>, not to one bond's currency: the same
+borrower's EUR and USD bonds imply the same default intensity, and each is stripped
+against its own currency's discount curve before the two are pooled. Subordinated or
+guaranteed paper is never used as a stand-in for senior unsecured risk &mdash; an earlier
+version of this leg allowed a parent-guaranteed bond to benchmark an unguaranteed loan,
+which understates the issuer's own standalone risk and biases the result tight; the
+admission rules are asymmetric specifically to prevent that.</p>
+<h4>Open, logged, not yet fixed: recovery is one number for two different things</h4>
+<p>The 40% recovery assumption above is used <i>both</i> to strip the
+comparable bonds <i>and</i> to reprice the loan. That mostly cancels when the two share a
+seniority regime &mdash; but our loans are typically senior secured or asset-backed while
+the comparable bonds are typically senior unsecured, and published recovery-by-seniority
+studies put secured recovery meaningfully higher. One flat number for both likely
+understates the loan's own seniority benefit. Logged as a pending fix (seniority-split
+recovery, plus a dedicated mismatch-sensitivity test) in
+<code>PRICING_BENCHMARK_ARCHITECTURE.md</code> &sect;11 &mdash; not yet built.</p></div></details><details id="m0-tut" class="sec" ><summary>Tutorial — built up from first principles</summary><div class="sb">
+<p>Building this up from first principles, in order:</p>
+<h4>1. Discounting, from scratch</h4>
+<p>A euro promised in five years is worth less than a euro today, purely from the passage
+of time &mdash; a <b>discount factor</b> DF(t) &lt; 1 converts a future cashflow into
+today's money: PV = cashflow &times; DF(t). Every valuation here is a sum of cashflows,
+each multiplied by its own discount factor.</p>
+<h4>2. The reference curve: why the swap curve, specifically</h4>
+<p>A swap exchanges a fixed rate for a floating reference rate (Euribor) over several
+years. The fixed rate that makes that exchange fair today &mdash; the <b>par swap
+rate</b> &mdash; is, maturity by maturity, the market's cleanest read of pure time value
+of money: it carries no single company's credit risk, and unlike a government bond it is
+not distorted by safe-haven demand or repo scarcity. <code>bootstrap_curve()</code> solves
+for this curve sequentially: find the shortest maturity's rate first, then the next,
+each one chosen so that maturity's swap reprices to exactly zero value today, building the
+curve maturity-by-maturity the same way a chain of dependent equations gets solved one
+link at a time.</p>
+<h4>3. Why a raw YTM, or even a raw z-spread, is not enough</h4>
+<p>A bond's yield-to-maturity bundles time value and credit risk into one number. A
+z-spread &mdash; the flat add-on to the swap curve that reprices the bond &mdash; isolates
+the credit piece, but is still contaminated by that specific bond's own coupon and
+schedule: two bonds from the same issuer, same maturity, different coupons, can show
+different z-spreads for identical credit risk. Something cleaner than either is needed.</p>
+<h4>4. Survival probability, built from a simple story</h4>
+<p>Picture a small, constant chance of default each year. Surviving five years means
+surviving year one, <i>and</i> year two, <i>and</i>&hellip; &mdash; probabilities
+multiply. Shrink the time step toward zero and that discrete story becomes a clean
+formula: S(t) = exp(&minus;&int;&lambda;), where &lambda;(t) is the <b>hazard
+rate</b> &mdash; the instantaneous chance of default at each moment &mdash; exactly the
+same limiting argument that turns compound interest into continuous compounding. This
+system fits &lambda; as piecewise-constant over three maturity buckets per issuer.</p>
+<h4>5. The full valuation equation</h4>
+<p>A risky cashflow's value is its survival-weighted, discounted payment, <i>plus</i> a
+recovery leg paid if default happens first: recovery rate &times; the balance
+<b>outstanding at that moment</b> &mdash; not the original face value. That distinction
+only matters for amortisers, where the outstanding balance has already shrunk by the time
+a default could occur, and it is exactly why an amortising loan cannot borrow a bullet
+bond's number unmodified.</p>
+<h4>6. Calibration is just least squares</h4>
+<p><code>fit_hazard()</code> searches for the one hazard triple that reprices <i>every</i>
+admitted bond from an issuer simultaneously as closely as possible &mdash; minimising
+total squared repricing error, the same basic idea as fitting a line through scattered
+points, except the relationship between &lambda; and price is non-linear, so it is solved
+numerically rather than with a closed-form formula.</p>
+<h4>7. Shrinkage: lean on peers when data is thin</h4>
+<p>A two-bond issuer cannot reliably pin down how its curve <i>slopes</i>. Its slope is
+blended toward its sector&times;rating peers' slope, weight n/(n+k) &mdash; more of the
+issuer's own curve as it has more bonds, more of the peer curve when it has few. The
+curve's <i>level</i> is left unshrunk even with one or two bonds, because the overall
+level is pinned down much faster than its shape.</p>
+<h4>8. Why the loan is repriced, not adjusted</h4>
+<p>Once calibrated, (&lambda;, the discount curve) is a general-purpose pricing formula
+that takes <i>any</i> cashflow schedule and returns its fair value &mdash; it has no
+notion of "this came from a bond." The correct gap between a bond's spread and an
+amortising loan's spread is not a constant: on a flat hazard curve it is ~0bp; on a
+realistically sloped one it is positive and grows with slope, because the loan's
+principal stays outstanding longer at the curve's riskier, far end. Worked example, same
+company, same 4-year WAL, bullet vs. an equal-principal amortiser to year 7:</p>
+<table class="fields">
+<tr><th>hazard shape</th><th>bullet</th><th>amortiser</th><th>wedge</th></tr>
+<tr><td>flat (3%/yr throughout)</td><td class="n">182.7bp</td><td class="n">182.7bp</td>
+<td class="n">~0bp</td></tr>
+<tr><td>rising (1%&rarr;5%/yr)</td><td class="n">119.4bp</td><td class="n">142.5bp</td>
+<td class="n">+23.1bp</td></tr>
+</table>
+<p>No single hard-coded markup is right across every curve shape &mdash; the only way to
+get the right number is to run the full survival-weighted sum again on the loan's own
+schedule. That re-run is what "repricing" means.</p>
+<h4>9. Recovery: why it is needed, and where it actually comes from</h4>
+<p>One observed bond price cannot separately reveal <i>how likely</i> default is and
+<i>how severe</i> it would be &mdash; spread &asymp; hazard &times; (1 &minus; recovery),
+one equation, two unknowns. Recovery has to be fixed to solve for hazard at all, and it is
+also a direct ingredient of the loan's own recovery leg. It is never observable for a
+live borrower &mdash; only published historical averages by seniority (Moody's/S&amp;P
+recovery studies) or a realised number from an actual CDS default auction, which only
+exists after a company has already defaulted.</p>
+<h4>10. Floating-rate loans: margin is not automatically a z-spread</h4>
+<p>A loan quoted at Euribor-6M + 50bp is not yet in the same units as a bond's z-spread.
+Projecting each coupon off the curve's own <i>forward</i> rate for that period (not a
+flat, repeated spot rate) and solving for the equivalent flat spread handles the
+time-value piece; a genuinely different index tenor (3M vs. 6M Euribor) is a separate,
+quoted basis on top of that. See the Code tab for exactly where this is, and is not yet,
+wired in.</p></div></details><details id="m0-code" class="sec" ><summary>In the code — files, functions, what maps to what</summary><div class="sb">
+<p>Function by function, in the order the Tutorial built them up:</p>
+<h4>The curve: <code>pb_curves.py</code></h4>
+<p><code>Curve.forward(t1, t2)</code> is the whole of Tutorial step 2's "read the market's
+own forecast" in one line: <code>log(df(t1) / df(t2)) / (t2 - t1)</code> &mdash; the
+standard identity that recovers an implied forward rate purely from two discount
+factors, no separate projection model needed. <code>bootstrap_curve()</code> builds the
+curve this feeds from: it walks the quoted maturities in order and, at each one, calls
+<code>solve_scalar</code> (Brent's method, in <code>pb_primitives.py</code>) to find the
+one zero rate that makes <i>that</i> maturity's par swap worth exactly zero today, given
+every shorter zero rate already solved. Each maturity is pinned down using only
+information already fixed by the shorter ones &mdash; nothing is fitted jointly.</p>
+<h4>The valuation equation: <code>pb_hazard.py</code></h4>
+<p><code>HazardCurve.cumulative(t)</code> is Tutorial step 4's &int;&lambda; written as
+an array operation: for each requested time it measures how much of each hazard "node
+width" has elapsed, clips that at the node's own span, and dot-products with the three
+levels &mdash; <code>survival()</code> then just takes <code>exp(-cumulative)</code>.</p>
+<p><code>risky_pv()</code> <i>is</i> Tutorial step 5's equation, with nothing abstracted
+away:</p>
+<p class="mono" style="font-size:11.5px">PV = &Sigma; DF(t) &middot; [ S(t)&middot;CF + R&middot;(S(t&minus;)&minus;S(t))&middot;Outstanding ]</p>
+<p>&mdash; <code>s_now</code>/<code>s_prev</code> are <code>S(t)</code> and
+<code>S(t&minus;)</code>; <code>default_leg</code> is the recovery term, and it
+multiplies by <code>sched.outstanding</code>, never the original face &mdash; the
+function's own docstring calls using original notional here "a common and material
+error", which is precisely why an amortiser recovers less in absolute terms than a
+bullet: by the time it could default, less of it is left to recover.
+<code>par_spread()</code> re-runs that same equation but makes the coupon
+<code>(forward_rate + s)</code> &mdash; the forward projection from Tutorial step 10,
+reused rather than re-derived &mdash; and Brent-solves for the <code>s</code> that
+prices the whole thing back to par. <b>This one function is simultaneously M0's final
+output and the mechanism behind "margin is not automatically a z-spread": the identical
+code path prices a par-floater's margin and reprices a loan's schedule.</b></p>
+<h4>Calibration: <code>fit_hazard()</code>, concretely</h4>
+<p>The residual vector handed to <code>scipy.optimize.least_squares</code> is, in order:
+one repricing error per admitted bond (<code>risky_pv(...) - observed_price</code>), then
+&mdash; only if a peer prior is supplied &mdash; a second block,
+<code>sqrt(prior_weight) * (diff(fitted_levels) - diff(prior_levels))</code>. That second
+block is Tutorial step 7 made literal: it penalises the <i>shape</i> (the first
+differences between adjacent hazard levels) departing from the peer curve's shape, and
+says nothing at all about the <i>level</i>, which is exactly the level/slope split the
+Tutorial argued for. The fit runs in log-space (<code>x0 = log(prior_levels)</code>,
+levels recovered via <code>exp(sol.x)</code>) purely so hazards can never go negative
+without needing an explicit constraint.</p>
+<p><code>shrinkage_weight(n, k=2.0)</code> returns the simple <code>n/(n+k)</code>
+fraction; <code>pb_m0_fairvalue.fair_value()</code> turns that weight on the issuer's own
+slope into the penalty weight the residual block above actually needs via
+<code>prior_weight = (1 - w_own) / w_own * len(prices)</code> &mdash; a thin-curve issuer
+with a low <code>w_own</code> gets a large penalty weight, pulling its fitted shape hard
+toward its peers'; an issuer with many bonds gets a penalty near zero and its own data
+simply wins.</p>
+<h4>Why <code>curve</code> is a list, not one shared object</h4>
+<p><code>fit_hazard()</code> accepts <code>curve</code> as either one shared
+<code>Curve</code> or a list, one per observation. That is not an API convenience; it is
+the only way to respect the Tutorial's claim that a hazard curve belongs to the
+<i>issuer</i>, never to one bond's currency. The same borrower's EUR and USD bonds are
+expected to imply the same default intensity, so each bond must be stripped against its
+<i>own</i> currency's discount curve before the resulting hazard readings are pooled into
+one fit &mdash; stripping every bond on one shared curve regardless of currency would
+quietly contaminate the hazard level with a currency-basis effect that has nothing to do
+with credit risk.</p>
+<h4>The uncertainty band: perturb and refit, not a formula</h4>
+<p><code>fair_value()</code>'s band is not a closed-form confidence interval. It takes
+the fit's own <code>rmse_price</code>, shifts every admitted bond's price by
+&plusmn; that amount, <i>reruns <code>fit_hazard()</code> from scratch</i> on the
+shifted prices, and reprices the loan again &mdash; the resulting two numbers become
+p5/p95. Uncertainty here is "how much would the answer move if the evidence were this
+much noisier," made concrete by literally redoing the fit under that noise rather than
+by deriving a variance algebraically.</p>
+<h4>Orchestration: <code>pb_m0_fairvalue.fair_value()</code> and <code>pb_m0_batch.py</code></h4>
+<p><code>_observation_price()</code> is the hard branch the Tutorial's margin-vs-z-spread
+discussion needs: FIXED bonds are priced from a quoted YTM via <code>price_from_ytm</code>;
+FLOATING bonds go through <code>z_spread_from_quoted_margin()</code> &mdash; <b>currently
+wired only here</b>, into the bond-evidence path, not yet into converting our own quoted
+loan margins before they reach <code>quotes.proposed_spread_bp</code>. <code>pb_m0_batch.py</code>
+runs the whole book in two deliberately ordered passes: pass 1 fits every client with
+&ge;3 distinct admitted maturities <i>without</i> shrinkage and medians the results by
+rating into a peer curve; pass 2 refits <i>everyone</i>, including those thick-curve
+clients, with shrinkage toward that peer curve. Doing it the other order &mdash;
+shrinking toward a prior built from already-shrunk fits &mdash; would let the prior feed
+on itself.</p>
+<h4>Open, logged, not yet fixed</h4>
+<p><code>comparability_rules.json</code>'s <code>recovery_assumption</code>
+(40%) is the one flat value passed into every <code>fit_hazard()</code> and
+every <code>risky_pv()</code>/<code>par_spread()</code> call above, for both the bonds
+and the loan; see the pending item in the Reference tab.</p>
+<p>Validated by <code>test_m0_repricing.py</code> (hazard levels within 5bp,
+loan-equivalent spread within 8bp, wedge sign and magnitude checked directly) &mdash;
+<code>results/m0_repricing.json</code>.</p></div></details><div class="modh"><span class="tag">GATE</span><span>The comparability gate</span></div><details id="gate-ref" class="sec" ><summary>Reference — the short version</summary><div class="sb">
+<p>Before any fitting happens, every candidate bond observation is tested against six
+conditions, and admitted only if it passes all of them. Exactly one rejection code is
+assigned when it fails, from a closed list:</p>
+<table class="fields">
+<tr><th>STALE</th><td>the quote is older than the staleness window</td></tr>
+<tr><th>ILLIQUID</th><td>the bid/ask is too wide, or nothing has traded recently</td></tr>
+<tr><th>OFF_TENOR</th><td>inside its final year, or the admitted set does not span the
+loan's average life without extrapolating past the curve's own support</td></tr>
+<tr><th>WRONG_SENIORITY</th><td>subordinated, secured, or carrying a guarantee that does
+not match the loan being priced</td></tr>
+<tr><th>CURRENCY_PROXY</th><td>a cross-currency substitute where the basis is too wide,
+or not observed at all</td></tr>
+<tr><th>SINGLE_SOURCE</th><td>too few admitted bonds to separate the issuer's credit level
+from one bond's own idiosyncratic pricing</td></tr>
+</table>
+<p>The gate is tuned deliberately for <b>precision over recall</b>: admitting a bad
+comparable corrupts the fair-value anchor and biases the result tight, which is the
+dangerous direction; rejecting a good one only costs an honest "insufficient evidence"
+verdict, which is recoverable. Validated against 28 hand-written cases &mdash; reasoned
+from how bond comparables are actually screened, not generated from the same model that
+is being tested &mdash; with every threshold swept to show how many bonds and clients
+would flip if it moved.</p></div></details><details id="gate-tut" class="sec" ><summary>Tutorial — built up from first principles</summary><div class="sb">
+<p>Two instruments from the <i>same issuer</i> can still be a bad comparable pair &mdash;
+comparability is about more than "same name."</p>
+<h4>What makes a bond admissible at all</h4>
+<p>Each of the six checks guards against one specific way a price can be meaningless as
+evidence for M0: too old and the market has moved past it (STALE); too thin a market and
+the quote is noise, not a price (ILLIQUID); too far from the loan's own maturity and
+using it means extrapolating the hazard curve past anything it was ever fitted to
+(OFF_TENOR); a different seniority, security or guarantee and the bond is pricing a
+different risk entirely, not this issuer's standalone credit (WRONG_SENIORITY); a
+different currency's bond standing in without a reliable cross-currency basis
+(CURRENCY_PROXY); or simply too few bonds to tell the issuer's own level apart from one
+bond's idiosyncratic pricing (SINGLE_SOURCE).</p>
+<h4>A real example of why WRONG_SENIORITY exists</h4>
+<p>Early in this leg's build, a parent-guaranteed bond was briefly admitted as a
+comparable for an unguaranteed loan. A parent guarantee makes a bond trade tighter than
+the subsidiary's own standalone risk warrants &mdash; so using it as evidence understated
+exactly the number the loan needed, and did so quietly, with no error raised anywhere.
+The admission rules were made asymmetric specifically so a guarantee can only ever be
+used where it genuinely matches, never as a stand-in.</p>
+<h4>Why precision beats recall here specifically</h4>
+<p>A bad bond wrongly <i>admitted</i> looks exactly like a normal data point once it's in
+the hazard fit &mdash; there is nothing downstream that will catch it. A good bond wrongly
+<i>rejected</i> just costs a visible, honest "insufficient evidence" verdict. One error is
+silent and corrupts the anchor; the other is loud and safe. Every threshold in this gate
+is set with that asymmetry in mind, not to maximise how many bonds get admitted.</p>
+<h4>Why OFF_TENOR is a set-level test, not a per-bond one</h4>
+<p>An earlier version rejected any bond more than a fixed distance from the loan's own
+maturity. That discarded real information at precisely the issuers with the fewest bonds
+&mdash; a 12-year bond is exactly what you want informing the far end of a curve for a
+7-year-WAL loan, even though it is not itself close to 7 years. The rule now asks whether
+the <i>admitted set as a whole</i> spans the loan's maturity, not whether each bond
+individually sits near it.</p></div></details><details id="gate-code" class="sec" ><summary>In the code — files, functions, what maps to what</summary><div class="sb">
+<p><code>gate_observation(obs, target, rules)</code> runs the six checks in exactly one
+order, and the order is part of the design, not an implementation detail:</p>
+<ol>
+<li><b>Required fields raise, they never default.</b> The first six lines fetch
+<code>seniority</code>, <code>guarantee</code>, <code>currency</code>,
+<code>maturity_date</code>, <code>obs_date</code> and raise <code>KeyError</code> if any
+is missing &mdash; on both the observation and the target. The comment is explicit about
+why: a missing <code>seniority</code> that silently defaulted to
+<code>SENIOR_UNSECURED</code> would admit subordinated paper as if it were senior
+unsecured, "the single worst failure this gate can have." A loud crash here is strictly
+safer than a quiet, wrong admission.</li>
+<li><b>STALE is checked before ILLIQUID, deliberately.</b> Liquidity is read off
+<code>bid_ask_bp</code> and <code>days_since_trade</code> &mdash; but those readings are
+themselves unreliable once a quote is old, so reporting ILLIQUID on a stale observation
+would be naming a number the gate does not trust as the reason for rejecting it.</li>
+<li><b>OFF_TENOR here is only a floor</b> &mdash; <code>resid &lt;
+min_residual_maturity_years</code> &mdash; because whether the <i>admitted set as a
+whole</i> spans the loan's WAL is a different, set-level question, answered separately
+by <code>assess_sufficiency()</code> once every bond has already been gated one at a
+time.</li>
+<li><b>Seniority and guarantee are two separate adjacency-matrix lookups</b>:
+<code>sn["admit_matrix"][target.seniority]</code> lists which observed seniorities may
+stand in for this target, and <code>guarantee_admit_matrix</code> does the same for
+guarantee status. Keeping them as two matrices (rather than one combined rule) is what
+let the earlier parent-guarantee mistake get fixed by editing one matrix cell rather than
+rewriting the branch.</li>
+<li><b>Currency proxying has its own three-step fallback</b>: a different currency is
+rejected outright unless cross-currency proxies are allowed; if allowed, a missing basis
+observation is rejected if the rules require one; if the basis exists, it is rejected only
+if it exceeds <code>max_xccy_basis_bp</code>. Three separate ways to fail, not one
+blanket check, so the rejection code's underlying reason stays specific.</li>
+</ol>
+<p><code>assess_sufficiency()</code> runs after every individual bond has already passed:
+first the plain count test (<code>n_admitted &lt; min_admitted_observations</code> &rarr;
+SINGLE_SOURCE), then the set-level span test &mdash; <code>target_wal</code> must fall
+inside <code>[min(admitted) - tolerance, max(admitted) + tolerance]</code>, replacing the
+earlier per-bond proximity rule the Tutorial described.</p>
+<p>Both functions are called from <code>pb_m0_fairvalue.fair_value()</code> in that same
+two-stage order: every observation gated individually first, sufficiency assessed on
+what survives second &mdash; the file's own docstring states this as a design rule
+("it never looks at more than one observation at a time, except for the client-level
+sufficiency test").</p>
+<p>Validated by <code>test_comparability_gate.py</code> against
+<code>data/comparability_gate_cases.json</code> (28 hand-written cases, independent of
+the synthetic DGP, including near-miss negative controls &mdash; a bond one day inside
+the staleness window and one day outside, one 0.4y and one 0.6y from a tenor-band edge),
+plus a threshold sensitivity sweep reporting how many bonds and clients would flip
+ADMIT/REJECT if each number in <code>comparability_rules.json</code> moved.</p></div></details><div class="modh"><span class="tag">M1 · M2</span><span>The clearing model</span></div><details id="m1m2-ref" class="sec" ><summary>Reference — the short version</summary><div class="sb">
+<p>M0 answers what the borrower's bonds imply. A separate, harder question is <b>where
+will a competing lender actually price this deal</b>, split into two linked pieces fitted
+together as one hierarchical Bayesian model across the whole client book: <b>M1</b>, the
+loan-bond basis (how a loan typically prices relative to the same borrower's bond-implied
+fair value), and <b>M2</b>, the structural model of where a competitor would actually
+bid.</p>
+<h4>M2: outcomes are censored, not binary</h4>
+<p>A win tells us only that the best competing offer was <i>above</i> our price; a loss on
+price tells us only that it was <i>below</i>. The actual competing number is almost never
+observed. Both are treated as interval constraints on one latent quantity &mdash; the
+"clearing spread" &mdash; rather than as a win/loss label fed to a classifier, which
+discards exactly the information that makes the number informative.</p>
+<h4>M2: losses are split by reason, and this matters more than any other single
+modelling choice</h4>
+<p>A deal lost because a competitor undercut us says something about price. A deal lost
+because the borrower issued a bond instead, restructured the deal, or stayed with an
+incumbent lender says nothing about price at all. Pooling the two flattens the estimated
+price-sensitivity in direct proportion to how many non-price losses are in the sample
+&mdash; roughly a third of all losses in this book &mdash; and every naive win-rate model
+in the market makes exactly this error.</p>
+<h4>M1 and M2 both: sparse cells borrow strength from their cohort</h4>
+<p>With roughly 20 closed deals a year across 200 clients, 30 markets, 2 currencies and 5
+tenor bands, most client-level cells hold at most one observation. Both the basis (M1) and
+the competitor level (M2) are pooled hierarchically &mdash; client, within
+sector&times;rating, within country, within region &mdash; so a thinly-covered name
+inherits its cohort's level rather than fitting noise to itself. How much of any given
+number is the client's own evidence versus its cohort's is reported, not hidden: see
+"Evidence strength" below.</p>
+<h4>M1: why the bond-implied fair value enters as an estimated quantity, not a fact</h4>
+<p>M0's output feeds M1 as a regressor, and M0 is itself an estimate with its own error.
+Treating it as exact data is a textbook statistical mistake (errors-in-variables) that
+<i>attenuates</i> the estimated loan-bond pass-through toward zero and makes every other
+coefficient near it overconfident. M1 carries M0's own reported uncertainty forward
+explicitly, which is what let the pass-through coefficient recover to 0.918 (true
+value 0.90) instead of settling, overconfidently, on 0.915.</p>
+<h4>M2: why a correction is needed at all</h4>
+<p id="biascorrection">The quote we put on the table is not independent of what we believe
+about the market &mdash; we price tighter when we sense a competitive deal. Because of
+that, the censoring threshold itself depends on the thing being estimated, which is a
+textbook source of bias (endogeneity). We confirmed its size directly: rebuilding the
+identical synthetic world with a quote that does <i>not</i> depend on our own read of the
+market cuts the resulting bias from &minus;16.5bp to &minus;6.2bp &mdash; so roughly
+two-thirds of it is this specific mechanism. The <b>16.5bp correction</b> seen
+throughout the application is added to M2's own estimate of the clearing level, not to
+any quote or any historical record, to undo that one-sided pull. The remedy that removes
+the cause rather than correcting for it &mdash; wider market-intelligence coverage, a
+valid instrument, or deliberate price variation inside committee tolerance &mdash; is a
+data-collection question for the desk, not a modelling one.</p></div></details><details id="m1m2-tut" class="sec" ><summary>Tutorial — built up from first principles</summary><div class="sb">
+<h4>Why a model beyond M0 is needed at all</h4>
+<p>The bond market and the loan market are not the same market. M1 models the <b>basis
+level</b> between them, not the level itself, because that basis is far more stable than
+either market's level alone &mdash; a 200bp market-wide move can leave the basis within a
+few bp of where it started. Modelling the stable thing is a large variance reduction, and
+it is what lets the model survive a regime shift the level-only model could not.</p>
+<h4>Partial pooling, with a plain analogy</h4>
+<p>Forecasting weather for a small town with ten years of its own records: lean heavily on
+the town's own history. For a town with one year of records: lean mostly on the region's
+climate instead, folding in the town's own single year as it accumulates more.
+Hierarchical pooling (client &larr; sector&times;rating &larr; country &larr; region
+&larr; global) does exactly this, automatically, for both M1's basis and M2's competitor
+level &mdash; the data itself determines how much weight each level earns.</p>
+<h4>Censoring, with a plain analogy</h4>
+<p>You don't know a stranger's exact height, only that they cleared a fence you can
+measure. A win says the competitor's price was above ours &mdash; taller than our fence; a
+loss on price says it was below. M2 treats every outcome as one of these one-sided bounds
+on a hidden number, <code>s_comp</code>, rather than forcing it into a win/loss label, which
+would throw away the "how much above or below" information these bounds still carry.</p>
+<h4>Competing risks, with a plain analogy</h4>
+<p>Estimating how price-sensitive customers are, but a third of the people who didn't buy
+walked away for reasons that had nothing to do with price &mdash; include them in a
+price-sensitivity estimate and the true effect of price gets diluted by noise that isn't
+about price at all. M2 excludes <code>LOST_ON_OTHER</code> from the price-response
+likelihood for exactly this reason.</p>
+<h4>Errors-in-variables, with a plain analogy</h4>
+<p>Regressing Y on a noisy measurement of X, instead of the true X, always flattens the
+fitted slope toward zero &mdash; the noise scatters the X-axis without correspondingly
+scattering Y, so the apparent relationship looks weaker than it is. M0's output is exactly
+this kind of noisy X inside M1; carrying its known uncertainty forward rather than
+treating it as exact is the standard fix.</p>
+<h4>Gibbs sampling, briefly</h4>
+<p>Rather than solve for every unknown parameter at once, a Gibbs sampler repeatedly draws
+each one from its own conditional distribution, holding the current guesses for all the
+others fixed, and cycles through all of them many times. Because the pieces here are
+conjugate (normal-on-normal, with the censored observations handled by an auxiliary
+truncated-draw step), each conditional draw is exact, not approximate &mdash; which is why
+no separate sampler (PyMC, NUTS) turned out to be necessary.</p></div></details><details id="m1m2-code" class="sec" ><summary>In the code — files, functions, what maps to what</summary><div class="sb">
+<p><b>A deliberate deviation from the original file plan:</b> <code>pb_basis_model.py</code>
+(M1) and <code>pb_price_response.py</code> (M2) were never built as separate files. They
+share one coupled hierarchy and one sampler &mdash; splitting the files would have meant
+awkwardly splitting one estimation problem &mdash; so both live together in
+<code>pb_posterior.fit()</code>, one Gibbs sweep that cycles through seven blocks every
+iteration. Each block below is one piece of Tutorial intuition made literal:</p>
+<h4>Before the sampler ever runs: <code>pb_calibrate.build_observations()</code></h4>
+<p>This is where the Tutorial's competing-risks exclusion actually happens &mdash;
+<code>LOST_ON_OTHER</code> and <code>NO_DECISION</code> rows are filtered out before they
+ever reach <code>fit()</code>, which is why the sampler itself contains no notion of
+"price-independent loss" at all; by the time it sees data, that noise is already gone.
+The function also sets each row's measurement-error scale from how the intel was sourced
+&mdash; <code>INTEL_NOISE = {"FIRM_QUOTE": 10.0, "CLIENT_REPORTED": 25.0, "HEARSAY":
+50.0}</code> &mdash; and the <code>oracle_b</code> flag switches off the
+errors-in-variables treatment entirely (feeding M0's point estimate in as if exact), kept
+only so the attenuation it causes can be measured on purpose.</p>
+<h4>Step 1 &mdash; the censored latent, with label noise layered on top</h4>
+<p><code>_rtruncnorm()</code> is the fence analogy as code: given a mean, an sd, and a
+<code>[lo, hi]</code> window, it draws from a normal truncated to that window &mdash;
+exactly a win or a loss, expressed as "somewhere above/below this line," not a point.
+Layered on top is the label-noise mixture: for every censored row the sweep computes how
+likely the recorded direction is versus its opposite (<code>z_as</code>, via the normal
+CDF), weights "as recorded" by <code>(1&minus;eps)</code> and "flipped" by
+<code>eps&middot;(1&minus;as-recorded)</code>, and actually swaps the bound direction for
+rows that draw into the flipped camp. A genuinely contradictory set of constraints
+(<code>hi_r &le; lo_r</code> later, in step 5) is treated as evidence of exactly this kind
+of mislabelling, not as an error.</p>
+<p>An absent bound is represented as <code>&plusmn;1e6</code> in the data contract &mdash;
+a finite number, deliberately, so the bounds arrays stay plain floats with no
+<code>None</code>/<code>NaN</code> handling scattered through the sweep. Every place that
+reads a bound checks it against an explicit <code>SENT = 1e5</code> threshold first
+(<code>np.abs(lo0) &lt; SENT</code>) rather than using the raw value directly, which is
+what keeps a sentinel from ever being treated as a real, very wide, constraint.</p>
+<h4>Step 1b &mdash; B as a latent, not a regressor (errors-in-variables)</h4>
+<p>This block only runs where <code>s_B</code> (M0's reported uncertainty) is present. It
+draws a latent <code>B_i</code> from its two sources of information at once &mdash; the
+observed <code>C</code> (weighted by how strongly <code>beta</code> ties them together)
+and the noisy reading <code>B_hat_i</code> (weighted by <code>1/s_B_i&sup2;</code>) &mdash;
+which is precisely Tutorial step 5's "carry the noisy X's own uncertainty forward" made
+into an extra conjugate draw rather than an approximation. <code>B_hat_c</code> is
+captured once, immediately after the design matrix's one centring step, and reused as the
+fixed reference point for every sweep from then on &mdash; the comment at that line notes
+explicitly that this value is already <code>(B &minus; mean)</code>, which is what stops
+a second, redundant centring from ever being applied to it later in the function. The draw
+is also re-anchored to <code>B_hat_c[eiv].mean()</code> every sweep: each individual
+<code>B_i</code> only has one reading from each side (one <code>C</code>, one
+<code>B_hat</code>), so it is weakly identified on its own, and re-anchoring the column's
+mean every sweep is what stops it drifting as a whole to chase the overall level instead
+of staying tied to what was actually observed.</p>
+<h4>Steps 2&ndash;3 &mdash; the pooling itself</h4>
+<p><code>_draw_normal_coeffs()</code> is one conjugate multivariate-normal draw for the
+fixed-effect coefficients (entity type, currency, fixed/floating, appetite, size, and
+&beta; &mdash; M1's pass-through). <code>_group_means()</code> plus the same conjugate
+form then draws the country and client random effects &mdash; this <i>is</i> the "lean on
+the cohort when your own history is short" mechanism: each group's posterior mean blends
+its own average residual against the global mean, weighted by how many observations that
+group actually has (<code>c_ / sigma&sup2;</code> versus <code>1/s_cty&sup2;</code>).</p>
+<p><code>u</code> and <code>v</code> are re-centred to average zero after every draw
+(<code>u -= average(u, weights=...)</code>), which is required for identifiability, not
+optional tidying: a uniform shift in the random effects can always be exactly cancelled by
+an opposite shift in the intercepts, and nothing in the likelihood prefers one split over
+the other unless something pins the random effects down independently. The centring is
+<b>observation-weighted</b>, not a plain average, specifically because group sizes here
+range from 1 to 40 &mdash; an unweighted zero-mean constraint does not make the
+<i>weighted</i> mean zero when groups this unbalanced are involved, and it is the weighted
+mean, not the plain one, that the intercepts actually need held at zero.</p>
+<h4>Step 4 &mdash; the basis random walk</h4>
+<p>Each time knot's value is drawn conditional on its immediate neighbours only (a
+first-order Gaussian Markov chain), with <code>rw_s0 = 1.2</code> pinned deliberately
+tight. The comment explains why: this walk and a market-wide "lender appetite" covariate
+both move with the calendar, so left loose, the walk quietly absorbs the covariate's own
+signal &mdash; the "two time terms fighting" risk named in the architecture doc, made
+concrete as a specific, named parameter rather than left as a general warning.</p>
+<h4>Step 5 &mdash; rho, derived from the same bounds that constrain C</h4>
+<p>This is the step that needs the intel channel, per the Reference tab's identification
+argument. Concretely: every outcome bound is first expressed as a constraint on
+<code>rho</code> itself (<code>rho &ge; bound_lo &minus; C</code>, <code>rho &lt;
+bound_hi &minus; C</code>), intersected across a client's deals, then drawn as a truncated
+normal around the pooled <code>rho_mu</code>. Deriving these bounds from exactly the same
+<code>lo0</code>/<code>hi0</code> array the censored likelihood itself uses, rather than
+re-deriving them separately from our quoted price, is what makes outright wins, price
+losses and last-look wins all handled the same way automatically: a last-look win's real
+constraint is on the <i>matched</i> price, not the original wider quote, and reading the
+bound off the same array <code>C</code> is already constrained by means there is only one
+place that number can come from, for every outcome type at once.</p>
+<h4>Steps 6&ndash;7 &mdash; variances and label noise</h4>
+<p>Every variance (<code>sigma</code>, <code>s_cty</code>, <code>s_cli</code>,
+<code>s_rw</code>) is drawn from a scaled inverse-chi-squared posterior anchored at a
+hand-set prior, never a flat prior &mdash; the comment is explicit that this is "domain
+knowledge... not a crutch," because with 86% of rows bounded on only one side, a flat
+prior on <code>sigma</code> has no fixed point: a large <code>sigma</code> produces wide
+latent draws, which produce large residuals, which keep <code>sigma</code> large. An
+earlier run with flat variance priors walked <code>sigma</code> to its clip at 60 against
+a truth of 12. The intel-selection offset (step 6b) is one more conjugate normal draw,
+directly implementing the Reference tab's correction for selectively reported deals; the
+label-noise rate <code>eps</code> (step 7) is a Beta draw counting how many censored rows
+got flipped this sweep versus how many stayed as recorded.</p>
+<p><code>rhat_ess()</code> computes split R-hat and effective sample size from the kept
+draws &mdash; the convergence check that says whether any of the above actually mixed.</p>
+<p>Validated by <code>test_parameter_recovery.py</code> (coverage-based, every miss
+individually attributed) and <code>test_endogenous_censoring.py</code> (the counterfactual
+exogenous-quote rebuild behind the 16.5bp &rarr; 6.2bp finding).</p></div></details><div class="modh"><span class="tag">M3</span><span>The profitability floor</span></div><details id="m3-ref" class="sec" ><summary>Reference — the short version</summary><div class="sb">
+<p>The minimum price reaching a 2% RoRWA hurdle, net of cost of funds, is <b>given</b> by
+the bank's existing profitability engine for every combination of borrower rating,
+sovereign rating, tenor band and currency &mdash; this leg does not model capital, RWA or
+expected loss, and treats that boundary as fixed by design. What this leg adds is a
+queryable, monotone surface over that grid (so results never run backwards as risk
+worsens) and the one property the raw matrix does not carry: its <b>drift over time</b> as
+the bank's own cost of funds moves, which is what makes the six-month quote-shelf-life
+question in the window monitor answerable at all.</p></div></details><details id="m3-tut" class="sec" ><summary>Tutorial — built up from first principles</summary><div class="sb">
+<h4>What a profitability floor means, in plain terms</h4>
+<p>Every loan ties up a slice of regulatory capital sized by its risk weight; a 2% RoRWA
+hurdle says that capital has to earn at least 2% a year. For a given risk weight and
+expected loss, there is therefore a minimum spread below which the deal cannot clear that
+bar. This leg never computes any of that machinery &mdash; capital, RWA and expected loss
+are entirely the profitability engine's job, consumed here as a finished grid.</p>
+<h4>Why monotonicity is a sanity check, not a modelling choice</h4>
+<p>If two deals are identical except one borrower is riskier, that borrower's floor can
+never be <i>lower</i>. A floor that runs backwards as risk worsens isn't a surprising
+market fact &mdash; it is a bug in the upstream grid, and this leg's job is to catch that,
+not to silently smooth over it.</p>
+<h4>Why the floor moves even when nothing about the borrower changes</h4>
+<p>The floor nets out the bank's own cost of funds, and that cost drifts with the market
+independent of the borrower's own risk. A quote that cleared the floor comfortably in
+March can breach it by October purely because funding costs moved &mdash; which is exactly
+the quantity the six-month window-monitor view needs to track.</p></div></details><details id="m3-code" class="sec" ><summary>In the code — files, functions, what maps to what</summary><div class="sb">
+<h4>Reading the engine's grid</h4>
+<p><code>FloorSurface.__init__()</code> turns the engine's columnar export (a flat list
+of cells plus a <code>_columns</code> header) into a plain dict keyed by the 4-axis tuple
+<code>(internal_rating, country_rating, tenor_bucket, currency)</code> &mdash; a one-time
+reshape so every later lookup is an O(1) dict access rather than a scan. One such table is
+kept per monthly <code>version</code>; <code>version_for(month)</code> picks the latest
+version dated on or before the month asked for, which is what makes
+<code>query()</code> a genuinely <i>point-in-time</i> lookup rather than always reading
+today's grid.</p>
+<h4><code>query()</code>: nearest rating, interpolated tenor &mdash; and in that order</h4>
+<p>Rating lookups go through <code>_nearest_rating()</code>, which snaps to the closest
+rating in the table rather than interpolating between two &mdash; the Tutorial's point
+made literal: BBB and BB are ordinal categories, and a number halfway between them does
+not describe a credit quality the engine ever actually priced. Tenor, by contrast,
+genuinely is continuous, so <code>query()</code> pulls the floor at each of the five WAL
+buckets' midpoints, <b>enforces monotonicity first</b> &mdash;
+<code>np.maximum.accumulate(vals)</code>, run <i>before</i> interpolating &mdash; and only
+then calls <code>np.interp()</code> for the requested WAL. Enforcing before interpolating,
+not after, is deliberate: an input glitch in the raw grid must not get smoothed into a
+plausible-looking but wrong interpolated value. The function also reports whether the
+requested WAL landed exactly on a grid point or had to be interpolated
+(<code>meta["interpolated"]</code>), so a memo never presents an interpolated floor as if
+it were a directly quoted one.</p>
+<h4><code>drift()</code> and <code>monotonicity_report()</code></h4>
+<p><code>drift()</code> is nothing more than two <code>query()</code> calls at different
+months, subtracted &mdash; the floor's movement for an otherwise unchanged scenario, and
+the direct input to the window monitor's shelf-life question. <code>monotonicity_report()</code>
+walks all three ordinal axes using one small helper, <code>_desc(seq)</code>, which simply
+counts how many times a sequence of floors goes <i>down</i> when the thing it's indexed
+by (rating, country rating, or tenor) is supposed to only ever make the deal riskier. Any
+non-zero count here is flagged as an upstream engine or ingest bug, never silently
+tolerated or smoothed away &mdash; the same report also counts cells where the engine's
+own stated <code>implied_rorwa</code> falls short of the 2% hurdle it was supposed to
+guarantee.</p>
+<p>No capital or RWA logic is reimplemented anywhere in this leg &mdash; every function
+above is a consumer or interpolator of the grid the profitability engine returns, never a
+re-derivation of it.</p></div></details><div class="modh"><span class="tag">M4</span><span>From a distribution to a quote</span></div><details id="m4-ref" class="sec" ><summary>Reference — the short version</summary><div class="sb">
+<p>Given the clearing-spread distribution and the floor, the decision layer solves</p>
+<p style="text-align:center;font-weight:600">maximise &nbsp; P(win at spread s) &times;
+(s &minus; floor) &times; size &times; life &nbsp;&nbsp; subject to &nbsp; s &ge; floor</p>
+<p>The floor is a <b>hard constraint</b>, never a soft penalty: it is never traded off
+against a higher win probability, by construction. The optimum is reported as a three-rung
+ladder &mdash; <b>walk-away</b> (the floor itself), <b>recommended</b> (where the product
+above peaks) and <b>stretch</b> (the widest spread still retaining a workable win
+probability) &mdash; because a negotiation needs an opening level and a floor, not only a
+single number. The <b>unwinnable-band flag</b> fires when the floor sits above the 90th
+percentile of the clearing distribution: not merely an expensive deal, one with no
+spread that is both compliant and competitive at any price.</p>
+<p>Verified against 10,000 randomised posteriors: 0 floor breaches, 0
+ladder-ordering violations, unwinnable-flag precision 100% and recall
+100%. Integrating the optimisation over the full posterior rather than a single
+point estimate changes the recommended quote by 22.0bp on average &mdash;
+material, which is why the full integration is kept rather than the cheaper plug-in
+approximation.</p></div></details><details id="m4-tut" class="sec" ><summary>Tutorial — built up from first principles</summary><div class="sb">
+<h4>Why there is a genuine peak, not a corner solution</h4>
+<p>As the quoted spread rises, the win probability falls but the profit per deal rises
+&mdash; the product of the two has a real interior maximum, not a solution that just wants
+to go as high or as low as possible. That peak is the "recommended" rung.</p>
+<h4>Hard constraint vs. soft penalty, concretely</h4>
+<p>A hard floor constraint means the search never even considers a price below it, no
+matter how attractive its expected value looks on paper. A soft penalty just subtracts a
+cost for breaching the floor &mdash; and if that cost isn't large enough, a sufficiently
+profitable non-compliant price can still slip through. This system only ever uses the
+hard form.</p>
+<h4>Why the ladder has three rungs, not one</h4>
+<p>A negotiation needs an opening ask and a floor below which there is nothing left to
+give, not a single number. Walk-away is the floor itself; stretch is the widest price that
+still keeps a workable chance of winning &mdash; the two bookends a real conversation
+actually needs.</p>
+<h4>A real bug that shows why "just round" is fragile</h4>
+<p>Rounding the walk-away rung <i>down</i> to the nearest quoting increment pushed it
+through the floor in roughly half of randomised posteriors tested. Rounding up fixed that,
+but then the search grid &mdash; which still started at the unrounded floor &mdash;
+sometimes produced a "recommended" rung below the now-higher rounded walk-away rung,
+breaking the ladder's own ordering. The fix was to start the search grid <i>at</i> the
+rounded value, not just round the final answer &mdash; a small detail that broke the
+ladder's basic ordering guarantee until it was found.</p>
+<h4>Why integrate over the whole posterior, not just its mean</h4>
+<p>Plugging in only the mean of each uncertain input and then optimising is not the same
+as optimising first and averaging second, whenever the thing being optimised is a
+non-linear function of those inputs &mdash; which an expected-value product with a hard
+floor constraint certainly is. The two approaches were tested against each other directly
+and disagree by a measurable amount, which is why the costlier full integration is kept.</p></div></details><details id="m4-code" class="sec" ><summary>In the code — files, functions, what maps to what</summary><div class="sb">
+<h4>Two small functions carry all the economics</h4>
+<p><code>economic_profit_bp()</code> is <code>(spread &minus; floor) &times; notional
+&times; WAL</code>: subtracting the floor <i>first</i>, before multiplying by size, is
+what makes a deal priced exactly at the floor worth zero by construction &mdash; the
+optimiser can never trade volume for value it does not actually have.
+<code>win_curve()</code> is a direct Monte Carlo estimate, not a formula: for each
+candidate spread on the grid it counts the <i>fraction of the posterior's own
+(clearing + rho) draws</i> that clear that spread &mdash; <code>(eff &ge; s).mean()</code>
+&mdash; so the win-probability curve is literally "how often would we have won, across
+every plausible world the posterior considers." Adding <code>rho</code> before comparing
+is what separates "the market cleared here" from "we personally win here": a client with
+a real non-price advantage can sit wide of the best competitor and still clear.</p>
+<h4><code>decide()</code>, the solve itself</h4>
+<p>Before anything else, if the config says so, the posterior's clearing draws get the
+measured <code>clearing_bias_correction_bp</code> added on &mdash; the same +16.5bp
+correction from the M1&middot;M2 card, applied here rather than at the source, so raw
+historical records are never touched. The walk-away rung is then rounded <b>up</b> to the
+quoting increment, never down &mdash; rounding toward the floor could in principle land a
+fraction of an increment inside it, and the floor is a hard constraint a desk should never
+quote through, not even by a rounding convention &mdash; and the search grid is built to
+start exactly <i>at</i> that rounded value, which is what guarantees
+<code>walk_away &le; recommended</code> by construction rather than by coincidence: both
+the rounding direction and the grid's own starting point have to agree for the ladder's
+ordering to hold.</p>
+<p>Expected value at every grid point is simply <code>win_curve &times;
+economic_profit</code>, and <code>recommended</code> is wherever that product peaks
+(<code>argmax</code>) &mdash; the genuine interior optimum the Tutorial described, found
+by direct search over the grid rather than solved analytically, because nothing about the
+shape of <code>pw &times; prof</code> guarantees a closed form. <code>stretch</code> is
+the widest grid point whose own win probability still clears
+<code>stretch_win_probability</code>, floored at <code>recommended</code> so the ladder
+can never report out of order. <code>unwinnable</code> is one comparison &mdash;
+<code>floor_bp &gt; percentile(clearing_draws, 90)</code> &mdash; and
+<code>plugin=True</code> collapses every draw to its own median <i>before</i> any of the
+above runs, which is precisely how <code>validate_decision_layer.py</code> isolates what
+integrating over the full posterior actually buys versus optimising a single point
+estimate.</p>
+<h4>Classification lives in a different function on purpose</h4>
+<p><code>pb_verdict.pricing_verdict()</code> computes INSIDE/AT/OUTSIDE_MARKET purely
+from where <code>our_spread_bp</code> sits against the clearing posterior's median,
+independent of the floor entirely; <code>recommended_action()</code> is a short,
+explicit decision tree (NO_RELIABLE_BENCHMARK &rarr; ESCALATE; unwinnable &rarr; WALK;
+too little evidence &rarr; ESCALATE; recommended below floor &rarr; WALK; win probability
+already high at the ceiling &rarr; STRETCH; otherwise QUOTE) that never touches the
+verdict variable except to read it. The two can and do disagree &mdash;
+<i>inside market but walk</i> when the floor binds regardless of how the market looks,
+<i>outside market but quote</i> when there's a documented strategic reason &mdash; and
+that disagreement is a feature the schema was built to allow, not an inconsistency to
+resolve.</p>
+<p><code>ev_per_banker_hour()</code> is still in the code, its own docstring now marked
+deprecated: it was theoretically defensible (attention is the binding constraint, so
+attention belongs in the denominator) but failed in practice because no reader could
+verify the denominator, and a ranking nobody trusts reallocates nothing. The views now
+rank on plain euro expected value and show effort separately.</p>
+<p>Validated by <code>validate_decision_layer.py</code> (10,000 randomised posteriors;
+the floor-violation and ladder-ordering counts quoted in the Reference tab).</p></div></details><div class="modh"><span class="tag">M5</span><span>The forward view and the window monitor</span></div><details id="m5-ref" class="sec" ><summary>Reference — the short version</summary><div class="sb">
+<p>A quote made today is judged by the borrower months later. Holding a price for six
+months is, in substance, <b>granting the borrower a free option on credit spreads</b>
+&mdash; export credit agencies already price exactly this through CIRR holding periods;
+commercial lenders typically do not.</p>
+<h4>What is forecast, and what deliberately is not</h4>
+<p><b>Interest rates are read from the forward curve, never forecast.</b> The forward
+curve is the market's own expectation of where rates will be, it costs nothing to use, and
+presenting a proprietary rate view on top of it would be model risk with no offsetting
+benefit.</p>
+<p>Only two things are forecast, because only two are genuinely specific to this bank
+rather than observable in the market: <b>our own cost of funds</b> (mean-reverting to its
+trailing 12-month average) and a <b>two-factor model of systemic credit conditions</b>
+fitted to the iTraxx / CDX / MOVE / VIX panel &mdash; two principal components, not three,
+because a third component on roughly five years of monthly data would fit noise rather
+than signal. Both are simulated forward hundreds of times to produce a distribution, not
+a single path.</p>
+<h4>The headline output is a probability, not a forecast</h4>
+<p>Credit spreads are close to a random walk at a six-month horizon, so a point prediction
+adds little on its own. The output that matters is <b>P(a deal exists that is both
+compliant and competitive)</b> &mdash; the clearing distribution and the floor, evaluated
+jointly, because the two move with overlapping drivers and treating them as independent
+would overstate how often a window is genuinely open.</p></div></details><details id="m5-tut" class="sec" ><summary>Tutorial — built up from first principles</summary><div class="sb">
+<h4>Why read the forward curve instead of forecasting rates</h4>
+<p>The forward curve already <i>is</i> the market's collective best guess, priced in by
+arbitrage: if enough people believed a different path was more likely, they would trade on
+that belief until the forward curve itself moved to match it. Proposing a different,
+in-house rate view on top of that is pure model risk with no edge to justify it &mdash;
+the discipline is to read the forward curve, never to second-guess it.</p>
+<h4>What a factor model is, intuitively</h4>
+<p>Dozens of credit-market series &mdash; iTraxx, CDX, sector sub-indices, sovereign CDS,
+MOVE, VIX &mdash; mostly move together on "risk-on / risk-off" days. Compressing them into
+two common drivers (two principal components) captures almost all of that shared movement
+without pretending each of thirty series needs its own independent model. A third
+component, on roughly five years of monthly data, would be fitting noise rather than a
+real, repeatable pattern &mdash; a concrete instance of the general rule that more
+parameters than the data can support make a model worse, not better.</p>
+<h4>Mean reversion and half-life, in one picture</h4>
+<p>A quantity that drifts back toward its own long-run average after a shock is
+mean-reverting; its <b>half-life</b> &mdash; the time for a shock to decay halfway back
+&mdash; is the single most intuitive number for communicating how fast that happens, far
+more so than the underlying decay-rate parameter itself.</p>
+<h4>Why simulate hundreds of paths rather than report one number</h4>
+<p>What matters for the window monitor is the <i>shape</i> of the distribution of future
+outcomes &mdash; how often the window stays open &mdash; not a single best-guess path,
+especially at a six-month horizon where spreads behave close to a random walk and a point
+forecast carries very little information on its own.</p></div></details><details id="m5-code" class="sec" ><summary>In the code — files, functions, what maps to what</summary><div class="sb">
+<h4>Finding the two factors: <code>fit_ar1_factors()</code></h4>
+<p>The function centres the whole credit-indicator panel (iTraxx, CDX, sovereign CDS,
+MOVE, VIX and the rest) and runs one SVD on it &mdash; a principal-component decomposition
+done the direct linear-algebra way, not fitted iteratively. The first <code>n_pc=2</code>
+components become the factors; each factor's own AR(1) coefficient is then estimated with
+nothing more than a lag-1 regression (<code>dot(f[:-1], f[1:]) / dot(f[:-1], f[:-1])</code>
+&mdash; literally "how much does tomorrow look like a scaled copy of today," the simplest
+possible estimator of mean-reversion speed), clipped to stay inside
+<code>(&minus;0.99, 0.99)</code> so the walk can never explode or reverse. Why exactly two:
+<code>explained</code> reports each component's share of total variance, and the code
+simply never asks for a third &mdash; the Tutorial's parsimony argument (a third component
+on ~five years of monthly data fits noise) is enforced by never fitting it, not by fitting
+it and discarding it.</p>
+<h4><code>simulate_factors()</code> and <code>forecast_cof()</code>: the same
+mean-reversion idea, run forward</h4>
+<p>Both functions share one simple recursion &mdash; <code>next = mean + phi &times;
+(current &minus; mean) + noise</code> &mdash; applied <code>horizon</code> times to
+<code>n=2000</code> independent starting copies at once, which is what turns a single
+fitted AR(1) model into an actual <i>distribution</i> of future paths rather than one
+projected line. <code>forecast_cof()</code> applies the identical recursion to the bank's
+own cost-of-funds series specifically, reverting to its own trailing 12-month average with
+an innovation size taken straight from the realised month-to-month changes.</p>
+<h4>The headline number is a comparison, not a forecast</h4>
+<p><code>window_probability()</code> is the same Monte Carlo counting trick as M4's
+<code>win_curve()</code>, reused: <code>(clearing_draws &ge; floor_draws).mean()</code>,
+counted pairwise across the <i>same</i> simulated paths rather than against each
+distribution's own marginal percentiles &mdash; which is exactly what makes it a joint,
+not independent, evaluation. <code>classify()</code> is a two-line threshold rule on how
+much that probability moves between today (<code>p0</code>) and six months out
+(<code>p6</code>); <code>NARROWING</code> specifically means a <i>currently open</i>
+window is forecast to move toward closed, which the function singles out as the
+highest-priority case because it is the one state where today's number is actively
+misleading about what to do next.</p>
+<h4><code>shelf_life_days()</code>: censoring, again, in a new place</h4>
+<p>For every simulated path it finds the first month where the clearing draw falls below
+the floor draw (<code>breach.argmax(axis=1)</code>, the index of the first <code>True</code>
+in a boolean array) and converts that to days. Paths that never breach inside the horizon
+keep the full horizon length as their "first breach" &mdash; the function's own docstring
+is explicit that this must be read as <i>right-censored</i>, not as "safe forever," which
+is the same censoring idea from the M1&middot;M2 card showing up again, this time in the
+forward simulation rather than in historical win/loss records.</p>
+<h4><code>window_scenario_range()</code>: deliberately never one number</h4>
+<p>For each path it computes <code>give = max(clearing_at_horizon &minus;
+clearing_today, 0)</code> &mdash; the spread forgone if the market widens while the quote
+sits fixed &mdash; then reports the 25th/50th/75th percentile of <code>give</code> across
+all simulated paths, never a single collapsed figure. The docstring states the reasoning
+directly: a Black-style single option value computed from a latent spread estimated off
+roughly 100 historical deals is spurious precision, and reporting one number would invite
+exactly the false confidence this whole system exists to avoid.</p></div></details><div class="modh"><span class="tag">VALIDATION</span><span>How this is validated, including what did not work</span></div><details id="validation-ref" class="sec" ><summary>Reference — the short version</summary><div class="sb">
+<p>Every figure below is measured, not asserted, and negative results are kept on the
+record rather than quietly dropped.</p>
+<h4>Parameter recovery</h4>
+<p>Against known truth on synthetic data with every adversarial feature the real world is
+expected to contain (censoring, selective reporting, mean-reverting label noise,
+correlated ratings, thin coverage): <b>87% of 90% credible intervals contain the
+true value</b>, against an 85% target that is deliberately left unmet rather than lowered
+to match. Every miss is individually attributed to a named, understood cause; the harness
+fails only on misses that are <i>not</i> attributed, and currently there are none.</p>
+<h4>Walk-forward backtest, never random cross-validation</h4>
+<p>Five time-ordered folds, each trained only on information available before the
+prediction window, deliberately crossing a simulated regime shift rather than reporting
+an average over calm conditions:</p>
+<table class="fields">
+<tr><th>estimator</th><th>CRPS (bp)</th><th>Brier</th><th>AUC</th></tr>
+<tr><td>this model</td><td>16.5</td>
+<td>0.102</td><td>0.656</td></tr>
+<tr><td>last comparable closed deal</td><td>62.0</td>
+<td>0.243</td>
+<td>0.451</td></tr>
+<tr><td>bond spread &minus; fixed basis</td><td>22.7</td>
+<td>0.164</td>
+<td>0.535</td></tr>
+<tr><td>floor + fixed margin</td><td>30.2</td>
+<td>0.179</td>
+<td>0.493</td></tr>
+</table>
+<p>CRPS is the headline score because it rewards a <i>distribution</i> being both sharp
+and right, not merely a point forecast being close. AUC is reported for every estimator
+but is never the pass criterion, and the floor-plus-margin baseline is exactly why: it
+scores an AUC of 0.493 on this run &mdash; close to chance,
+though exactly how close moves a few points run to run on a book this size, which is
+itself consistent with there being no reliable edge here to find, rather than a precise
+0.500 to defend. Distance from our own floor says little about whether a deal is
+competitive, because a wide gap to the floor usually means a high-spread name in a wide
+market, not an expensive quote. The <i>CRPS</i> ranking,
+where this baseline comes last by a wide margin, is the more trustworthy read of the
+same claim, precisely because CRPS was declared the headline score before either number
+was seen.</p>
+<h4>Calibration</h4>
+<p>Reliability is scored ahead of raw discrimination throughout: a model that ranks deals
+correctly while being systematically overconfident produces a confident, wrong quote
+ladder, and the ladder is the product. On a held-out test window, the raw predictive
+distribution's 90% interval covered 88.2% of outcomes (nominal 90%).
+Attempting to correct this with distributional recalibration &mdash; fitted on an
+adjacent time window &mdash; moved coverage to 82.7% this run. <b>The sign of
+that move is not stable, and that instability is itself the finding.</b> An earlier run
+of this same check, on a different random realisation of the identical adversarial DGP,
+measured raw coverage at 85.8% moving to 80.0% after recalibration &mdash; a materially
+<i>worse</i> fit, with opposite-skewed PIT histograms between the calibration and test
+windows. Recalibration assumes the model is wrong in the same way in both windows; a
+credit cycle does not guarantee that, and whether the assumption happens to hold varies
+run to run rather than failing consistently in one direction. A fix whose benefit depends
+on which realisation you happened to measure is not a fix to rely on. Built, tested
+twice, found unstable, and left switched off &mdash; recorded as a negative result rather
+than discarded quietly.</p>
+<h4>What is known not to work yet</h4>
+<ul>
+<li>The forward factor used for the window monitor is mean-reverting on synthetic data,
+so almost nothing registers as a window "narrowing" in testing. That is a property of the
+test data, not a validated finding about the real book, and the narrowing count should be
+read as untested until this runs on real history.</li>
+<li>A systemic market-wide driver (lender appetite) and the basis random-walk term can
+both absorb the same movement in the data; the model is constrained to prevent this but
+the constraint trades away some of the appetite effect's own signal.</li>
+<li>Label noise in committee records is under-detected at this sample size: with most
+outcomes bounding the clearing spread from one side only, a mislabelled loss reason is
+usually still consistent with the data.</li>
+<li><b>Recovery is one flat number for both the comparable bonds and the loan being
+priced</b> (M0), with no stress test yet for what happens when their seniority genuinely
+differs &mdash; our loans are typically senior secured, the comparable bonds typically
+senior unsecured. Logged as pending in <code>PRICING_BENCHMARK_ARCHITECTURE.md</code>
+&sect;11; flagged here, not fixed here.</li>
+</ul></div></details><details id="validation-tut" class="sec" ><summary>Tutorial — built up from first principles</summary><div class="sb">
+<h4>What CRPS rewards, that a plain error score does not</h4>
+<p>A score like RMSE only checks whether a point forecast was close. CRPS scores a whole
+<i>distribution</i>: it rewards being both well-centred <i>and</i> appropriately sharp,
+and penalises a forecast that is either overconfident (too narrow, wrong often) or
+needlessly vague (too wide, uninformative). The deliverable here is a band, not a point,
+so the headline score has to judge the band.</p>
+<h4>Calibration vs. discrimination</h4>
+<p>A model can rank deals perfectly &mdash; correctly sorting which ones are more
+competitive than others (good discrimination, high AUC) &mdash; while being systematically
+overconfident about the actual numbers (bad calibration). A well-calibrated 30%
+win-probability prediction wins about 30% of the time; an overconfident one does not, even
+if its <i>ranking</i> of deals was right all along. A confidently wrong quote ladder is
+dangerous in a way a merely imprecise one is not, which is why calibration is scored ahead
+of raw discrimination throughout.</p>
+<h4>Why time-ordered folds, never random ones</h4>
+<p>A random fold can let the model "see" information from after some of its training
+points in spirit, because nearby time periods share the same regime. That specifically
+leaks the credit cycle &mdash; the one thing the model most needs to be tested against,
+not allowed to memorise. A time-ordered fold only ever trains on what would genuinely have
+been known at the time, which is the only honest test of "would this have worked."</p>
+<h4>The three baselines, and why they are not a straw man</h4>
+<p>Each baseline is what a skeptical managing director would propose in the first meeting:
+just use the last comparable deal; just take the bond spread and subtract a fixed typical
+basis; just add a fixed margin to the floor. All three are genuinely plausible shortcuts,
+which is exactly why the real model has to beat them on a fair, identical, time-ordered
+test rather than being compared only against itself.</p>
+<h4>Why coverage, not point accuracy, judges parameter recovery</h4>
+<p>A weather forecaster who says "30% chance of rain" is not wrong just because it rained
+&mdash; what matters, checked over many such forecasts, is whether it actually rains about
+30% of the time when they say 30%. Parameter recovery here is judged the same way: not
+whether any single draw hit the true value exactly, but whether the stated 90% interval
+contains the truth about 90% of the time across many draws.</p></div></details><details id="validation-code" class="sec" ><summary>In the code — files, functions, what maps to what</summary><div class="sb">
+<h4><code>pb_metrics.py</code>: the scoring functions themselves</h4>
+<p><code>crps_ensemble(draws, y)</code> computes the CRPS Tutorial intuition &mdash; reward
+both centring and sharpness &mdash; from its textbook definition, <code>E|X&minus;y|
+&minus; 0.5&middot;E|X&minus;X'|</code>, but the second term is <i>not</i> computed by the
+obvious pairwise loop over all draw pairs (which would be O(n&sup2;)); it uses the
+closed-form sorted-sample identity <code>2&middot;&Sigma;(2i&minus;n&minus;1)&middot;x_i /
+n&sup2;</code> on the sorted draws, giving the exact same number in O(n). The function's
+own comment notes it collapses to mean absolute error for a point forecast &mdash; so a
+model can only win by being sharper <i>and</i> correctly centred, never by one at the
+expense of the other.</p>
+<p><code>pit_values(draws_matrix, y)</code> is the forecast's own CDF evaluated at what
+actually happened, for every deal: <code>(draws &le; outcome).mean()</code>, one number
+per deal. <code>pit_uniformity()</code> then checks whether <i>those</i> numbers,
+pooled across every deal, look uniform on [0,1] &mdash; both a chi-square test on a
+10-bin histogram and a Kolmogorov&ndash;Smirnov test against the uniform distribution.
+This is the Tutorial's calibration idea turned into a single diagnostic: a model whose
+90% intervals really do contain the truth 90% of the time produces PIT values that look
+like noise; one that is overconfident piles PIT values near 0 and 1 (outcomes keep
+landing outside a too-narrow band), and one that is underconfident piles them in the
+middle.</p>
+<h4>The test scripts: how each headline number in the Reference tab is actually produced</h4>
+<p><code>test_parameter_recovery.py</code> does not just compute one coverage percentage
+and stop &mdash; every individual parameter whose 90% interval misses the known truth is
+looked up against a hand-maintained dictionary of <i>named, understood</i> causes (thin
+country-level cells, the deliberately pinned basis random walk, and so on). The harness's
+actual pass condition is stronger than "85% coverage": it is "85% coverage, or every
+single miss below that bar is one of the misses we already understand" &mdash; which is
+why the Reference tab can say every current miss is attributed rather than merely report
+a percentage.</p>
+<p><code>validate_backtest.py</code> builds the three baselines
+(<code>pb_baselines.py</code>'s <code>B1LastComparable</code>,
+<code>B2BondMinusBasis</code>, <code>B3FloorPlusMargin</code>) behind the exact same
+<code>fit()</code> / <code>predict_draws()</code> interface the real model uses, so the
+walk-forward loop that calls one calls all four identically &mdash; no baseline gets an
+easier harness than the model it is being compared against. Each of the five folds trains
+only on deals dated before that fold's window, which is what makes the comparison honest
+about the regime shift rather than averaging over it.</p>
+<p><code>validate_calibration.py</code> is where the recalibration instability was
+actually measured: <code>pb_metrics.fit_recalibrator()</code> learns a correction on one
+time window and <code>recalibrated_coverage()</code> applies it to the next, and the
+result &mdash; which direction coverage moves &mdash; is stored fresh in
+<code>results/calibration_report.json</code> every time this is rerun. It moved the wrong
+way on one random realisation of the DGP and a small amount the right way on another;
+<code>conformal_prediction: false</code> in <code>pb_priors.json</code> reflects that the
+sign itself is not trustworthy, not a single bad run. The functions themselves were not
+deleted after the finding; only their switch was flipped, so it stays reproducible rather
+than becoming a sentence with no code behind it.</p>
+<p><code>validate_provenance.py</code> plants one deliberately mislabelled
+<code>client_safe</code> record and checks that the provenance layer actually refuses to
+let it through &mdash; a leak test that can fail is the only kind worth having; a check
+that always passes because nothing in the fixture could ever trip it would not be testing
+anything.</p></div></details>
+<h2>Data used in each borrower's report</h2>
+<p class="lead">The theory above is general; this is not. For every client currently on the
+book, here is specifically what evidence supports their number.</p>
+<p>Every figure in a client's dossier traces to one of five input tables, refreshed
+monthly: the borrower's own traded bonds (maturity, coupon, currency, seniority, guarantee,
+size, liquidity), the EUR/USD swap curves and cross-currency basis, the profitability
+engine's floor matrix, five years of pricing-committee records and deal announcements, and
+market intelligence on competitor pricing. Market intelligence and committee records never
+reach client-facing material &mdash; that separation is enforced as a data type, not a
+convention, and a planted mis-tagged record is deliberately kept in the test suite to prove
+the enforcement actually catches one.</p>
+<p>The table below is the same evidence read the dossier shows for one client, for every
+client at once: how many of their own bonds cleared the comparability gate, and therefore
+how much of their number is their own evidence versus a sector&times;rating peer's.
+<b>140 of 198</b> clients in this run had sufficient bond evidence of their own;
+the remainder resolve to an honest "insufficient evidence" verdict rather than a number
+borrowed silently from a peer.</p>
+<div class="scroll" style="max-height:480px;overflow-y:auto">
+<table class="fields" style="width:100%">
+<tr><th>client</th><th>id</th><th class="c">rating</th><th>region</th>
+<th class="n">admitted bonds</th><th>evidence basis</th><th class="n">data weight</th>
+<th>gate codes seen</th></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A. (Project Finance SPV)</td><td class="mono">SYN-CLI-0001</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Elektroenergien Sistemen Operator EAD (Project Finance SPV)</td><td class="mono">SYN-CLI-0002</td><td class="c">BB</td><td>CEE</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE, STALE</td></tr><tr><td>Industria Militar de Colombia (Indumil)</td><td class="mono">SYN-CLI-0003</td><td class="c">A</td><td>MENA</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>MVM Group Renewables</td><td class="mono">SYN-CLI-0004</td><td class="c">A</td><td>LATAM</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>CEPS a.s.</td><td class="mono">SYN-CLI-0005</td><td class="c">BBB</td><td>APAC</td><td class="n">7</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Dassault Aviation (export programme)</td><td class="mono">SYN-CLI-0006</td><td class="c">BB</td><td>WEU</td><td class="n">11</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Przedsiebiorstwo Panstwowe Porty Lotnicze</td><td class="mono">SYN-CLI-0007</td><td class="c">BBB</td><td>CEE</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Saab AB (export programme)</td><td class="mono">SYN-CLI-0008</td><td class="c">A</td><td>MENA</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Philippine Long Distance Telephone Company (PLDT)</td><td class="mono">SYN-CLI-0009</td><td class="c">BB</td><td>LATAM</td><td class="n">9</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>MAVIR Magyar Villamosenergia-ipari Atviteli Rendszeriranyito Zrt.</td><td class="mono">SYN-CLI-0010</td><td class="c">A</td><td>APAC</td><td class="n">9</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Rigas udens SIA</td><td class="mono">SYN-CLI-0011</td><td class="c">BBB</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Manila Water Company, Inc. (Project Finance SPV)</td><td class="mono">SYN-CLI-0012</td><td class="c">BBB</td><td>CEE</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0013</td><td class="c">BBB</td><td>MENA</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Dassault Aviation (export programme)</td><td class="mono">SYN-CLI-0014</td><td class="c">B</td><td>LATAM</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Red de Energia del Peru S.A. (ISA Peru)</td><td class="mono">SYN-CLI-0015</td><td class="c">BBB</td><td>APAC</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>MAVIR Magyar Villamosenergia-ipari Atviteli Rendszeriranyito Zrt. (Project Finance SPV)</td><td class="mono">SYN-CLI-0016</td><td class="c">BB</td><td>WEU</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>PT Telkom Indonesia (Persero) Tbk</td><td class="mono">SYN-CLI-0017</td><td class="c">BB</td><td>CEE</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Egyptian General Petroleum Corporation (EGPC) (Project Finance SPV)</td><td class="mono">SYN-CLI-0018</td><td class="c">CCC</td><td>MENA</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0019</td><td class="c">AA</td><td>LATAM</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Lockheed Martin Corporation (export programme)</td><td class="mono">SYN-CLI-0020</td><td class="c">AA</td><td>APAC</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>TAV Havalimanlari Holding A.S.</td><td class="mono">SYN-CLI-0021</td><td class="c">BB</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Budapest Airport Zrt.</td><td class="mono">SYN-CLI-0022</td><td class="c">BBB</td><td>CEE</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE, STALE</td></tr><tr><td>Orlen S.A. (PKN Orlen)</td><td class="mono">SYN-CLI-0023</td><td class="c">A</td><td>MENA</td><td class="n">2</td><td>insufficient evidence</td><td class="n">33%</td><td>OFF_TENOR, WRONG_SENIORITY</td></tr><tr><td>NOS, SGPS, S.A.</td><td class="mono">SYN-CLI-0024</td><td class="c">BB</td><td>LATAM</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Przedsiebiorstwo Panstwowe Porty Lotnicze (Project Finance SPV)</td><td class="mono">SYN-CLI-0025</td><td class="c">BB</td><td>APAC</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Rio Tinto plc (regional exploration)</td><td class="mono">SYN-CLI-0026</td><td class="c">AAA</td><td>WEU</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Southern Copper Corporation / Antamina</td><td class="mono">SYN-CLI-0027</td><td class="c">BB</td><td>CEE</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>MVM Group Renewables</td><td class="mono">SYN-CLI-0028</td><td class="c">B</td><td>MENA</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Servicio de Agua Potable y Alcantarillado de Lima (Sedapal) (Project Finance SPV)</td><td class="mono">SYN-CLI-0029</td><td class="c">B</td><td>LATAM</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Slovenske elektrarne, a.s. - Renewables</td><td class="mono">SYN-CLI-0030</td><td class="c">BBB</td><td>APAC</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Polenergia S.A. (Project Finance SPV)</td><td class="mono">SYN-CLI-0031</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Transelec S.A. (Project Finance SPV)</td><td class="mono">SYN-CLI-0032</td><td class="c">A</td><td>CEE</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>America Movil, S.A.B. de C.V.</td><td class="mono">SYN-CLI-0033</td><td class="c">BBB</td><td>MENA</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>MOL Hungarian Oil and Gas Plc (Project Finance SPV)</td><td class="mono">SYN-CLI-0034</td><td class="c">B</td><td>LATAM</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Emirates Telecommunications Group Company (e&amp;) (Project Finance SPV)</td><td class="mono">SYN-CLI-0035</td><td class="c">AA</td><td>APAC</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Transelectrica S.A. (Project Finance SPV)</td><td class="mono">SYN-CLI-0036</td><td class="c">BBB</td><td>WEU</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0037</td><td class="c">A</td><td>CEE</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Southern Copper Corporation / Antamina</td><td class="mono">SYN-CLI-0038</td><td class="c">BB</td><td>MENA</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Ecopetrol S.A.</td><td class="mono">SYN-CLI-0039</td><td class="c">BB</td><td>LATAM</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Budapest Airport Zrt.</td><td class="mono">SYN-CLI-0040</td><td class="c">BBB</td><td>APAC</td><td class="n">3</td><td>insufficient evidence</td><td class="n">50%</td><td>ILLIQUID, OFF_TENOR</td></tr><tr><td>Latvijas Mobilais Telefons SIA (LMT)</td><td class="mono">SYN-CLI-0041</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Viettel Group</td><td class="mono">SYN-CLI-0042</td><td class="c">B</td><td>CEE</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Przedsiebiorstwo Panstwowe Porty Lotnicze</td><td class="mono">SYN-CLI-0043</td><td class="c">BBB</td><td>MENA</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>AES Bulgaria EOOD</td><td class="mono">SYN-CLI-0044</td><td class="c">BBB</td><td>LATAM</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Denel SOC Ltd (Project Finance SPV)</td><td class="mono">SYN-CLI-0045</td><td class="c">CCC</td><td>APAC</td><td class="n">9</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>MAVIR Magyar Villamosenergia-ipari Atviteli Rendszeriranyito Zrt.</td><td class="mono">SYN-CLI-0046</td><td class="c">BB</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Empresa de Acueducto y Alcantarillado de Bogota (EAB)</td><td class="mono">SYN-CLI-0047</td><td class="c">A</td><td>CEE</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Barzan Holdings LLC</td><td class="mono">SYN-CLI-0048</td><td class="c">A</td><td>MENA</td><td class="n">12</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Polenergia S.A.</td><td class="mono">SYN-CLI-0049</td><td class="c">B</td><td>LATAM</td><td class="n">9</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Konstrukta - Defence, a.s. (Project Finance SPV)</td><td class="mono">SYN-CLI-0050</td><td class="c">B</td><td>APAC</td><td class="n">12</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Empresa Nacional de Telecomunicaciones S.A. (Entel)</td><td class="mono">SYN-CLI-0051</td><td class="c">BB</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>MOL Hungarian Oil and Gas Plc</td><td class="mono">SYN-CLI-0052</td><td class="c">BBB</td><td>CEE</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Slovenske elektrarne, a.s. - Renewables</td><td class="mono">SYN-CLI-0053</td><td class="c">A</td><td>MENA</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>San Antonio Terminal Internacional S.A.</td><td class="mono">SYN-CLI-0054</td><td class="c">BBB</td><td>LATAM</td><td class="n">11</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0055</td><td class="c">BBB</td><td>APAC</td><td class="n">9</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Litgrid AB (Project Finance SPV)</td><td class="mono">SYN-CLI-0056</td><td class="c">BBB</td><td>WEU</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Saudi Telecom Company (stc)</td><td class="mono">SYN-CLI-0057</td><td class="c">BBB</td><td>CEE</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Budapest Airport Zrt.</td><td class="mono">SYN-CLI-0058</td><td class="c">BB</td><td>MENA</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>MAVIR Magyar Villamosenergia-ipari Atviteli Rendszeriranyito Zrt. (Project Finance SPV)</td><td class="mono">SYN-CLI-0060</td><td class="c">BBB</td><td>APAC</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0061</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Vilniaus vandenys UAB (Project Finance SPV)</td><td class="mono">SYN-CLI-0062</td><td class="c">BBB</td><td>CEE</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>SINGLE_SOURCE</td></tr><tr><td>Chaiseri Metal and Rubber Co., Ltd.</td><td class="mono">SYN-CLI-0063</td><td class="c">BBB</td><td>MENA</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>MOL Hungarian Oil and Gas Plc</td><td class="mono">SYN-CLI-0064</td><td class="c">BB</td><td>LATAM</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>OMV Petrom S.A. (Project Finance SPV)</td><td class="mono">SYN-CLI-0065</td><td class="c">A</td><td>APAC</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Barzan Holdings LLC (Project Finance SPV)</td><td class="mono">SYN-CLI-0066</td><td class="c">AA</td><td>WEU</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>ILLIQUID, SINGLE_SOURCE</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0067</td><td class="c">A</td><td>CEE</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>CEPS a.s.</td><td class="mono">SYN-CLI-0068</td><td class="c">AA</td><td>MENA</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Piraeus Port Authority S.A. (COSCO)</td><td class="mono">SYN-CLI-0069</td><td class="c">BBB</td><td>LATAM</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>MOL Hungarian Oil and Gas Plc</td><td class="mono">SYN-CLI-0070</td><td class="c">BBB</td><td>APAC</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>Saab AB (export programme)</td><td class="mono">SYN-CLI-0071</td><td class="c">AA</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Letisko M.R. Stefanika - Airport Bratislava, a.s.</td><td class="mono">SYN-CLI-0072</td><td class="c">BB</td><td>CEE</td><td class="n">2</td><td>insufficient evidence</td><td class="n">33%</td><td>OFF_TENOR, STALE</td></tr><tr><td>Orlen S.A. (PKN Orlen)</td><td class="mono">SYN-CLI-0073</td><td class="c">A</td><td>MENA</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Lockheed Martin Corporation (export programme)</td><td class="mono">SYN-CLI-0074</td><td class="c">A</td><td>LATAM</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Barzan Holdings LLC</td><td class="mono">SYN-CLI-0075</td><td class="c">BBB</td><td>APAC</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>MAVIR Magyar Villamosenergia-ipari Atviteli Rendszeriranyito Zrt.</td><td class="mono">SYN-CLI-0076</td><td class="c">A</td><td>WEU</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Denel SOC Ltd</td><td class="mono">SYN-CLI-0077</td><td class="c">CCC</td><td>CEE</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Barzan Holdings LLC</td><td class="mono">SYN-CLI-0078</td><td class="c">B</td><td>MENA</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0079</td><td class="c">AA</td><td>LATAM</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Infinity Power Holding</td><td class="mono">SYN-CLI-0080</td><td class="c">B</td><td>APAC</td><td class="n">9</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>ACWA Power Company</td><td class="mono">SYN-CLI-0081</td><td class="c">AA</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>MAVIR Magyar Villamosenergia-ipari Atviteli Rendszeriranyito Zrt.</td><td class="mono">SYN-CLI-0082</td><td class="c">BB</td><td>CEE</td><td class="n">2</td><td>insufficient evidence</td><td class="n">33%</td><td>OFF_TENOR, STALE</td></tr><tr><td>Qatar Ports Management Company (Mwani Qatar)</td><td class="mono">SYN-CLI-0083</td><td class="c">AA</td><td>MENA</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>SINGLE_SOURCE, WRONG_SENIORITY</td></tr><tr><td>Ecopetrol S.A.</td><td class="mono">SYN-CLI-0084</td><td class="c">BBB</td><td>LATAM</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Orlen S.A. (PKN Orlen)</td><td class="mono">SYN-CLI-0085</td><td class="c">BBB</td><td>APAC</td><td class="n">2</td><td>insufficient evidence</td><td class="n">33%</td><td>OFF_TENOR</td></tr><tr><td>San Antonio Terminal Internacional S.A.</td><td class="mono">SYN-CLI-0086</td><td class="c">A</td><td>WEU</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Grupo Mexico, S.A.B. de C.V.</td><td class="mono">SYN-CLI-0087</td><td class="c">A</td><td>CEE</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>ILLIQUID, SINGLE_SOURCE</td></tr><tr><td>MAVIR Magyar Villamosenergia-ipari Atviteli Rendszeriranyito Zrt.</td><td class="mono">SYN-CLI-0088</td><td class="c">BB</td><td>MENA</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>AES Bulgaria EOOD (Project Finance SPV)</td><td class="mono">SYN-CLI-0089</td><td class="c">A</td><td>LATAM</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>Agence Nationale des Ports / Tanger Med Port Authority</td><td class="mono">SYN-CLI-0090</td><td class="c">B</td><td>APAC</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Orlen S.A. (PKN Orlen)</td><td class="mono">SYN-CLI-0091</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Qatar Primary Materials Company</td><td class="mono">SYN-CLI-0092</td><td class="c">A</td><td>CEE</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE, STALE</td></tr><tr><td>Boliden AB (regional exposure)</td><td class="mono">SYN-CLI-0093</td><td class="c">A</td><td>MENA</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>SINGLE_SOURCE, WRONG_SENIORITY</td></tr><tr><td>MOL Hungarian Oil and Gas Plc</td><td class="mono">SYN-CLI-0094</td><td class="c">A</td><td>LATAM</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Centamin Egypt Limited</td><td class="mono">SYN-CLI-0095</td><td class="c">BB</td><td>APAC</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Bulgargaz EAD (Project Finance SPV)</td><td class="mono">SYN-CLI-0096</td><td class="c">BBB</td><td>WEU</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Polenergia S.A.</td><td class="mono">SYN-CLI-0097</td><td class="c">BBB</td><td>CEE</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>AES Bulgaria EOOD</td><td class="mono">SYN-CLI-0098</td><td class="c">B</td><td>MENA</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>PTT Public Company Ltd</td><td class="mono">SYN-CLI-0099</td><td class="c">BBB</td><td>LATAM</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>MOL Hungarian Oil and Gas Plc (Project Finance SPV)</td><td class="mono">SYN-CLI-0100</td><td class="c">BB</td><td>APAC</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Saudi Telecom Company (stc)</td><td class="mono">SYN-CLI-0101</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Southern Copper Corporation / Antamina (Project Finance SPV)</td><td class="mono">SYN-CLI-0102</td><td class="c">A</td><td>CEE</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>SINGLE_SOURCE, STALE</td></tr><tr><td>Orlen S.A. (PKN Orlen)</td><td class="mono">SYN-CLI-0103</td><td class="c">BBB</td><td>MENA</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>Anglo American plc</td><td class="mono">SYN-CLI-0104</td><td class="c">BBB</td><td>LATAM</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>MVM Group Renewables</td><td class="mono">SYN-CLI-0106</td><td class="c">A</td><td>WEU</td><td class="n">2</td><td>insufficient evidence</td><td class="n">33%</td><td>OFF_TENOR</td></tr><tr><td>Petroleos Mexicanos (Pemex)</td><td class="mono">SYN-CLI-0107</td><td class="c">CCC</td><td>CEE</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Orlen S.A. (PKN Orlen)</td><td class="mono">SYN-CLI-0108</td><td class="c">BBB</td><td>MENA</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Polenergia S.A.</td><td class="mono">SYN-CLI-0109</td><td class="c">BBB</td><td>LATAM</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Celsia S.A.</td><td class="mono">SYN-CLI-0110</td><td class="c">BBB</td><td>APAC</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>ACWA Power Company (Project Finance SPV)</td><td class="mono">SYN-CLI-0111</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>MVM Group Renewables</td><td class="mono">SYN-CLI-0112</td><td class="c">BBB</td><td>CEE</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE, STALE</td></tr><tr><td>Konstrukta - Defence, a.s.</td><td class="mono">SYN-CLI-0113</td><td class="c">A</td><td>MENA</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Independent Power Transmission Operator S.A. (ADMIE)</td><td class="mono">SYN-CLI-0114</td><td class="c">A</td><td>LATAM</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A. (Project Finance SPV)</td><td class="mono">SYN-CLI-0115</td><td class="c">A</td><td>APAC</td><td class="n">12</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>PT Telkom Indonesia (Persero) Tbk</td><td class="mono">SYN-CLI-0116</td><td class="c">A</td><td>WEU</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Chaiseri Metal and Rubber Co., Ltd.</td><td class="mono">SYN-CLI-0117</td><td class="c">A</td><td>CEE</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>MOL Hungarian Oil and Gas Plc</td><td class="mono">SYN-CLI-0118</td><td class="c">BBB</td><td>MENA</td><td class="n">7</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Litgrid AB</td><td class="mono">SYN-CLI-0119</td><td class="c">A</td><td>LATAM</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Litgrid AB</td><td class="mono">SYN-CLI-0120</td><td class="c">A</td><td>APAC</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>Orlen S.A. (PKN Orlen)</td><td class="mono">SYN-CLI-0121</td><td class="c">BBB</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Sofia Airport EAD</td><td class="mono">SYN-CLI-0122</td><td class="c">BB</td><td>CEE</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE, STALE</td></tr><tr><td>Elbit Systems Ltd (export programme)</td><td class="mono">SYN-CLI-0123</td><td class="c">BB</td><td>MENA</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>MAVIR Magyar Villamosenergia-ipari Atviteli Rendszeriranyito Zrt. (Project Finance SPV)</td><td class="mono">SYN-CLI-0124</td><td class="c">A</td><td>LATAM</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Boliden AB (regional exposure) (Project Finance SPV)</td><td class="mono">SYN-CLI-0125</td><td class="c">A</td><td>APAC</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Companhia de Saneamento Basico do Estado de Sao Paulo (Sabesp)</td><td class="mono">SYN-CLI-0126</td><td class="c">A</td><td>WEU</td><td class="n">7</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0127</td><td class="c">A</td><td>CEE</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Rheinmetall AG (export programme)</td><td class="mono">SYN-CLI-0128</td><td class="c">A</td><td>MENA</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Centamin Egypt Limited</td><td class="mono">SYN-CLI-0129</td><td class="c">CCC</td><td>LATAM</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>MVM Group Renewables</td><td class="mono">SYN-CLI-0130</td><td class="c">BB</td><td>APAC</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Turkiye Petrolleri A.O. (TPAO) (Project Finance SPV)</td><td class="mono">SYN-CLI-0131</td><td class="c">B</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>National Power Transmission Corporation (EVNNPT) (Project Finance SPV)</td><td class="mono">SYN-CLI-0132</td><td class="c">BB</td><td>CEE</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE, STALE</td></tr><tr><td>Polenergia S.A.</td><td class="mono">SYN-CLI-0133</td><td class="c">BBB</td><td>MENA</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE, WRONG_SENIORITY</td></tr><tr><td>OCP Group S.A.</td><td class="mono">SYN-CLI-0134</td><td class="c">B</td><td>LATAM</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>SINGLE_SOURCE</td></tr><tr><td>Banpu Public Company Ltd</td><td class="mono">SYN-CLI-0135</td><td class="c">BBB</td><td>APAC</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>MVM Group Renewables</td><td class="mono">SYN-CLI-0136</td><td class="c">BB</td><td>WEU</td><td class="n">9</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Industria Militar de Colombia (Indumil)</td><td class="mono">SYN-CLI-0137</td><td class="c">BB</td><td>CEE</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>OKD, a.s.</td><td class="mono">SYN-CLI-0138</td><td class="c">B</td><td>MENA</td><td class="n">7</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Polenergia S.A.</td><td class="mono">SYN-CLI-0139</td><td class="c">B</td><td>LATAM</td><td class="n">7</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Bratislavska vodarenska spolocnost, a.s. (Project Finance SPV)</td><td class="mono">SYN-CLI-0140</td><td class="c">A</td><td>APAC</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Sociedad Portuaria Regional de Cartagena S.A. (Project Finance SPV)</td><td class="mono">SYN-CLI-0141</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>MOL Hungarian Oil and Gas Plc (Project Finance SPV)</td><td class="mono">SYN-CLI-0142</td><td class="c">BBB</td><td>CEE</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE, STALE</td></tr><tr><td>Saudi Arabian Oil Company (Saudi Aramco)</td><td class="mono">SYN-CLI-0143</td><td class="c">AA</td><td>MENA</td><td class="n">3</td><td>insufficient evidence</td><td class="n">50%</td><td>OFF_TENOR, WRONG_SENIORITY</td></tr><tr><td>Klaipedos valstybinio jurų uosto direkcija</td><td class="mono">SYN-CLI-0144</td><td class="c">A</td><td>LATAM</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0145</td><td class="c">BBB</td><td>APAC</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>SINGLE_SOURCE</td></tr><tr><td>Arab Organization for Industrialization (AOI)</td><td class="mono">SYN-CLI-0146</td><td class="c">CCC</td><td>WEU</td><td class="n">7</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Corporacion Nacional del Cobre de Chile (Codelco)</td><td class="mono">SYN-CLI-0147</td><td class="c">AA</td><td>CEE</td><td class="n">9</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>MOL Hungarian Oil and Gas Plc</td><td class="mono">SYN-CLI-0148</td><td class="c">BBB</td><td>MENA</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Hellenic Telecommunications Organization S.A. (OTE) (Project Finance SPV)</td><td class="mono">SYN-CLI-0149</td><td class="c">BBB</td><td>LATAM</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Vivacom Bulgaria EAD</td><td class="mono">SYN-CLI-0150</td><td class="c">A</td><td>APAC</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Polenergia S.A.</td><td class="mono">SYN-CLI-0151</td><td class="c">AA</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Nickel Asia Corporation</td><td class="mono">SYN-CLI-0152</td><td class="c">BBB</td><td>CEE</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>Centamin Egypt Limited</td><td class="mono">SYN-CLI-0153</td><td class="c">CCC</td><td>MENA</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>MOL Hungarian Oil and Gas Plc</td><td class="mono">SYN-CLI-0154</td><td class="c">BBB</td><td>LATAM</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>SINGLE_SOURCE</td></tr><tr><td>Latvijas Mobilais Telefons SIA (LMT)</td><td class="mono">SYN-CLI-0155</td><td class="c">B</td><td>APAC</td><td class="n">2</td><td>insufficient evidence</td><td class="n">33%</td><td>ILLIQUID, OFF_TENOR</td></tr><tr><td>Elbit Systems Ltd (export programme) (Project Finance SPV)</td><td class="mono">SYN-CLI-0156</td><td class="c">A</td><td>WEU</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Orlen S.A. (PKN Orlen)</td><td class="mono">SYN-CLI-0157</td><td class="c">A</td><td>CEE</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Aguas Andinas S.A.</td><td class="mono">SYN-CLI-0158</td><td class="c">A</td><td>MENA</td><td class="n">10</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Nareva Holding S.A.</td><td class="mono">SYN-CLI-0159</td><td class="c">BBB</td><td>LATAM</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Budapest Airport Zrt.</td><td class="mono">SYN-CLI-0160</td><td class="c">BB</td><td>APAC</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Itissalat Al-Maghrib (Maroc Telecom)</td><td class="mono">SYN-CLI-0161</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Star Energy Geothermal</td><td class="mono">SYN-CLI-0162</td><td class="c">BBB</td><td>CEE</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE, STALE</td></tr><tr><td>Polenergia S.A.</td><td class="mono">SYN-CLI-0163</td><td class="c">BBB</td><td>MENA</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>SINGLE_SOURCE, WRONG_SENIORITY</td></tr><tr><td>Comision Federal de Electricidad (CFE Transmision)</td><td class="mono">SYN-CLI-0164</td><td class="c">A</td><td>LATAM</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Zorlu Enerji Elektrik Uretim A.S.</td><td class="mono">SYN-CLI-0165</td><td class="c">B</td><td>APAC</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>Budapest Airport Zrt.</td><td class="mono">SYN-CLI-0166</td><td class="c">BB</td><td>WEU</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>Hrvatski operator prijenosnog sustava d.o.o. (Project Finance SPV)</td><td class="mono">SYN-CLI-0167</td><td class="c">A</td><td>CEE</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Petrol d.d., Ljubljana (Project Finance SPV)</td><td class="mono">SYN-CLI-0168</td><td class="c">BBB</td><td>MENA</td><td class="n">9</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0169</td><td class="c">BB</td><td>LATAM</td><td class="n">7</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Empresa Nacional de Aeronautica de Chile (ENAER) (Project Finance SPV)</td><td class="mono">SYN-CLI-0170</td><td class="c">BBB</td><td>APAC</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Miejskie Przedsiebiorstwo Wodociagow i Kanalizacji w Warszawie</td><td class="mono">SYN-CLI-0171</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>MVM Group Renewables (Project Finance SPV)</td><td class="mono">SYN-CLI-0172</td><td class="c">BBB</td><td>CEE</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Office National de l&#x27;Electricite et de l&#x27;Eau Potable (ONEE) (Project Finance SPV)</td><td class="mono">SYN-CLI-0173</td><td class="c">B</td><td>MENA</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Luka Koper, d.d. (Project Finance SPV)</td><td class="mono">SYN-CLI-0174</td><td class="c">BBB</td><td>LATAM</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>Orlen S.A. (PKN Orlen)</td><td class="mono">SYN-CLI-0175</td><td class="c">BBB</td><td>APAC</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>SINGLE_SOURCE</td></tr><tr><td>Adani Ports and Special Economic Zone Ltd</td><td class="mono">SYN-CLI-0176</td><td class="c">BBB</td><td>WEU</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Grupo Aeroportuario del Pacifico, S.A.B. de C.V. (GAP) (Project Finance SPV)</td><td class="mono">SYN-CLI-0177</td><td class="c">BB</td><td>CEE</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>MOL Hungarian Oil and Gas Plc</td><td class="mono">SYN-CLI-0178</td><td class="c">B</td><td>MENA</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>SINGLE_SOURCE</td></tr><tr><td>Saigon Newport Corporation</td><td class="mono">SYN-CLI-0179</td><td class="c">BBB</td><td>LATAM</td><td class="n">6</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Ignitis Renewables UAB</td><td class="mono">SYN-CLI-0180</td><td class="c">BBB</td><td>APAC</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>Orlen S.A. (PKN Orlen)</td><td class="mono">SYN-CLI-0181</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Empresa Nacional de Telecomunicaciones S.A. (Entel)</td><td class="mono">SYN-CLI-0182</td><td class="c">BBB</td><td>CEE</td><td class="n">3</td><td>insufficient evidence</td><td class="n">50%</td><td>OFF_TENOR, STALE</td></tr><tr><td>Egyptian Water and Wastewater Holding Company</td><td class="mono">SYN-CLI-0183</td><td class="c">B</td><td>MENA</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>MAVIR Magyar Villamosenergia-ipari Atviteli Rendszeriranyito Zrt.</td><td class="mono">SYN-CLI-0184</td><td class="c">A</td><td>LATAM</td><td class="n">9</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Freeport of Riga Authority</td><td class="mono">SYN-CLI-0185</td><td class="c">B</td><td>APAC</td><td class="n">5</td><td>own bonds</td><td class="n">83%</td><td>&mdash;</td></tr><tr><td>National Water Company (NWC) Saudi Arabia</td><td class="mono">SYN-CLI-0186</td><td class="c">A</td><td>WEU</td><td class="n">11</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0187</td><td class="c">A</td><td>CEE</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Grupo Aeroportuario del Pacifico, S.A.B. de C.V. (GAP)</td><td class="mono">SYN-CLI-0188</td><td class="c">BBB</td><td>MENA</td><td class="n">7</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Perusahaan Listrik Negara (PLN)</td><td class="mono">SYN-CLI-0189</td><td class="c">BB</td><td>LATAM</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>MAVIR Magyar Villamosenergia-ipari Atviteli Rendszeriranyito Zrt. (Project Finance SPV)</td><td class="mono">SYN-CLI-0190</td><td class="c">A</td><td>APAC</td><td class="n">11</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Ignitis Renewables UAB</td><td class="mono">SYN-CLI-0191</td><td class="c">BBB</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>Empresa Nacional de Aeronautica de Chile (ENAER)</td><td class="mono">SYN-CLI-0192</td><td class="c">BB</td><td>CEE</td><td class="n">3</td><td>own bonds</td><td class="n">50%</td><td>&mdash;</td></tr><tr><td>Polskie Sieci Elektroenergetyczne S.A.</td><td class="mono">SYN-CLI-0193</td><td class="c">BBB</td><td>MENA</td><td class="n">2</td><td>own bonds</td><td class="n">33%</td><td>&mdash;</td></tr><tr><td>Saudi Electricity Company</td><td class="mono">SYN-CLI-0194</td><td class="c">AA</td><td>LATAM</td><td class="n">1</td><td>insufficient evidence</td><td class="n">17%</td><td>ILLIQUID, SINGLE_SOURCE</td></tr><tr><td>Delhi Jal Board</td><td class="mono">SYN-CLI-0195</td><td class="c">BBB</td><td>APAC</td><td class="n">4</td><td>own bonds</td><td class="n">67%</td><td>&mdash;</td></tr><tr><td>MVM Group Renewables</td><td class="mono">SYN-CLI-0196</td><td class="c">A</td><td>WEU</td><td class="n">0</td><td>insufficient evidence</td><td class="n">0%</td><td>SINGLE_SOURCE</td></tr><tr><td>ReNew Energy Global plc</td><td class="mono">SYN-CLI-0197</td><td class="c">BBB</td><td>CEE</td><td class="n">7</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Office National de l&#x27;Electricite et de l&#x27;Eau Potable (ONEE)</td><td class="mono">SYN-CLI-0198</td><td class="c">BB</td><td>MENA</td><td class="n">11</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Przedsiebiorstwo Panstwowe Porty Lotnicze</td><td class="mono">SYN-CLI-0199</td><td class="c">BB</td><td>LATAM</td><td class="n">7</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr><tr><td>Boliden AB (regional exposure) (Project Finance SPV)</td><td class="mono">SYN-CLI-0200</td><td class="c">AA</td><td>APAC</td><td class="n">8</td><td>own bonds</td><td class="n">100%</td><td>&mdash;</td></tr></table></div>
+</div></body></html>

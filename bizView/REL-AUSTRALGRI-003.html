@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=1280, initial-scale=1.0" name="viewport"/>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+    <title>REL-AUSTRALGRI-003 Austral Grid – Lead</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+        .burgundy-bg { background-color: #800020; }
+        .burgundy-text { color: #800020; }
+        .card { background-color: white; border: 1px solid rgba(229, 231, 235, 0.5); border-radius: 0.5rem; }
+        .section-title { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #f3f4f6; }
+        .section-title i { color: #c4284a; font-size: 1.125rem; }
+        .pill { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
+        .conv-track { background-color: #f3f4f6; border-radius: 9999px; height: 8px; overflow: hidden; }
+        .conv-fill { background-color: #800020; height: 100%; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; }
+        tr.lead-row:hover { background-color: #fdf2f4; }
+
+        /* One typographic scale for every lead page, so a reader never has to re-calibrate what
+           a given font size/weight/spacing means from one section to the next - the specific
+           complaint this scale exists to fix: ad hoc text-xs/text-sm/text-base and mb-1/mb-2/
+           mb-5 mixed within a single block, with no visual logic to the mixture. */
+        .lead-eyebrow { font-size: 0.6875rem; font-weight: 600; color: #9ca3af;
+                        text-transform: uppercase; letter-spacing: 0.04em; }
+        .lead-headline { font-size: 0.9375rem; font-weight: 600; color: #1f2937; line-height: 1.5; }
+        .lead-body { font-size: 0.8125rem; color: #374151; line-height: 1.65; }
+        .lead-meta { font-size: 0.75rem; color: #6b7280; line-height: 1.6; }
+        .evidence-block { padding-bottom: 1.25rem; margin-bottom: 1.25rem;
+                          border-bottom: 1px solid #e5e7eb; }
+        .evidence-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                      gap: 1rem; }
+        .stat-item .lead-eyebrow { margin-bottom: 0.25rem; }
+        .stat-item .stat-value { font-size: 0.9375rem; font-weight: 600; color: #1f2937; }
+        .fact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+                     gap: 0.625rem 1.25rem; }
+        .fact-item .lead-eyebrow { margin-bottom: 0.125rem; }
+        .fact-item .fact-value { font-size: 0.8125rem; color: #1f2937; font-weight: 500; }
+        details.tech { margin-top: 0.75rem; }
+        details.tech > summary { font-size: 0.6875rem; color: #9ca3af; cursor: pointer;
+                                 list-style: none; }
+        details.tech > summary::-webkit-details-marker { display: none; }
+        details.tech > summary:before { content: '\25b8  '; }
+        details.tech[open] > summary:before { content: '\25be  '; }
+        details.tech > summary:hover { color: #6b7280; }
+        details.tech > .tech-body { margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+  <div class="burgundy-bg text-white px-8 py-5">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex justify-between items-start">
+        <div>
+          <div class="text-xs opacity-75 mono">
+            <a class="text-white hover:underline" href="index.html">reports</a> /
+            <a class="text-white hover:underline" href="leads.html">leads</a>
+            · REL-AUSTRALGRI-003 · 2 of 27</div>
+          <h1 class="text-2xl font-semibold mt-1"><a class="text-white hover:underline" href="Austral_Grid.html">Austral Grid</a><span class="pill bg-white bg-opacity-25 text-white ml-2">NEW</span></h1>
+          <div class="text-sm opacity-90 mt-1">
+            relationship · asset backed term lending · near term
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-xl font-semibold">unsized</div>
+          <div class="text-xs opacity-75">materiality · state: new</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="max-w-5xl mx-auto px-8 py-6">
+    
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-building"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Counterparty</h3></div>
+      <table class="w-full text-xs text-gray-700">
+        <tr><td class="py-1 text-gray-500 w-32">Group</td><td class="font-semibold">Austral Grid</td></tr>
+        <tr><td class="py-1 text-gray-500">As received</td><td>Austral Grid Holdings</td></tr>
+        <tr><td class="py-1 text-gray-500">Resolution</td><td>tier 1 · confidence 0.85</td></tr>
+        <tr><td class='py-1 text-gray-500'>Role</td><td>owner</td></tr>
+        
+      </table>
+      
+    </div>
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-lightbulb"></i>
+        <h3 class="text-sm font-semibold text-gray-800">At a glance</h3></div>
+      <div class="mb-3 pb-3 border-b border-gray-100">
+        <div class="lead-eyebrow mb-1">Suggested product</div>
+        <div class="lead-body font-medium text-gray-800">Asset-backed term lending (ship/aircraft finance), buyer&#x27;s credit where ECA-eligible, or working capital for the yard/manufacturer client</div>
+      </div>
+      <div class="lead-eyebrow mb-1">What we found</div>
+      <ul class="list-none pl-0"><li class="lead-body mb-1.5 last:mb-0">
+              <span class="font-semibold text-gray-800">EAF05</span>
+               &middot; A company&#x27;s own disclosure, its annual report capex/fleet footnote, or a company-name search of Clarksons Research&#x27;s vessel orderbook, finds a new order or an approaching delivery with no financing mentioned.
+            </li></ul>
+      <div class="lead-meta mt-2">
+            + 1 supporting signal below add further
+            context, but didn't independently open this lead.</div>
+    </div>
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-file-lines"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Evidence (1)</h3></div>
+      <div class="lead-meta mb-4 pb-3 border-b border-gray-200">
+        <span class="font-medium text-gray-600">Opportunity size:</span> <span class="text-gray-500 italic">unsized</span> — EAF05 sizes on `contract_value_eur`, which this fire does not carry (it carries [&#x27;role&#x27;])
+         <span class="text-gray-400">(event + presence — **fixed** — `contract_value_eur`/`unit_count` was extracted then never used; now a presence test (newbuilds are inherently large-ticket, the guard needed is against vague mentions))</span>
+        &nbsp;&middot;&nbsp;
+        <span class="font-medium text-gray-600">Timing:</span> near term
+      </div>
+      
+        <div class="evidence-block">
+          <div class="flex justify-between items-baseline mb-2">
+            <span class="lead-headline">
+              EAF05c
+               &middot; Fleet, vessel, or aircraft order</span>
+            <span class="pill bg-gray-100 text-gray-700">opened</span>
+          </div>
+          <div class="lead-eyebrow mb-0.5">Signal</div><div class="lead-body">A company&#x27;s own disclosure, its annual report capex/fleet footnote, or a company-name search of Clarksons Research&#x27;s vessel orderbook, finds a new order or an approaching delivery with no financing mentioned.</div>
+          <div class="lead-eyebrow mt-2 mb-0.5">Why it matters</div><div class="lead-body text-gray-600">A new order is a financing need forming, typically 18-36 months ahead of delivery; an approaching,
+confirmed delivery date with no financing mentioned is a later-stage, time-sensitive opportunity.
+Trigger (c), where subscribed to, is both earlier and more complete for vessels than waiting for
+company disclosure, since not every order is separately press-released.</div>
+          <div class="lead-meta mt-2">
+            S1/S2 (a, b); S3 (c) · company ir disclosure · fired 2026-10-20
+          </div>
+          <div class="mt-3 lead-meta italic">
+              No re-locatable source passage for this fire — label on record:
+              EAF05c (Austral Grid Holdings, as owner)</div>
+          <div class="mt-3">
+        <div class="lead-eyebrow mb-1.5">The numbers behind it</div>
+        <div class="fact-grid"><div class="fact-item">
+              <div class="lead-eyebrow">role</div>
+              <div class="fact-value">owner</div>
+            </div></div>
+      </div>
+          <div class="mt-2 lead-meta">Sizes on <span class='mono'>contract_value_eur</span> (eur, EUR)</div>
+          
+          <div class="mt-3 pt-3 border-t border-gray-100">
+            <div class="lead-eyebrow mb-1">Could lead to</div>
+            <div class="lead-body">Asset-backed term lending (ship/aircraft finance), buyer&#x27;s credit where ECA-eligible, or working capital for the yard/manufacturer client</div></div>
+        </div>
+    </div>
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-layer-group"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Supporting signals (1)</h3></div>
+      <div class="lead-meta mb-3 pb-3 border-b border-gray-200">
+        These cards also fired for this counterparty, but on their own aren't strong enough to
+        justify a lead — they add context (timing, risk, or detail) to the finding in Evidence
+        above, rather than a separate opportunity.
+      </div>
+      
+        <div class="evidence-block">
+          <div class="flex justify-between items-baseline mb-1">
+            <span class="lead-headline text-sm">EAF10
+               &middot; Credit rating / outlook change</span>
+            <span class="pill bg-gray-100 text-gray-700">qualified</span>
+          </div>
+          <div class="lead-body">A company-name search of Moody&#x27;s, S&amp;P Global Ratings, or Fitch Ratings finds a rating action or outlook change for the client.</div>
+          <div class="lead-meta mt-1">
+            S3 primary; S1/S2 alternative · rating agency feed corporate
+          </div>
+          <div class="mt-3">
+        <div class="lead-eyebrow mb-1.5">The numbers behind it</div>
+        <div class="fact-grid"><div class="fact-item">
+              <div class="lead-eyebrow">agency</div>
+              <div class="fact-value">Fitch Ratings</div>
+            </div><div class="fact-item">
+              <div class="lead-eyebrow">action type</div>
+              <div class="fact-value">outlook change</div>
+            </div></div>
+      </div>
+        </div>
+    </div>
+    <div class="mt-6 pt-2 text-xs text-gray-400 uppercase tracking-wide">Procedural</div>
+    
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-gauge-high"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Conviction — 0.705</h3></div>
+      <div class="text-xs text-gray-500 mb-3">A single sort key, nothing more — the weighted sum
+        of the four rows below. Procedural; the case for the lead is in Evidence above.</div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead class="text-gray-400 text-left">
+            <tr><th class="py-1 pr-3">Factor</th><th class="py-1 pr-3">Score</th>
+                <th class="py-1 pr-3">Weight</th><th class="py-1">What it means</th></tr>
+          </thead>
+          <tbody>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">corroboration</td>
+          <td class="py-2 pr-3 mono align-top">0.950</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.4</td>
+          <td class="py-2 text-gray-600 align-top">how independent the evidence is. Multiple cards reading the SAME document count as one piece of evidence, not several — see the document count below.
+            <div class="mt-0.5 text-gray-500">distinct_documents: 2 · distinct_source_types: 3 · distinct_cards: 2 · double_counting_avoided: 0</div></td>
+        </tr>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">materiality</td>
+          <td class="py-2 pr-3 mono align-top">0.500</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.25</td>
+          <td class="py-2 text-gray-600 align-top">how large the opportunity is in EUR, on a log scale (~0 at EUR 1m, ~1.0 at EUR 1bn). Unsized leads get a neutral 0.5, not a zero — a ratio-sized card is not a smaller opportunity, just an unmeasured one.
+            <div class="mt-0.5 text-gray-500">basis: no EUR magnitude available · reason: EAF05 sizes on `contract_value_eur`, which this fire does not carry (it carries [&#x27;role&#x27;])</div></td>
+        </tr>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">horizon</td>
+          <td class="py-2 pr-3 mono align-top">0.700</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.2</td>
+          <td class="py-2 text-gray-600 align-top">how soon the underlying event plays out: immediate (this quarter), near_term, or pipeline (a structural fact with no clock on it).
+            <div class="mt-0.5 text-gray-500">band: near_term</div></td>
+        </tr>
+        <tr class="border-b border-gray-100">
+          <td class="py-2 pr-3 font-medium text-gray-700 align-top">relationship</td>
+          <td class="py-2 pr-3 mono align-top">0.400</td>
+          <td class="py-2 pr-3 text-gray-400 align-top">× 0.15</td>
+          <td class="py-2 text-gray-600 align-top">whether any evidence came from the bank's own internal records (S4) — internal visibility is the strongest base for a conversation, and the most sensitive under §6.5's governance line.
+            <div class="mt-0.5 text-gray-500">internal_evidence: False</div></td>
+        </tr></tbody>
+        </table>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">
+        documents: <span class="mono">company_ir_disclosure, rating_agency_feed_corporate</span>
+      </div>
+      
+        <div class="mt-3 text-xs text-gray-500 italic">
+          priors set by argument, not by outcome data — see proposal §5
+        </div>
+    </div>
+    <div class="card p-4 mb-4">
+      <div class="section-title"><i class="fas fa-route"></i>
+        <h3 class="text-sm font-semibold text-gray-800">Routing &amp; lifecycle</h3></div>
+      <table class="w-full text-xs text-gray-700">
+        <tr><td class="py-1 text-gray-500 w-32">State</td><td><span class="pill bg-gray-100 text-gray-800">new</span></td></tr>
+        <tr><td class="py-1 text-gray-500">Owner</td><td><span class='mono'>eaf.asset_finance</span></td></tr>
+        <tr><td class="py-1 text-gray-500">Routed by</td><td class="text-gray-500">by_product_family: asset_backed_term_lending</td></tr>
+        <tr><td class="py-1 text-gray-500">Horizon</td><td>near term</td></tr>
+        <tr><td class="py-1 text-gray-500">First seen</td><td>2026-10-20</td></tr>
+        <tr><td class="py-1 text-gray-500">Expires</td><td>2027-04-18</td></tr>
+      </table>
+      
+      
+    </div>
+    <div class="mt-4 text-center">
+      <a class="text-xs burgundy-text hover:underline" href="leads.html">&larr; back to the queue</a>
+      &nbsp;·&nbsp;<a class="text-xs burgundy-text hover:underline" href="Austral_Grid.html">company report</a>
+    </div>
+  </div>
+</body>
+</html>

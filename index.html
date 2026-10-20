@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <title>EAF AI Lab</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #800020 0%, #4a0e12 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 1080px;
+            text-align: center;
+        }
+
+        .page h1 {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+        }
+
+        .page p.subtitle {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 15px;
+            margin: 0 0 48px 0;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+        }
+
+        @media (max-width: 860px) {
+            .cards { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+            display: block;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+        }
+
+        .card .icon {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #800020;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+        }
+
+        .card p {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0 0 24px 0;
+        }
+
+        .card .enter {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            background-color: #800020;
+            color: #ffffff;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+
+        .card:hover .enter {
+            background-color: #5a0015;
+        }
+
+        footer {
+            margin-top: 48px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <h1>EAF AI Lab</h1>
+        <p class="subtitle">Export &amp; Agency Finance &mdash; project origination, counterparty intelligence, and pricing tools</p>
+
+        <div class="cards">
+            <a class="card" href="https://devjrm.github.io/europe-plus-projects/">
+                <div class="icon">🗂️</div>
+                <h2>projectsView</h2>
+                <p>Europe+ project database &mdash; screened export &amp; agency finance opportunities.</p>
+                <span class="enter">Open &rarr;</span>
+            </a>
+
+            <a class="card" href="bizView/index.html">
+                <div class="icon">🏢</div>
+                <h2>bizView</h2>
+                <p>Counterparty intelligence &mdash; company profiles, relationships, and transaction history.</p>
+                <span class="enter">Open &rarr;</span>
+            </a>
+
+            <a class="card" href="marketsView/index.html">
+                <div class="icon">📈</div>
+                <h2>marketsView</h2>
+                <p>Statistical pricing benchmarks for export and agency finance lending.</p>
+                <span class="enter">Open &rarr;</span>
+            </a>
+        </div>
+
+        <footer>EAF AI Lab</footer>
+    </div>
+</body>
+</html>
