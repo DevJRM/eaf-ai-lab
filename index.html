@@ -42,6 +42,7 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 28px;
+            align-items: stretch;
         }
 
         @media (max-width: 860px) {
@@ -54,7 +55,9 @@
             padding: 40px 28px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             text-decoration: none;
-            display: block;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -92,48 +95,99 @@
             font-size: 14px;
             font-weight: 600;
             transition: background-color 0.2s ease;
+            margin-top: auto;
         }
 
         .card:hover .enter {
             background-color: #5a0015;
         }
 
-        footer {
-            margin-top: 48px;
-            color: rgba(255, 255, 255, 0.5);
+        .corner-date {
+            position: fixed;
+            top: 16px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.6);
             font-size: 12px;
+            font-weight: 500;
+        }
+
+        .corner-note {
+            position: fixed;
+            bottom: 16px;
+            max-width: 340px;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 11.5px;
+            line-height: 1.4;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            text-align: left;
+        }
+
+        .corner-note .note-icon { font-size: 14px; flex: none; line-height: 1.4; }
+
+        .corner-note.left { left: 20px; }
+        .corner-note.right { right: 20px; text-align: right; flex-direction: row-reverse; }
+
+        @media (max-width: 860px) {
+            .corner-date { position: static; display: block; text-align: left; margin: 0 0 20px 0; }
+            .corner-note {
+                position: static;
+                max-width: none;
+                margin: 16px auto 0;
+                justify-content: center;
+            }
+            .corner-note.right { flex-direction: row; text-align: left; }
         }
     </style>
 </head>
 <body>
+    <div class="corner-date" id="corner-date"></div>
+
     <div class="page">
         <h1>EAF AI Lab</h1>
-        <p class="subtitle">Export &amp; Agency Finance &mdash; project origination, counterparty intelligence, and pricing tools</p>
+        <p class="subtitle">Prototypes for Project Database, Borrower Intelligence and Market Benchmarking</p>
 
         <div class="cards">
             <a class="card" href="https://devjrm.github.io/europe-plus-projects/">
-                <div class="icon">🗂️</div>
+                <div class="icon">🏗️</div>
                 <h2>projectsView</h2>
-                <p>Europe+ project database &mdash; screened export &amp; agency finance opportunities.</p>
+                <p>Comprehensive media screening.</p>
                 <span class="enter">Open &rarr;</span>
             </a>
 
             <a class="card" href="bizView/index.html">
                 <div class="icon">🏢</div>
                 <h2>bizView</h2>
-                <p>Counterparty intelligence &mdash; company profiles, relationships, and transaction history.</p>
+                <p>Public and private sources client insights.</p>
                 <span class="enter">Open &rarr;</span>
             </a>
 
             <a class="card" href="marketsView/index.html">
                 <div class="icon">📈</div>
                 <h2>marketsView</h2>
-                <p>Statistical pricing benchmarks for export and agency finance lending.</p>
+                <p>Applied statistics on external benchmarks and internal datapoints.</p>
                 <span class="enter">Open &rarr;</span>
             </a>
         </div>
 
-        <footer>EAF AI Lab</footer>
+        <div class="corner-note left">
+            <span class="note-icon">⚠️</span>
+            <span>Disclaimer: only public information (projectView &amp; bizView) and synthetic data (marketsView)</span>
+        </div>
+
+        <div class="corner-note right">
+            <span class="note-icon">🚧</span>
+            <span>Applications developed as proof of concepts | work in progress</span>
+        </div>
     </div>
+
+    <script>
+        var d = new Date();
+        var dd = String(d.getDate()).padStart(2, '0');
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var yyyy = d.getFullYear();
+        document.getElementById('corner-date').textContent = dd + '/' + mm + '/' + yyyy;
+    </script>
 </body>
 </html>
