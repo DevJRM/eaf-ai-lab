@@ -336,6 +336,8 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <div><h4>WAL</h4><p>Centre of gravity of the <b>repayments</b>. Answers: on average, when is the money paid back?</p></div>
     <div><h4>Exposure centre</h4><p>Centre of gravity of the <b>balance outstanding</b>. Answers: on average, when is the money lent out? This is what the credit curve prices.</p></div>
   </div>
+
+  <h3>Splitting the exposure centre in two</h3>
   <div class="fx">
     <div class="eq">exposure centre = <span class="t c1">WAL / 2</span> + <span class="t c4">(spread of repayment dates)²</span> ÷ <span class="t c3">(2 × WAL)</span></div>
     <dl>
@@ -344,6 +346,14 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     </dl>
     <p class="muted" style="margin-bottom:0">So the wedge comes from how <em>dispersed</em> the repayments are, which WAL ignores completely. There is no single standard name for the exposure centre; "exposure-weighted average time" describes it. Its cousins are WAL (centre of repayments) and Macaulay duration (centre of discounted cash flows, the textbook seesaw picture).</p>
   </div>
+  <details>
+    <summary>Where this formula comes from, and what it proves</summary>
+    <div>
+      <p>This drops out of one of the oldest identities in statistics: for any set of weighted points, the <b>second moment</b> &mdash; the average of their squared distance from zero &mdash; equals the <b>variance</b> plus the <b>mean squared</b>. Apply that to the repayment dates, weighted by how much principal each one repays (exactly as WAL already weights them), and the exposure centre &mdash; which is half that second moment divided by WAL &mdash; falls out directly as WAL/2 plus variance &divide; (2 &times; WAL). No assumption about the shape of the repayment schedule is needed; it holds for any profile.</p>
+      <p>It checks out exactly against both shapes derived from geometry above. A bullet has a single repayment date, so its variance is zero and the formula collapses to WAL/2 &mdash; the rectangle's midpoint. A pure straight-line amortiser repays uniformly between zero and its maturity M; a uniform distribution's variance is M&sup2;/12, and feeding that in gives exactly M/3 &mdash; the triangle's centroid, and 2 &times; WAL/3 once WAL = M/2 is substituted in. The formula does not just match these two special cases, it explains why every profile in between behaves the way it does.</p>
+      <p>Because variance can never be negative, the formula also proves something stronger than either worked example alone: at a given WAL, the exposure centre can never sit earlier than WAL/2, and a bullet is the only shape that reaches that floor. Spreading repayments out over time &mdash; which is exactly what amortisation does &mdash; always adds a non-negative penalty on top. The more dispersed the schedule, the larger that penalty, and the further the exposure centre sits beyond WAL/2. That is the exact mechanism behind this loan's 8.26-year exposure centre landing well past the 6.25 years an equal-WAL bullet would show: 23 years of semi-annual repayments is a far more dispersed schedule than a single bullet date, and the formula prices that dispersion directly into extra years.</p>
+    </div>
+  </details>
 
   <h3>Why a straight curve still produces a wedge</h3>
   <p>If the cost of each year rises in a straight line, the price of any loan is simply the cost at its exposure centre. The bullet pays the cost at W/2; the amortiser pays the cost at 2W/3. On a rising line the second is higher. No curvature needed.</p>
