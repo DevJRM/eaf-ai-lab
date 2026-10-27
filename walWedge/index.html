@@ -1,0 +1,958 @@
+<!doctype html><html><head><link rel="stylesheet" href="/eaf-ai-lab/assets/auth.css"><script>try{if(sessionStorage.getItem('eaf_restricted_authenticated')==='true'){document.documentElement.classList.add('eaf-authed');}}catch(e){}</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><div id="auth-overlay"><div id="auth-modal"><h2>🔒 EAF AI Lab — Restricted</h2><p>Please enter your password</p><input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password" autofocus/><button onclick="checkPassword()">Access</button><div id="auth-error">❌ Incorrect password. Please try again.</div></div></div><script src="/eaf-ai-lab/assets/auth.js"></script>
+<title>The WAL Wedge</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a guided learning route — sticky level map on the left, a reading column with wide figure bays on the right. */
+:root{
+  --paper:#F4F6F9; --panel:#FFFFFF; --ink:#151A2D; --muted:#5A6177; --rule:#D9DDE7; --soft:#EDF0F6;
+  --accent:#2148C9; --accent-soft:#E2E9FC;
+  --gain:#0E7F56; --gain-soft:#DCF2E8; --loss:#B93B26; --loss-soft:#FAE3DD;
+  --amber:#A86A12; --amber-soft:#FBEFD9; --violet:#6A4FC2;
+  --f-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --measure:760px; --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0E1120; --panel:#161A2C; --ink:#E6E9F3; --muted:#9BA3BB; --rule:#2B3048; --soft:#1C2136;
+  --accent:#86A2FF; --accent-soft:#1F2952; --gain:#43CC92; --gain-soft:#11301F; --loss:#FF8169; --loss-soft:#3A1D17;
+  --amber:#E8B456; --amber-soft:#33270F; --violet:#B39CFF; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#0E1120; --panel:#161A2C; --ink:#E6E9F3; --muted:#9BA3BB; --rule:#2B3048; --soft:#1C2136;
+  --accent:#86A2FF; --accent-soft:#1F2952; --gain:#43CC92; --gain-soft:#11301F; --loss:#FF8169; --loss-soft:#3A1D17;
+  --amber:#E8B456; --amber-soft:#33270F; --violet:#B39CFF; color-scheme:dark }
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;padding-block:28px 80px}
+nav.route{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;font-family:var(--f-display);font-size:14px}
+nav.route .lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+nav.route ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--rule)}
+nav.route a{display:grid;grid-template-columns:28px 1fr;align-items:baseline;padding:6px 10px 6px 12px;margin-left:-2px;border-left:2px solid transparent;color:var(--muted);text-decoration:none;line-height:1.3}
+nav.route a span{font-family:var(--f-mono);font-size:11px;opacity:.8}
+nav.route a:hover,nav.route a.on{color:var(--ink);border-left-color:var(--accent)}
+nav.route a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{min-width:0}
+h1,h2,h3,h4{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(38px,6vw,64px);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(28px,3.6vw,38px);font-weight:700;letter-spacing:-.01em}
+h3{font-size:22px;font-weight:700;margin-top:34px}
+h4{font-size:16px;font-weight:700}
+p,li{max-width:var(--measure)}
+p{margin:14px 0}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--f-display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:10px}
+.lvl{padding-block:56px 8px;border-top:1px solid var(--rule)}
+.lvl:first-of-type{border-top:0}
+.lead{font-size:20px;line-height:1.5;color:var(--ink)}
+.muted{color:var(--muted)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:.92em}
+.g{color:var(--gain);font-weight:600}.l{color:var(--loss);font-weight:600}
+/* hero */
+.hero{padding-block:8px 36px}
+.hero .sub{font-size:21px;max-width:var(--measure);margin-top:18px;line-height:1.45}
+.case{margin-top:30px;max-width:var(--measure);display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.case>div{background:var(--panel);padding:16px 18px;min-width:0}
+.case .k{font-family:var(--f-display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.case .v{font-family:var(--f-mono);font-size:22px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+.case .v.big{font-size:30px}
+.case .d{font-size:14px;color:var(--muted);margin-top:4px;line-height:1.4}
+/* callouts */
+.take,.mile,.warn,.note{border-radius:var(--r);padding:16px 20px;margin:22px 0;max-width:var(--measure)}
+.take{background:var(--accent-soft)}
+.mile{background:var(--gain-soft)}
+.warn{background:var(--amber-soft)}
+.note{background:var(--soft)}
+.take>b:first-child,.mile>b:first-child,.warn>b:first-child,.note>b:first-child{display:block;font-family:var(--f-display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.take>b:first-child{color:var(--accent)}.mile>b:first-child{color:var(--gain)}.warn>b:first-child{color:var(--amber)}.note>b:first-child{color:var(--muted)}
+.take p,.mile p,.warn p,.note p{margin:6px 0}
+/* figures */
+figure{margin:26px 0;max-width:var(--measure);background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:18px 18px 14px;min-width:0}
+figure .ft{font-family:var(--f-display);font-weight:700;font-size:16px}
+figure .fs{font-size:14px;color:var(--muted);margin-top:2px}
+figcaption{font-size:14px;color:var(--muted);margin-top:10px;line-height:1.45}
+.chartbox{overflow-x:auto;margin-top:10px}
+svg.ch{width:100%;min-width:520px;height:auto;display:block;font-family:var(--f-mono)}
+svg.ch .tk{font-size:11px;fill:var(--muted)}
+svg.ch .al{font-size:11.5px;fill:var(--muted);font-family:var(--f-display)}
+svg.ch .lab{font-size:12px;font-family:var(--f-display);font-weight:700}
+svg.ch .grid{stroke:var(--rule);stroke-width:1}
+svg.ch .zero{stroke:var(--muted);stroke-width:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin-top:8px;font-family:var(--f-display)}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.legend i.dot{width:9px;height:9px;border-radius:50%}
+.legend i.blk{width:12px;height:12px;border-radius:2px}
+/* controls */
+.ctrls{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;margin-top:12px;font-family:var(--f-display);font-size:14px}
+.ctrls label{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;color:var(--muted);max-width:100%;min-width:0}
+select{max-width:100%;min-width:0}
+.ctrls output{font-family:var(--f-mono);color:var(--ink);min-width:5.5ch;font-variant-numeric:tabular-nums}
+input[type=range]{accent-color:var(--accent);width:170px}
+select,input[type=number]{font:inherit;font-family:var(--f-mono);font-size:14px;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--panel);color:var(--ink)}
+.seg{display:inline-flex;flex-wrap:wrap;max-width:100%;border:1px solid var(--rule);border-radius:18px;padding:3px;background:var(--soft)}
+.seg button{font:inherit;font-family:var(--f-display);font-size:13px;font-weight:700;border:0;background:transparent;color:var(--muted);padding:6px 14px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.readout{display:grid;max-width:var(--measure);grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.readout>div{background:var(--soft);border-radius:8px;padding:10px 12px;min-width:0}
+.readout .k{font-family:var(--f-display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.readout .v{font-family:var(--f-mono);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.readout .v.g{color:var(--gain)}.readout .v.l{color:var(--loss)}
+/* tables */
+.tbl{overflow-x:auto;margin:18px 0;max-width:var(--measure)}
+table{border-collapse:collapse;font-size:15px;min-width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{white-space:normal;font-family:var(--f-display);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;vertical-align:bottom}
+td:first-child,th:first-child{text-align:left}
+td.mono,.tbl td{font-family:var(--f-mono);font-size:14px}
+td.txt{font-family:var(--f-body);font-size:15px;white-space:normal;text-align:left;min-width:220px}
+tr.tot td{font-weight:700;border-top:2px solid var(--ink)}
+tr.hl td{background:var(--accent-soft)}
+/* formulas */
+.fx{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:18px 20px;margin:20px 0;overflow-x:auto;max-width:var(--measure)}
+.fx .eq{font-family:var(--f-mono);font-size:17px;line-height:2.1;white-space:nowrap}
+.fx .eq .t{padding:2px 5px;border-radius:5px;border-bottom:3px solid}
+.t.c1{background:var(--accent-soft);border-color:var(--accent)}
+.t.c2{background:var(--gain-soft);border-color:var(--gain)}
+.t.c3{background:var(--amber-soft);border-color:var(--amber)}
+.t.c4{background:var(--loss-soft);border-color:var(--loss)}
+.fx dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:12px 0 0;font-size:15px}
+.fx dt{font-family:var(--f-mono);font-size:13px;white-space:nowrap}
+.fx dt .t{padding:1px 6px;border-radius:4px;border-bottom:3px solid}
+.fx dd{margin:0;color:var(--muted)}
+/* pipeline */
+.pipe{display:grid;max-width:var(--measure);grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;margin:22px 0;counter-reset:st}
+.pipe>div{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:14px 14px 12px;position:relative;counter-increment:st;min-width:0}
+.pipe>div::before{content:counter(st);font-family:var(--f-mono);font-size:12px;color:var(--accent);font-weight:600;display:block;margin-bottom:4px}
+.pipe h4{font-size:15px}
+.pipe p{font-size:14px;color:var(--muted);margin:6px 0 0;line-height:1.4}
+.pipe .ws{font-family:var(--f-mono);font-size:11px;color:var(--accent);margin-top:8px;display:block}
+/* two-col compare */
+.duo{display:grid;max-width:var(--measure);grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:20px 0}
+.duo>div{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:16px 18px;min-width:0}
+.duo h4{margin-bottom:6px}
+.duo p{font-size:15.5px}
+/* details */
+details{border-top:1px solid var(--rule);padding:12px 0;max-width:var(--measure)}
+details:last-of-type{border-bottom:1px solid var(--rule)}
+summary{cursor:pointer;font-family:var(--f-display);font-weight:700;font-size:17px;list-style:none;display:grid;grid-template-columns:1fr auto;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--f-mono);color:var(--accent);font-size:20px;line-height:1}
+details[open] summary::after{content:"−"}
+details>div{padding-top:6px}
+.quiz details summary{font-size:16px}
+.chip{display:inline-block;font-family:var(--f-display);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--muted);vertical-align:middle}
+.chip.g{background:var(--gain-soft);color:var(--gain)}.chip.l{background:var(--loss-soft);color:var(--loss)}.chip.a{background:var(--amber-soft);color:var(--amber)}
+kbd,code{font-family:var(--f-mono);font-size:.88em;background:var(--soft);padding:1px 5px;border-radius:4px}
+.wbref{font-family:var(--f-mono);font-size:12px;color:var(--muted);background:var(--soft);padding:1px 6px;border-radius:4px;white-space:nowrap}
+footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid var(--rule);padding-top:20px}
+@media (max-width:920px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:0;padding-top:0}
+  nav.route{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--rule)}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+  nav.route .lbl{display:none}
+  nav.route ol{flex-direction:row;overflow-x:auto;border-left:0;gap:4px;scrollbar-width:none}
+  nav.route a{grid-template-columns:auto auto;gap:6px;border-left:0;border-bottom:2px solid transparent;margin:0;white-space:nowrap;padding:6px 8px}
+  nav.route a.on{border-bottom-color:var(--accent)}
+  body{font-size:16.5px}
+  .hero{padding-top:24px}
+}
+</style>
+
+<div id="wal-download-bar" style="position:sticky;top:0;z-index:50;background:#800020;text-align:center;padding:12px 16px;font-family:'Bricolage Grotesque','Avenir Next','Segoe UI',system-ui,sans-serif;">
+  <a href="WAL_Wedge_Loan_vs_Bond_Calculator.xlsx" download style="display:inline-block;color:#fff;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;">⬇ Download calculator</a>
+</div>
+<div class="wrap">
+<nav class="route" aria-label="Learning route">
+  <div class="lbl">Learning route</div>
+  <ol>
+    <li><a href="#start"><span>00</span>The answer first</a></li>
+    <li><a href="#question"><span>01</span>The question</a></li>
+    <li><a href="#case"><span>02</span>Our case</a></li>
+    <li><a href="#spot"><span>03</span>Idea 1 · averages</a></li>
+    <li><a href="#timing"><span>04</span>Idea 2 · timing</a></li>
+    <li><a href="#recovery"><span>05</span>Idea 3 · recovery</a></li>
+    <li><a href="#lambda"><span>06</span>Default intensity λ</a></li>
+    <li><a href="#price"><span>07</span>Pricing the loan</a></li>
+    <li><a href="#results"><span>08</span>Results</a></li>
+    <li><a href="#lab"><span>09</span>The lab</a></li>
+    <li><a href="#math"><span>10</span>The full maths</a></li>
+    <li><a href="#faq"><span>11</span>Questions</a></li>
+    <li><a href="#limits"><span>12</span>Assumptions</a></li>
+  </ol>
+</nav>
+
+<main>
+<!-- ================================================================ 00 -->
+<section id="start" class="hero">
+  <div class="eyebrow">Loan pricing · internal explainer</div>
+  <h1>The WAL Wedge</h1>
+  <p class="sub">Pricing an amortising loan by reading the borrower's bond curve at the loan's weighted average life (WAL) looks neutral. It is not. On a rising credit curve it hands the borrower a discount. This page shows why, and measures it exactly for one real-sized case.</p>
+
+  <div class="case" role="group" aria-label="Case and headline results">
+    <div><div class="k">The case</div><div class="v">EUR 5bn</div><div class="d">1y linear drawdown + 23y linear repayment, semi-annual. Final maturity 24y.</div></div>
+    <div><div class="k">Loan WAL</div><div class="v">12.50 y</div><div class="d">So the shortcut prices it like a 12.5-year bond.</div></div>
+    <div><div class="k">Floating loan vs Z-spread curve</div><div class="v big g">+8.82 bp</div><div class="d">per year saved by the borrower. Worth <b>€39.7m</b> today (€55.1m nominal over the life).</div></div>
+    <div><div class="k">Fixed loan vs YTM curve</div><div class="v big g">+8.02 bp</div><div class="d">per year saved. Worth <b>€35.8m</b> today (€50.1m nominal).</div></div>
+  </div>
+
+  <div class="note"><b>How to use this page</b>
+    <p>It is built as a route. Sections 01–05 need no maths: they give the three ideas behind the result. Sections 06–08 show exactly how the workbook turns those ideas into numbers, with this case's figures at every step. Section 09 is a lab where you can change the loan and the curve and watch the answer move. Section 10 is the full formula set for specialists. Section 11 answers the questions people usually ask.</p>
+    <p>All numbers are produced by the same engine as the Excel workbook, with these inputs: EUR, swap curve vs 6M EURIBOR, 6M EURIBOR fixing 3.0190%, recovery 40%, loan margin exactly at the curve (X = 0). The page and the workbook agree to the cent.</p>
+  </div>
+</section>
+
+<!-- ================================================================ 01 -->
+<section id="question" class="lvl">
+  <div class="eyebrow">01 · The question in plain words</div>
+  <h2>Two ways to borrow EUR 5bn, one pricing habit</h2>
+  <p>A borrower can raise EUR 5bn by issuing bonds or by taking an amortising loan. Lenders usually price the loan off the borrower's own bond curve, because that curve is the market's live view of the borrower's credit. The question is <em>which point</em> on that curve to use.</p>
+  <p>A bond repays everything at maturity. Our loan repays a little every six months for 23 years, so a lot of the money comes back early. The usual habit is to summarise the loan by its <b>weighted average life (WAL)</b>, here 12.5 years, and read the bond curve at 12.5 years. We call this <b>the shortcut</b>.</p>
+  <div class="duo">
+    <div><h4>The shortcut says</h4><p>"This loan behaves like a 12.5-year bond, so charge the 12.5-year spread."</p><p class="num">Z-spread at 12.5y = 53.5 bp · YTM at 12.5y = 4.0965%</p></div>
+    <div><h4>The exact answer says</h4><p>"Price every half-year of the loan at what that half-year actually costs on the bond curve, then average."</p><p class="num">Fair spread = 62.3 bp · fair fixed rate = 4.1355%</p></div>
+  </div>
+  <p>The difference between the two is <b>the wedge</b>. When it is positive, the shortcut charges less than the borrower's own bond market would, so the borrower saves and the lender gives up margin relative to bond-equivalent pricing. When it is negative, the borrower overpays.</p>
+  <div class="fx" aria-label="Definition of the wedge">
+    <div class="eq">wedge = <span class="t c2">fair spread or rate</span> − <span class="t c3">shortcut spread or rate (+ X)</span></div>
+    <dl>
+      <dt><span class="t c2">fair</span></dt><dd>What this exact drawdown and repayment profile costs on the borrower's bond curve. Results row 13.</dd>
+      <dt><span class="t c3">shortcut</span></dt><dd>The curve read at the WAL, plus any agreed margin X above or below it. Results rows 11–12.</dd>
+    </dl>
+  </div>
+  <div class="take"><b>Takeaway</b><p>The saving is a <em>net</em> figure. Before the WAL date the borrower overpays, because early exposure is genuinely cheaper than the 12.5-year point. After the WAL date it underpays, because late exposure is much dearer. On a rising curve the second effect wins. Sections 03–05 explain why it wins even when the curve is a straight line.</p></div>
+</section>
+
+<!-- ================================================================ 02 -->
+<section id="case" class="lvl">
+  <div class="eyebrow">02 · The inputs of this case</div>
+  <h2>Three curves and a loan profile</h2>
+  <p>The calculator needs three curves, one value per year, with gaps allowed. Missing years are filled by straight-line interpolation between the nearest quotes. The issuer here trades <em>below</em> swaps out to about 4 years and above swaps after that, with the spread rising steeply to 92bp at 28 years.</p>
+  <figure>
+    <div class="ft">The borrower's curves</div>
+    <div class="fs">Filled dots are quotes you entered; hollow dots are years the model filled by interpolation.</div>
+    <div class="ctrls"><div class="seg" role="group" aria-label="Choose curve view"><button type="button" id="cv-z" aria-pressed="true">Z-spread (bp)</button><button type="button" id="cv-y" aria-pressed="false">YTM and swap (%)</button></div></div>
+    <div class="chartbox" id="ch-curves"></div>
+    <div class="legend" id="lg-curves"></div>
+    <figcaption>Z-spread: spread of the issuer's bonds over the EUR swap curve (vs 6M EURIBOR). YTM: the bonds' yield, annual compounding, as quoted for EUR bonds. Swap: par swap rates, the risk-free benchmark.</figcaption>
+  </figure>
+
+  <h3>The loan profile and its WAL</h3>
+  <p>The EUR 5bn is drawn in two equal halves, at signing and six months later. From year 1.5 to year 24 it is repaid in 46 equal half-yearly instalments of about EUR 108.7m.</p>
+  <figure>
+    <div class="ft">Balance outstanding over time</div>
+    <div class="fs">Toggle the overlay to compare with a bond of the same WAL.</div>
+    <div class="ctrls"><label><input type="checkbox" id="ov-bullet"> Show the 12.5-year bullet with the same WAL</label></div>
+    <div class="chartbox" id="ch-profile"></div>
+    <div class="legend" id="lg-profile"></div>
+  </figure>
+  <div class="fx">
+    <div class="eq">WAL = <span class="t c1">average repayment date</span> − <span class="t c4">average drawdown date</span> = <span class="t c1">12.75</span> − <span class="t c4">0.25</span> = 12.50 years</div>
+    <dl>
+      <dt><span class="t c1">12.75</span></dt><dd>Repayments are equal and evenly spaced from 1.5 to 24 years, so their average date is (1.5 + 24) / 2.</dd>
+      <dt><span class="t c4">0.25</span></dt><dd>Half the money is drawn at 0, half at 0.5, so the average draw date is 0.25.</dd>
+    </dl>
+    <p class="muted" style="margin-bottom:0">Equivalent definition, used in the workbook: WAL = Σ (balance outstanding × time it is outstanding) ÷ amount. Both give 12.50 years.</p>
+  </div>
+  <div class="mile"><b>Milestone</b><p>You can now read the shortcut price: the curves at 12.5 years. Z-spread: 12Y and 13Y are interpolated as 51bp and 56bp, so 12.5Y is <b>53.5 bp</b>. YTM: <b>4.0965%</b>. Everything else on this page is about why that number is not the right price.</p></div>
+</section>
+
+<!-- ================================================================ 03 -->
+<section id="spot" class="lvl">
+  <div class="eyebrow">03 · Idea 1 · Quoted spreads are averages</div>
+  <h2>A quoted spread is the average speed of the whole trip</h2>
+  <p>Think of a car trip. If you averaged 42 km/h over ten hours of driving, that tells you nothing about how fast you were going in the tenth hour. You may have crawled through traffic early and driven fast at the end.</p>
+  <p>A bond curve works the same way. The 10-year Z-spread of 42bp is the <b>average</b> credit cost of years 1 to 10. Money that is lent in year 10 pays the cost of <b>year 10 alone</b>, which is called the <b>forward</b> cost. On a rising curve the forward cost is far above the average.</p>
+
+  <h3>Peeling the curve, one year at a time</h3>
+  <p>We can recover each year's own cost from the averages, like peeling an onion from the inside:</p>
+  <ul>
+    <li>The 1-year bond covers only year 1, so year 1 costs −19bp.</li>
+    <li>The 2-year bond is the average of years 1 and 2. Year 1 is known, so year 2 follows.</li>
+    <li>Continue out the curve. Each new bond adds exactly one unknown year.</li>
+  </ul>
+  <div class="fx">
+    <div class="eq">cost of year b ≈ <span class="t c1">b × spread(b)</span> − <span class="t c3">(b−1) × spread(b−1)</span></div>
+    <dl>
+      <dt><span class="t c1">b × spread(b)</span></dt><dd>Total credit cost of years 1 to b, if each year counted equally.</dd>
+      <dt><span class="t c3">(b−1) × spread(b−1)</span></dt><dd>Total cost of years 1 to b−1, already known.</dd>
+    </dl>
+    <p class="muted" style="margin-bottom:0">This rough version treats every year as equally important. The exact model also discounts later years and allows for default, so later years count less; a later year then needs a higher cost to move the average by the same amount. That is why the exact figures below are a bit higher than the rough ones.</p>
+  </div>
+  <figure>
+    <div class="ft">Quoted Z-spread (average) vs the cost of each individual year</div>
+    <div class="fs">Move the slider to peel a specific year.</div>
+    <div class="ctrls"><label for="yr">Year <input type="range" id="yr" min="1" max="24" step="1" value="10"><output id="yr-o">10</output></label></div>
+    <div class="chartbox" id="ch-spot"></div>
+    <div class="legend" id="lg-spot"></div>
+    <div class="readout" id="ro-spot"></div>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th>Year</th><th>Quoted Z-spread</th><th>Rough peel</th><th>Exact cost of that year</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>−19 bp</td><td>−19 bp</td><td>−19.0 bp</td></tr>
+      <tr><td>4</td><td>−2 bp</td><td>4×(−2) − 3×(−14) = 34 bp</td><td>36.6 bp</td></tr>
+      <tr><td>10</td><td>42 bp</td><td>10×42 − 9×37 = 87 bp</td><td>99.0 bp</td></tr>
+      <tr><td>13</td><td>56 bp (interp.)</td><td>13×56 − 12×51 = 116 bp</td><td>139.8 bp</td></tr>
+      <tr><td>20</td><td>78 bp</td><td>20×78 − 19×76 = 116 bp</td><td>145.8 bp</td></tr>
+    </tbody></table></div>
+  <div class="warn"><b>Trap: weighting the quoted curve gets the sign wrong</b>
+    <p>A tempting shortcut-of-the-shortcut is to weight the <em>quoted</em> curve by how much of the loan is outstanding each year. For this case that gives <b>18.0 bp</b>, which would say the borrower <em>overpays</em> by −35.5 bp against the 53.5bp charged. The correct method says it <em>underpays</em> by 8.82 bp. Weighting averages double-counts the early years, because every long-dated quote already contains them.</p>
+    <p>The fixed case shows the same reversal: quoted-curve weighting gives 3.610% against 4.0554% charged (−44.6 bp), while the correct answer is +8.02 bp.</p></div>
+  <div class="take"><b>Takeaway</b><p>Never price exposure in year <i>t</i> at the curve's quote for maturity <i>t</i>. Convert the curve into the cost of each year first. In this case year 10 alone costs about 99.0 bp, more than twice the 42bp the 10-year quote shows.</p></div>
+</section>
+
+<!-- ================================================================ 04 -->
+<section id="timing" class="lvl">
+  <div class="eyebrow">04 · Idea 2 · Same WAL is not same timing</div>
+  <h2>WAL measures how much. It does not measure when.</h2>
+  <p>WAL counts principal-years: how much money is lent, for how long. It says nothing about <em>where in time</em> those principal-years sit. Two loans with the same WAL can put their money in very different years, and on a rising curve different years cost different amounts.</p>
+
+  <h3>Rectangles and triangles</h3>
+  <p>Draw the balance outstanding against time. The area is the WAL. The balance point of the shape, its <b>centre of gravity</b>, is the average date at which money is lent out.</p>
+  <ul>
+    <li><b>Bullet</b> maturing at W: the full amount is out from 0 to W. The shape is a rectangle; it balances in the middle, at <b>W/2</b>.</li>
+    <li><b>Straight amortiser</b> with the same WAL: the balance falls in a straight line to zero. The shape is a triangle. To have the same area it must be twice as wide (maturity 2W), and a triangle balances one-third of the way from its tall side, at <b>2W/3</b>.</li>
+  </ul>
+  <figure>
+    <div class="ft">Same area, different balance point</div>
+    <div class="ctrls"><label for="wsl">WAL <input type="range" id="wsl" min="4" max="15" step="0.5" value="10"><output id="wsl-o">10.0 y</output></label></div>
+    <div class="chartbox" id="ch-tri"></div>
+    <div class="legend" id="lg-tri"></div>
+    <div class="readout" id="ro-tri"></div>
+  </figure>
+  <p>For our loan the centre of gravity is <b>8.26 years</b>, against <b>6.25 years</b> for a 12.5-year bullet (ratio 0.661, close to the 2/3 of a pure straight amortiser; the drawdown year and the half-yearly steps shift it slightly).</p>
+
+  <h3>WAL is also a centre of gravity, of a different thing</h3>
+  <div class="duo">
+    <div><h4>WAL</h4><p>Centre of gravity of the <b>repayments</b>. Answers: on average, when is the money paid back?</p></div>
+    <div><h4>Exposure centre</h4><p>Centre of gravity of the <b>balance outstanding</b>. Answers: on average, when is the money lent out? This is what the credit curve prices.</p></div>
+  </div>
+  <div class="fx">
+    <div class="eq">exposure centre = <span class="t c1">WAL / 2</span> + <span class="t c4">(spread of repayment dates)²</span> ÷ <span class="t c3">(2 × WAL)</span></div>
+    <dl>
+      <dt><span class="t c1">WAL / 2</span></dt><dd>Where a bullet's exposure sits.</dd>
+      <dt><span class="t c4">spread²</span></dt><dd>The variance of the repayment dates. Zero for a bullet (one date); large for a loan repaid over 23 years.</dd>
+    </dl>
+    <p class="muted" style="margin-bottom:0">So the wedge comes from how <em>dispersed</em> the repayments are, which WAL ignores completely. There is no single standard name for the exposure centre; "exposure-weighted average time" describes it. Its cousins are WAL (centre of repayments) and Macaulay duration (centre of discounted cash flows, the textbook seesaw picture).</p>
+  </div>
+
+  <h3>Why a straight curve still produces a wedge</h3>
+  <p>If the cost of each year rises in a straight line, the price of any loan is simply the cost at its exposure centre. The bullet pays the cost at W/2; the amortiser pays the cost at 2W/3. On a rising line the second is higher. No curvature needed.</p>
+  <p>A straight <em>quoted</em> curve rising by g bp per year means each year's own cost rises by 2g per year (averages move half as fast as what they average). That gives a rule of thumb:</p>
+  <div class="fx"><div class="eq">wedge ≈ <span class="t c1">quoted-curve slope g</span> × <span class="t c3">WAL</span> ÷ 3</div>
+    <p class="muted" style="margin-bottom:0">For a straight curve of 10bp + 4bp per year and our loan: rule of thumb 4 × 12.5 / 3 = 16.7 bp; exact 13.55 bp. Discounting and default risk give the late years less weight, so the exact figure is lower.</p></div>
+  <ul>
+    <li><b>Flat curve:</b> every year costs the same, so timing cannot matter. Wedge ≈ 0. In this case the engine returns 0.002 bp: a technical residue because the model holds default intensity constant within each year while the first six months use the 6M fixing. Without the 6M fixing it is 0.000 bp.</li>
+    <li><b>Straight and rising:</b> wedge proportional to the slope.</li>
+    <li><b>Curved:</b> a curve that flattens at the long end (the usual shape) shrinks the wedge, because the loan's tail lands where costs grow more slowly. A curve that steepens further out enlarges it.</li>
+  </ul>
+  <figure>
+    <div class="ft">Shape sandbox: flat, straight, curved</div>
+    <div class="fs">A synthetic Z-spread curve priced with the real engine, our loan profile and the case's swap curve.</div>
+    <div class="ctrls">
+      <label for="sb-a">Level at 1Y <input type="range" id="sb-a" min="-40" max="120" step="5" value="10"><output id="sb-a-o"></output></label>
+      <label for="sb-g">Slope per year <input type="range" id="sb-g" min="-4" max="8" step="0.5" value="4"><output id="sb-g-o"></output></label>
+      <label for="sb-c">Curvature <input type="range" id="sb-c" min="-0.15" max="0.15" step="0.01" value="0"><output id="sb-c-o"></output></label>
+    </div>
+    <div class="ctrls"><div class="seg" role="group" aria-label="Presets">
+      <button type="button" data-p="flat" aria-pressed="false">Flat</button><button type="button" data-p="straight" aria-pressed="true">Straight</button><button type="button" data-p="flatten" aria-pressed="false">Flattening</button><button type="button" data-p="steepen" aria-pressed="false">Steepening</button><button type="button" data-p="invert" aria-pressed="false">Inverted</button></div></div>
+    <div class="chartbox" id="ch-sb"></div>
+    <div class="legend" id="lg-sb"></div>
+    <div class="readout" id="ro-sb"></div>
+  </figure>
+  <div class="take"><b>Takeaway</b><p>Equal WAL means equal quantity of lending, not equal timing. An amortiser always has its exposure later than the equal-WAL bullet. On any rising curve that alone makes it dearer. The early-year loss and the late-year gain do not cancel, even on a straight line.</p></div>
+</section>
+
+<!-- ================================================================ 05 -->
+<section id="recovery" class="lvl">
+  <div class="eyebrow">05 · Idea 3 · Recovery on what is still owed</div>
+  <h2>If the borrower defaults, the lender recovers a share of the balance at that moment</h2>
+  <p>Standard practice assumes a lender recovers 40% of what it is owed when a senior unsecured borrower defaults. For an amortising loan, "what it is owed" shrinks every six months.</p>
+  <p>Suppose the borrower defaults in year 20. About 19.57% of the original EUR 5bn is still outstanding then. The lender recovers 40% of <em>that</em>, roughly EUR 0.39bn, not 40% of EUR 5bn. Using the original amount would assume the lender gets back far more than it would, and make late-year risk look cheaper than it is.</p>
+  <div class="take"><b>Takeaway</b><p>Every default scenario in the model uses the balance outstanding in the half-year the default happens. Results are insensitive to the recovery level itself (section 08), but very sensitive to applying it to the right balance.</p></div>
+</section>
+
+<!-- ================================================================ 06 -->
+<section id="lambda" class="lvl">
+  <div class="eyebrow">06 · How the model measures each year's cost</div>
+  <h2>Default intensity λ and survival</h2>
+  <p>The model expresses each year's credit cost as a <b>default intensity</b> λ, also called a hazard rate.</p>
+  <div class="fx"><div class="eq">λ<sub>year b</sub> = probability of defaulting during year b, <span class="t c1">given no default so far</span></div>
+    <p class="muted" style="margin-bottom:0">λ = 1.6% in year 10 means: if the borrower reaches year 10 alive, there is about a 1.6% chance it defaults during year 10. The chances chain into a survival probability, S(t) = exp(−sum of λ up to t), the chance of still being alive at t.</p></div>
+
+  <h3>The credit triangle</h3>
+  <p>A lender wants its extra margin to cover the expected loss each year. The expected loss is the chance of default times the share lost:</p>
+  <div class="fx"><div class="eq"><span class="t c2">credit margin</span> ≈ <span class="t c1">λ</span> × <span class="t c4">(1 − R)</span> &nbsp;&nbsp;⇔&nbsp;&nbsp; <span class="t c1">λ</span> ≈ <span class="t c2">credit margin</span> ÷ <span class="t c4">(1 − R)</span></div>
+    <dl><dt><span class="t c4">1 − R</span></dt><dd>Share lost in default: 60% with 40% recovery.</dd>
+    <dt><span class="t c2">margin</span></dt><dd>Floating: the Z-spread. Fixed: the YTM minus the swap rate of the same maturity (both in semi-annual terms).</dd></dl>
+    <p class="muted" style="margin-bottom:0">Year 10: the year's own cost is 99.0 bp, so λ ≈ 99 ÷ 0.6 ≈ 165bp; the exact model gives 159.6 bp. Dividing by 0.6 slightly overshoots: what is lost on default is the principal <em>plus</em> the half-year's interest, less recovery, so the exact break-even is c ≈ λ × (1 − R + f·a) ≈ λ × 0.617 here (section 10).</p></div>
+
+  <p>The model does not use the triangle shortcut. For every year b, it finds the λ that makes a bond maturing at b worth exactly 100, valuing it half-year by half-year: coupons if the borrower survives, 40% if it defaults, all discounted on the swap curve. Earlier years are already solved, so each new year has one unknown, and the equation is a quadratic with a closed-form answer. No Goal Seek, no iteration.</p>
+
+  <figure>
+    <div class="ft">Implied default intensity and survival</div>
+    <div class="ctrls"><div class="seg" role="group" aria-label="Choose product"><button type="button" id="lm-f" aria-pressed="true">From Z-spreads (floating)</button><button type="button" id="lm-x" aria-pressed="false">From YTMs (fixed)</button></div></div>
+    <div class="chartbox" id="ch-lam"></div>
+    <div class="chartbox" id="ch-surv"></div>
+    <div class="legend" id="lg-lam"></div>
+    <figcaption>Survival starts above 100% because λ is negative in years 1–3 (see the warning below). By year 24 the market-implied survival is 0.660 (floating calibration), i.e. a 34% implied chance of default over the life.</figcaption>
+  </figure>
+
+  <div class="warn"><b>Why the workbook shows "Negative forward hazard: YES"</b>
+    <p>This issuer's 1–3 year bonds trade <em>below</em> swaps: Z-spreads of −19, −15 and −14bp, and YTMs below the swap rates (3.032% against 3.270% at 1 year). The only default intensity that prices a bond <em>richer</em> than the risk-free curve is a negative one, so λ comes out around −31, −18 and −19bp for years 1–3. A real probability cannot be negative, hence the flag.</p>
+    <p>The calculation stays valid: every bond reprices to its quote and the integrity checks read OK. It simply means the market treats this issuer as safer than the swap curve at the short end, which is common for very high-grade names whose short bonds are scarce or in demand. It also explains why S(1) = 1.0031, slightly above 1. Before relying on the result, confirm the Z-spreads were measured against the same swap curve you entered, on the same date.</p></div>
+
+  <div class="note"><b>These are market-implied, not real-world, probabilities</b>
+    <p>λ is backed out of prices. Bond spreads also pay for uncertainty, liquidity and supply and demand, so implied default probabilities are usually well above historical default rates for the same rating. For this calculator that is exactly right: the goal is to price the loan consistently with where the borrower's bonds trade, whatever is driving those prices. λ is a pricing tool, not a default forecast.</p></div>
+
+  <h3>How the swap curve enters</h3>
+  <div class="duo">
+    <div><h4>Floating: a background role</h4><p>The credit information is entirely in the Z-spread. The swap curve supplies the discount factors and the floating coupons. Raising the whole swap curve by 30bp moves the saving from 8.82 to 8.70 bp.</p><p>The one hard requirement: the Z-spreads must be measured against the same swap curve you enter.</p></div>
+    <div><h4>Fixed: it splits rate from credit</h4><p>The swap curve decides how much of each YTM is risk-free rate and how much is credit. A 30bp higher swap curve leaves about 30bp less credit at every tenor, lowering every λ by roughly 50bp, while the risk-free forwards rise by about the same amount. The total, anchored by the YTM curve, moves only from 8.02 to 8.89 bp. What moves is the split shown in Results rows 34–35.</p></div>
+  </div>
+  <div class="mile"><b>Milestone</b><p>You now have a cost for every half-year of the next 30 years, built from the borrower's own bonds. Next: apply those costs to the loan.</p></div>
+</section>
+
+<!-- ================================================================ 07 -->
+<section id="price" class="lvl">
+  <div class="eyebrow">07 · From yearly costs to a loan price</div>
+  <h2>A weighted average of the half-year costs</h2>
+  <p>The whole calculation, from your inputs to row 13 of the Results tab, is a sequence of seven steps.</p>
+  <div class="pipe">
+    <div><h4>Fill the gaps</h4><p>Interpolate missing years; convert YTMs to semi-annual terms.</p><span class="ws">Curves A–S</span></div>
+    <div><h4>Risk-free curve</h4><p>Bootstrap discount factors from swap rates; pin 6M with the fixing.</p><span class="ws">Curves U–Z</span></div>
+    <div><h4>Peel λ</h4><p>One default intensity per year so each bond reprices to 100.</p><span class="ws">Calc_* H–P</span></div>
+    <div><h4>Half-year costs</h4><p>Turn each λ into a break-even margin c<sub>i</sub>.</p><span class="ws">Calc_* V–Y</span></div>
+    <div><h4>Loan profile</h4><p>Balance outstanding in every half-year.</p><span class="ws">Calc_* Q–T</span></div>
+    <div><h4>Weights</h4><p>Balance × 0.5 × discount × survival.</p><span class="ws">Calc_* U</span></div>
+    <div><h4>Fair price</h4><p>Weighted average of the costs; compare with the shortcut.</p><span class="ws">Results 9–13</span></div>
+  </div>
+
+  <h3>The weight of a half-year</h3>
+  <div class="fx"><div class="eq">weight<sub>i</sub> = <span class="t c1">balance<sub>i</sub> × 0.5</span> × <span class="t c3">discount factor<sub>i</sub></span> × <span class="t c2">survival<sub>i</sub></span></div>
+    <dl><dt><span class="t c1">balance × 0.5</span></dt><dd>Principal-years in that half-year: how much is lent, for how long.</dd>
+    <dt><span class="t c3">discount factor</span></dt><dd>Margin received in year 20 is worth less today than margin received in year 1.</dd>
+    <dt><span class="t c2">survival</span></dt><dd>Margin is only collected if the borrower has not defaulted.</dd></dl></div>
+  <p>Worked example, the half-year ending at year 20: balance 19.57% × 0.5 × discount 0.5059 × survival 0.7396 = <b class="num">0.0366</b>. The cost of that half-year is 145.8 bp. All 48 weights add up to <b class="num">9.002</b>, which is Results row 9, the <b>risky annuity</b>.</p>
+
+  <h3>The case in four blocks (floating)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Years</th><th>Avg balance</th><th>Principal-years</th><th>Share before discounting</th><th>Weight</th><th>Share of weighting</th><th>Cost of those years</th></tr></thead>
+    <tbody>
+      <tr><td>0–6</td><td>88%</td><td>5.26</td><td>42.1%</td><td>4.724</td><td>52.5%</td><td>12.6 bp</td></tr>
+      <tr><td>6–12</td><td>66%</td><td>3.98</td><td>31.8%</td><td>2.757</td><td>30.6%</td><td>99.9 bp</td></tr>
+      <tr><td>12–18</td><td>40%</td><td>2.41</td><td>19.3%</td><td>1.209</td><td>13.4%</td><td>147.5 bp</td></tr>
+      <tr><td>18–24</td><td>14%</td><td>0.85</td><td>6.8%</td><td>0.312</td><td>3.5%</td><td>153.5 bp</td></tr>
+      <tr class="tot"><td>Total</td><td></td><td>12.50 = WAL</td><td>100%</td><td>9.002 = row 9</td><td>100%</td><td>62.3 bp = row 13</td></tr>
+    </tbody></table></div>
+  <p>Read the columns separately; they are not multiplied together. The balance feeds the weight; the weight becomes a share; the cost comes from the curve (section 03) and has nothing to do with the loan's balance. The fair price is each block's share times its cost:</p>
+  <div class="fx"><div class="eq" id="blk-sum"></div></div>
+  <p>The early years are cheap (this issuer is safer than swaps at the short end) and carry over half the weight. The late years are far more expensive and pull the average up to 62.3 bp, well above the 53.5 bp shortcut.</p>
+  <p>The fixed case works identically, except each half-year's cost is the risk-free forward rate for that half-year <em>plus</em> its credit cost: 3.581%, 4.611%, 5.139% and 4.565% for the four blocks, giving a fair fixed rate of 4.1355%. The last block is cheaper than the third because the swap curve falls beyond 15 years (3.51% → 3.29% at 30Y), so risk-free forwards decline there.</p>
+
+  <figure>
+    <div class="ft">Every half-year: fair cost against the price charged</div>
+    <div class="fs">Top: each half-year's cost against the flat price charged; green where the half-year is dearer, red where it is cheaper. Bottom: the running present-value total of what the borrower saves.</div>
+    <div class="ctrls"><div class="seg" role="group" aria-label="Choose product"><button type="button" id="pr-f" aria-pressed="true">Floating</button><button type="button" id="pr-x" aria-pressed="false">Fixed</button></div></div>
+    <div class="chartbox" id="ch-cost"></div>
+    <div class="chartbox" id="ch-contrib"></div>
+    <div class="legend" id="lg-cost"></div>
+    <figcaption id="cap-cost"></figcaption>
+  </figure>
+
+  <h3>Results rows 11, 12 and 13, side by side</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Row</th><th>Floating</th><th>Fixed</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td>9 Risky annuity</td><td>9.002</td><td>8.943</td><td class="txt">Today's value of 1bp a year on this loan, in years. 1bp × 9.002 × EUR 5bn ≈ €4.5m. Below the WAL because of discounting and default risk.</td></tr>
+      <tr><td>11 Curve at WAL</td><td>53.5 bp</td><td>4.0965%</td><td class="txt">The shortcut: your curve read at exactly 12.5 years.</td></tr>
+      <tr><td>12 Charged</td><td>0.5350%</td><td>4.0554%</td><td class="txt">Row 11 + X, in the loan's own terms. Floating: same number as row 11, shown as a rate. Fixed: restated to half-yearly payments (below).</td></tr>
+      <tr><td>13 Fair</td><td>0.6232%</td><td>4.1355%</td><td class="txt">The weighted average of every half-year's cost: what funding this exact profile with the borrower's own bonds would cost.</td></tr>
+      <tr class="hl"><td>15 Net saving</td><td>+8.82 bp</td><td>+8.02 bp</td><td class="txt">Row 13 − row 12.</td></tr>
+    </tbody></table></div>
+
+  <h3>Why row 12 differs from row 11 in the fixed column</h3>
+  <p>EUR bonds pay their coupon once a year; the loan pays twice a year. A half-yearly payment arrives six months earlier and can be reinvested, so a slightly lower half-yearly rate gives exactly the same yield.</p>
+  <figure>
+    <div class="ft">Annual to semi-annual converter</div>
+    <div class="ctrls"><label for="cv-in">Annual YTM (%) <input type="number" id="cv-in" value="4.0965" step="0.0005" min="0" max="20" style="width:110px"></label></div>
+    <div class="readout" id="ro-conv"></div>
+    <figcaption id="cap-conv"></figcaption>
+  </figure>
+  <div class="note"><b>If the term sheet copies the number literally</b><p>Setting a 4.0965% coupon <em>paid half-yearly</em> gives the lender a higher effective yield than the bond. Model it by entering X = +4.11 bp in the fixed-loan row of the Inputs tab. The fixed saving then falls from 8.02 to 3.90 bp.</p></div>
+  <div class="take"><b>Takeaway</b><p>Row 11 is one point on the curve. Row 13 uses the whole curve, weighted by where this loan's money actually is. The wedge is the gap between them.</p></div>
+</section>
+
+<!-- ================================================================ 08 -->
+<section id="results" class="lvl">
+  <div class="eyebrow">08 · What the borrower saves</div>
+  <h2>Results for the EUR 5bn case</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Metric</th><th>Floating vs Z-spread</th><th>Fixed vs YTM</th><th>Results row</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td>Net saving, bp per year</td><td class="g">+8.82</td><td class="g">+8.02</td><td>15</td></tr>
+      <tr><td>As % of the bond-equivalent spread / rate</td><td>14.2%</td><td>1.9%</td><td>16</td></tr>
+      <tr><td>Bond-equivalent all-in rate</td><td>4.0708%</td><td>4.1355%</td><td>17</td></tr>
+      <tr><td>Loan all-in rate</td><td>3.9826%</td><td>4.0554%</td><td>18</td></tr>
+      <tr><td>As % of the bond all-in rate</td><td>2.17%</td><td>1.94%</td><td>19</td></tr>
+      <tr><td>Total saving, nominal (undiscounted)</td><td>€55.1m</td><td>€50.1m</td><td>20</td></tr>
+      <tr class="hl"><td>Total saving, present value</td><td class="g">€39.7m</td><td class="g">€35.8m</td><td>21</td></tr>
+      <tr><td>Average saving per year of life (nominal)</td><td>€2.30m</td><td>€2.09m</td><td>22</td></tr>
+      <tr><td>Loss phase, start → WAL (PV)</td><td class="l">−€26.3m</td><td class="l">−€27.4m</td><td>24</td></tr>
+      <tr><td>Benefit phase, WAL → maturity (PV)</td><td class="g">€66.0m</td><td class="g">€63.2m</td><td>25</td></tr>
+      <tr><td>Loss phase, bp per year</td><td class="l">−5.84</td><td class="l">−6.13</td><td>27</td></tr>
+      <tr><td>Benefit phase, bp per year</td><td class="g">+14.66</td><td class="g">+14.14</td><td>28</td></tr>
+      <tr><td>Principal-years before / after WAL</td><td>9.50 / 3.00</td><td>9.50 / 3.00</td><td>29–30</td></tr>
+      <tr><td>Average fair cost before / after WAL</td><td>46.6 bp / 149.7 bp</td><td>3.983% / 5.000%</td><td>31–32</td></tr>
+    </tbody></table></div>
+  <p>Notice the asymmetry. Only 3.00 of the 12.5 principal-years sit after the WAL date, yet they generate a benefit more than twice the size of the loss. The late years cost about 149.7 bp against 53.5bp charged; the early years about 46.6 bp.</p>
+
+  <h3>Nominal or present value?</h3>
+  <div class="duo">
+    <div><h4>Nominal €55.1m</h4><p>bp saving × amount × WAL: the plain sum of the extra interest the borrower avoids over 24 years. Easy to explain; mixes euros of different years.</p></div>
+    <div><h4>Present value €39.7m</h4><p>bp saving × amount × risky annuity: the value transferred to the borrower today, allowing for time value and default risk. The economically correct number for comparing alternatives.</p></div>
+  </div>
+
+  <h3>The fixed saving, split into rate and credit</h3>
+  <p>Reading a fixed rate at the WAL also misprices the risk-free curve itself. The workbook separates the two:</p>
+  <div class="fx"><div class="eq">+8.02 bp = <span class="t c3">risk-free effect −1.23 bp</span> + <span class="t c2">credit effect +9.25 bp</span></div>
+    <dl><dt><span class="t c3">risk-free</span></dt><dd>Profile-weighted risk-free forward (3.4478%) minus the risk-free par yield at 12.5 years (3.4601%). Negative here because the swap curve peaks at 15 years and falls to 3.29% at 30, so the late years this loan reaches have lower risk-free forwards than the 12.5-year par rate implies.</dd>
+    <dt><span class="t c2">credit</span></dt><dd>The pure hazard saving inside the fixed rate: comparable in size to the floating saving.</dd></dl></div>
+
+  <h3>How robust is the number?</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Change</th><th>Floating saving</th><th>Fixed saving</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td>Base case (R 40%)</td><td>8.82 bp</td><td>8.02 bp</td></tr>
+      <tr><td>Swap curve 30bp higher everywhere</td><td>8.70 bp</td><td>8.89 bp</td></tr>
+      <tr><td>Recovery 20%</td><td>8.99 bp</td><td>8.19 bp</td></tr>
+      <tr><td>Recovery 60%</td><td>8.49 bp</td><td>7.68 bp</td></tr>
+      <tr><td>Term sheet copies the annual YTM as a half-yearly coupon</td><td>n/a</td><td>3.90 bp</td></tr>
+    </tbody></table></div>
+  <p>The answer barely depends on the supporting inputs. It depends on the <b>shape of the bond curves</b>: their steepness over the loan's life, and where they bend. Spend data-gathering effort there.</p>
+  <div class="take"><b>Takeaway</b><p>For this EUR 5bn, 24-year amortiser, WAL pricing undercharges by about 9bp a year whether the loan is floating or fixed. That is roughly EUR 36–40m of value in today's money, or 14% of the fair floating credit spread.</p></div>
+</section>
+
+<!-- ================================================================ 09 -->
+<section id="lab" class="lvl">
+  <div class="eyebrow">09 · Try it</div>
+  <h2>The lab</h2>
+  <p>The full engine runs in this page. It starts on the case above; change anything and every number updates. Curve scenarios transform the case's own curves so you can see what drives the answer.</p>
+  <figure>
+    <div class="ctrls">
+      <div class="seg" role="group" aria-label="Product"><button type="button" id="lb-f" aria-pressed="true">Floating vs Z</button><button type="button" id="lb-x" aria-pressed="false">Fixed vs YTM</button></div>
+      <label for="lb-sc">Curve <select id="lb-sc">
+        <option value="case">Case curve as entered</option>
+        <option value="flat">Flat at the case's 12.5y level</option>
+        <option value="steep">Twice as steep (pivot at 12.5y)</option>
+        <option value="half">Half as steep (pivot at 12.5y)</option>
+        <option value="invert">Inverted (mirror around 12.5y)</option>
+        <option value="nonneg">No negative credit (short end floored at swaps)</option>
+      </select></label>
+    </div>
+    <div class="ctrls">
+      <label for="lb-x0">Drawdown years <input type="range" id="lb-x0" min="0" max="5" step="0.5" value="1"><output id="lb-x0-o"></output></label>
+      <label for="lb-y0">Repayment years <input type="range" id="lb-y0" min="0.5" max="29" step="0.5" value="23"><output id="lb-y0-o"></output></label>
+      <label for="lb-X">Margin vs curve X <input type="range" id="lb-X" min="-30" max="30" step="0.5" value="0"><output id="lb-X-o"></output></label>
+      <label for="lb-R">Recovery <input type="range" id="lb-R" min="0" max="0.8" step="0.05" value="0.4"><output id="lb-R-o"></output></label>
+      <label for="lb-N">Amount (EUR bn) <input type="number" id="lb-N" value="5" min="0.1" max="100" step="0.1" style="width:90px"></label>
+    </div>
+    <div class="readout" id="ro-lab"></div>
+    <div class="chartbox" id="ch-lab"></div>
+    <div class="chartbox" id="ch-lab2"></div>
+    <div class="legend" id="lg-lab"></div>
+    <figcaption id="cap-lab"></figcaption>
+  </figure>
+  <div class="quiz">
+    <h3>Check yourself</h3>
+    <details><summary>Set the curve to "Flat". What happens to the floating saving, and why?</summary><div><p>It drops to about zero. When every year costs the same, timing stops mattering, so the WAL shortcut is exact. The tiny residue (0.002bp) comes from the model holding λ constant within each year while the first half-year uses the 6M fixing.</p></div></details>
+    <details><summary>Set drawdown to 0 and repayment to 0.5 years. Why is the saving almost zero?</summary><div><p>That loan is a six-month bullet: one repayment date, no dispersion of repayments, so its exposure centre is WAL/2, exactly like a bond. The saving is 0.03bp, not zero, for a technical reason: the shortcut reads the 1-year quote (held flat below 1 year), while the model prices the first six months using the 6M fixing, which differs slightly from the second half of year 1.</p></div></details>
+    <details><summary>Try "Inverted". Who benefits now?</summary><div><p>The lender. Late years are now cheaper than the WAL point, so the shortcut overcharges and the saving turns negative. The workbook reports it as negative and never floors it at zero.</p></div></details>
+    <details><summary>Keep 23 years of repayment and lengthen the drawdown period to 3 and then 5 years. What happens?</summary><div><p>The floating saving roughly doubles and then triples: 8.82bp with 1 year of drawdown, 17.32bp with 3 years, 25.23bp with 5 years (PV €39.7m, €79.3m, €116.5m on EUR 5bn). The shortcut point moves only from 12.5 to 14.5 years, but the loan's tail moves into years 24–28, where this curve implies its highest yearly costs (λ of about 290–325bp in years 23–25). A small move in WAL hides a large move in where the risk sits.</p></div></details>
+  </div>
+</section>
+
+<!-- ================================================================ 10 -->
+<section id="math" class="lvl">
+  <div class="eyebrow">10 · For specialists</div>
+  <h2>The full maths, annotated</h2>
+  <p>Notation: half-year periods i = 1…60, t<sub>i</sub> = i/2, accrual a = 0.5, recovery R. All quantities per unit of notional.</p>
+
+  <h3>Risk-free discount factors</h3>
+  <div class="fx"><div class="eq">DF(k) = (1 − <span class="t c1">r<sub>k</sub></span>·α·Σ<sub>j&lt;k</sub>DF(j)) ÷ (1 + <span class="t c1">r<sub>k</sub></span>·α) &nbsp;&nbsp; DF(k−½) = √(DF(k−1)·DF(k)) &nbsp;&nbsp; DF(½) = 1 ÷ (1 + <span class="t c3">r<sub>6M</sub></span>·182.5/360)</div>
+    <dl><dt><span class="t c1">r<sub>k</sub></span></dt><dd>Par swap rate for year k (annual fixed leg). α = 1 for EUR vs 6M EURIBOR (30/360), 365.25/360 for €STR or USD SOFR (ACT/360).</dd>
+    <dt><span class="t c3">r<sub>6M</sub></span></dt><dd>6M EURIBOR fixing, 3.0190% here, giving DF(0.5) = 0.984926. Without it the half-year point is interpolated log-linearly.</dd>
+    <dt>f<sub>i</sub>·a</dt><dd>= DF(t<sub>i−1</sub>)/DF(t<sub>i</sub>) − 1: the simple forward rate for the half-year, so a riskless floater prices exactly at par.</dd></dl></div>
+
+  <h3>Bootstrapping λ in closed form</h3>
+  <p>Within year b, λ<sub>b</sub> is constant. Let u = e<sup>−λ<sub>b</sub>/2</sup>, the half-year survival ratio. A par bullet maturing at b, with years 1…b−1 already solved, satisfies:</p>
+  <div class="fx"><div class="eq">1 = <span class="t c1">K</span> + D<sub>1</sub>·S<sub>p</sub>·[u·g<sub>1</sub> + R(1−u)] + D<sub>2</sub>·S<sub>p</sub>·[u²·g<sub>2</sub> + R(u − u²)]</div>
+    <div class="eq">u = (−a<sub>1</sub> + √(a<sub>1</sub>² − 4a<sub>2</sub>a<sub>0</sub>)) ÷ 2a<sub>2</sub>, &nbsp; a<sub>2</sub> = D<sub>2</sub>S<sub>p</sub>(g<sub>2</sub>−R), &nbsp; a<sub>1</sub> = S<sub>p</sub>(D<sub>1</sub>(g<sub>1</sub>−R) + D<sub>2</sub>R), &nbsp; a<sub>0</sub> = K + D<sub>1</sub>S<sub>p</sub>R − 1, &nbsp; λ<sub>b</sub> = −2 ln u</div>
+    <dl><dt><span class="t c1">K</span></dt><dd>Value of the bond's cash flows in years 1…b−1: Σ DF[S·(coupon) + R·ΔS]. Floating coupon f·a + q·a, fixed coupon q·a (q = Z-spread or semi-annual YTM).</dd>
+    <dt>S<sub>p</sub></dt><dd>Survival at the start of year b. D<sub>1</sub>, D<sub>2</sub>: discount factors at b−½ and b. g<sub>1</sub>, g<sub>2</sub>: coupon (plus principal on g<sub>2</sub>) paid at those dates.</dd>
+    <dt>check</dt><dd>Every quoted bond reprices to its input; the workbook shows the maximum error (about 10<sup>−12</sup> bp). Beyond the last quote, the last λ is extended, not the last spread.</dd></dl></div>
+
+  <h3>Loan profile</h3>
+  <div class="fx"><div class="eq">O<sub>i</sub> = <span class="t c1">min(i, D)/D</span> − <span class="t c4">max(0, min(i−1, n) − D)/(2y)</span>, &nbsp; D = 2x drawdowns, n = 2x + 2y, &nbsp; WAL = Σ O<sub>i</sub>·a</div>
+    <dl><dt><span class="t c1">drawn</span></dt><dd>Drawdowns of 1/D at t = 0, 0.5, …, x − 0.5 (one drawdown of 1 at t = 0 if x = 0).</dd><dt><span class="t c4">repaid</span></dt><dd>Instalments of 1/(2y) at t = x + 0.5, …, x + y.</dd></dl></div>
+
+  <h3>Per-period break-even cost (exact decomposition)</h3>
+  <div class="fx"><div class="eq">c<sub>i</sub> = <span class="t c4">(1 − p<sub>i</sub>)</span>·<span class="t c3">(1 + f<sub>i</sub>a − R)</span> ÷ (p<sub>i</sub>·a), &nbsp; p<sub>i</sub> = S<sub>i</sub>/S<sub>i−1</sub></div>
+    <dl><dt><span class="t c4">1 − p</span></dt><dd>Chance of defaulting in the half-year, given survival to its start.</dd>
+    <dt><span class="t c3">1 + fa − R</span></dt><dd>What is lost if default happens: principal plus the forward interest due, less recovery. Hence c ≈ λ(1 − R + fa), slightly above λ(1 − R).</dd>
+    <dt>k<sub>i</sub></dt><dd>Floating: k<sub>i</sub> = c<sub>i</sub>. Fixed: k<sub>i</sub> = f<sub>i</sub> + c<sub>i</sub>.</dd></dl></div>
+
+  <h3>Fair price and saving</h3>
+  <div class="fx"><div class="eq">w<sub>i</sub> = DF<sub>i</sub>·S<sub>i</sub>·a·O<sub>i</sub> &nbsp;&nbsp; fair = <span class="t c2">Σ w<sub>i</sub>k<sub>i</sub> ÷ Σ w<sub>i</sub></span> &nbsp;&nbsp; PV saving = N · <span class="t c1">Σ w<sub>i</sub>(k<sub>i</sub> − charged)</span></div>
+    <dl><dt><span class="t c2">fair</span></dt><dd>Equivalent to solving PV(loan) = PV(drawdowns) for the flat spread or rate, where PV(loan) = Σ DF<sub>i</sub>[S<sub>i</sub>(coupon<sub>i</sub>O<sub>i</sub> + P<sub>i</sub>) + R(S<sub>i−1</sub> − S<sub>i</sub>)O<sub>i</sub>] and drawdowns are valued at DF·S on their dates. Proved by telescoping the per-period par conditions; the workbook checks it to about 10<sup>−7</sup> euros.</dd>
+    <dt><span class="t c1">split</span></dt><dd>Summing over periods before and after the WAL date (the straddling period split pro rata in time) gives the loss and benefit phases, which add up exactly to the net.</dd>
+    <dt>shortcut</dt><dd>Linear interpolation of the quoted curve at the exact WAL; for fixed, converted to semi-annual: 2((1 + y/m)<sup>m/2</sup> − 1), m = 1 for EUR bonds.</dd></dl></div>
+</section>
+
+<!-- ================================================================ 11 -->
+<section id="faq" class="lvl">
+  <div class="eyebrow">11 · Questions people ask</div>
+  <h2>Questions and answers</h2>
+  <details><summary>What if the bond curve is flat? What if it is straight?</summary><div><p>Flat: every year costs the same, so it does not matter when the money is lent and the shortcut is right (saving ≈ 0; 0.002 bp in this case, a modelling residue). Straight and rising: there is a saving roughly equal to slope × WAL ÷ 3, because the amortiser's exposure sits later than the bullet's. Curvature then adds (steepening) or subtracts (flattening). See section 04.</p></div></details>
+  <details><summary>Isn't the WAL already a centre of gravity? Why is it different?</summary><div><p>WAL is the centre of gravity of the <em>repayments</em>. The credit curve prices the <em>balance outstanding</em>, whose centre of gravity is WAL/2 for a bullet and about 2·WAL/3 for a straight amortiser (8.26 years for this loan vs 6.25 for the bullet). There is no standard name; "exposure-weighted average time" describes it. Macaulay duration is the textbook relative.</p></div></details>
+  <details><summary>Does the model recompute a centre of gravity for every half-year?</summary><div><p>No. The centre of gravity is a teaching device and is exact only for straight curves. The model never computes it. It takes each half-year's balance (from the schedule, computed once), each half-year's cost (from the curve) and each half-year's weight, and averages. That works for any curve shape.</p></div></details>
+  <details><summary>Where do the "share of weighting" percentages come from?</summary><div><p>Each half-year's weight is balance × 0.5 × discount factor × survival. A block's share is its weights divided by the total, 9.002. The 18–24 year block holds 6.8% of the principal-years but only 3.5% of the weight, because those euros are far in the future and only collected if the borrower survives. The share is not multiplied by the balance again, and the block's cost (153.5 bp) comes from the curve, not from the loan.</p></div></details>
+  <details><summary>Which "spread" drives λ: the Z-spread or the whole YTM?</summary><div><p>Floating: the Z-spread directly, since it is already a spread over swaps. Fixed: the YTM minus the swap rate of the same maturity. The model does not subtract explicitly; it values fixed bonds on the swap curve and attributes whatever yield the swap curve cannot explain to λ. At 1 year: YTM 3.032% annual = 3.009% semi-annual, minus swap 3.270%, gives about −26bp of credit.</p></div></details>
+  <details><summary>Is λ a real probability of default?</summary><div><p>No, it is market-implied. It includes everything investors charge for, not only expected losses, so it is usually well above historical default rates, and here it is even negative at the short end. It is the right input for pricing consistently with the borrower's bonds, and the wrong input for a credit risk forecast.</p></div></details>
+  <details><summary>Why does the workbook warn "Negative forward hazard"?</summary><div><p>Because the short bonds trade below swaps. A bond can only be richer than the risk-free curve if the implied default intensity is negative. The pricing remains internally consistent; the flag asks you to confirm the data (same swap curve as the Z-spreads, same date).</p></div></details>
+  <details><summary>Why is row 12 different from row 11 when the margin X is zero?</summary><div><p>Floating: it isn't; 53.5 bp and 0.5350% are the same number. Fixed: the annual-coupon bond yield (4.0965%) is restated as the half-yearly rate with the same effective yield (4.0554%), so it can be compared with the fair rate, which is computed on the loan's half-yearly payments.</p></div></details>
+  <details><summary>What is the risky annuity in row 9?</summary><div><p>The sum of all half-year weights: the loan's principal-years after discounting and default risk. It converts basis points into today's money: 1bp a year on this loan is worth 1bp × 9.002 × EUR 5bn ≈ €4.5m. In CDS markets the same quantity is called the risky PV01 (RPV01).</p></div></details>
+  <details><summary>What is the 6M fixing for?</summary><div><p>The swap curve starts at 1 year, but the model needs a discount factor every six months. The 6M EURIBOR fixing tells it the actual rate for the first six months instead of assuming both halves of year 1 are equal. Its effect on the saving is far below 0.1bp; it is optional.</p></div></details>
+  <details><summary>How much does the swap curve matter? Can we use free data?</summary><div><p>Very little for the result: a 30bp error in the whole curve moves the floating saving from 8.82 to 8.70 bp and the fixed from 8.02 to 8.89 bp. Free sources with a short delay are adequate. The bond curves are what drive the answer.</p></div></details>
+  <details><summary>Why are the loss and the benefit not equal on a straight curve?</summary><div><p>Because the loan's exposure centre is later than the equal-WAL bullet's. The benefit side reaches further up the curve than the loss side reaches down it. See the rectangle-and-triangle figure in section 04.</p></div></details>
+  <details><summary>Why is the fixed "risk-free effect" negative here?</summary><div><p>The swap curve rises to 3.51% at 15 years and then falls to 3.29% at 30. Risk-free forwards in the loan's late years are therefore below the 12.5-year par rate. Reading the fixed rate at 12.5 years slightly <em>overstates</em> the risk-free part for this profile (−1.23 bp), while the credit part is understated by 9.25 bp. Net, the borrower still saves 8.02 bp.</p></div></details>
+  <details><summary>Does the lender lose money?</summary><div><p>Not in an accounting sense. The saving is margin the lender forgoes relative to pricing the loan consistently with the borrower's bond curve. Whether that is acceptable depends on relationship, ancillary business, funding and capital, none of which this calculator models. Use it to know the price of the convention, then decide.</p></div></details>
+  <details><summary>What does recovery change?</summary><div><p>Almost nothing for the result: from 8.99 bp (20%) to 8.49 bp (60%) on the floating side. A higher recovery raises the implied λ and lowers the loss per default by the same proportion. What matters is applying recovery to the balance outstanding, not to the original amount.</p></div></details>
+</section>
+
+<!-- ================================================================ 12 -->
+<section id="limits" class="lvl">
+  <div class="eyebrow">12 · Read before quoting a number</div>
+  <h2>Assumptions and limitations</h2>
+  <ul>
+    <li><b>Bond quotes as par bonds.</b> Each Z-spread is treated as the spread of a floating bullet at par for that tenor, each YTM as the coupon of a par bullet. Exact for bonds near par; for deep discount or premium lines, prefer a fitted issuer curve (Bloomberg CRVF / BVAL).</li>
+    <li><b>Loan mechanics.</b> Semi-annual periods, accrual 0.5; floating resets to the 6M forward. Interest on drawn balances only; no commitment fee unless entered as a fee. Drawdowns are equal half-yearly amounts from signing.</li>
+    <li><b>Fixed rate basis.</b> The charged fixed rate is the semi-annual equivalent of YTM(WAL) + X. If the term sheet uses the annual number as a half-yearly coupon, add the difference through X.</li>
+    <li><b>Single curve.</b> The same swap curve projects and discounts. No basis between loan and bond funding, no bond new-issue premium unless entered (Inputs rows 22–24).</li>
+    <li><b>Beyond the data.</b> Inside the quotes, years are interpolated linearly; beyond the last bond quote the last λ is extended and flagged. Maximum life 30 years.</li>
+    <li><b>Validation.</b> The engine reproduces the reference specification exactly (65.8781bp vs 55.0000bp, wedge +10.8781bp) and, for this case, matches the workbook to the cent. Integrity checks in the workbook: bond repricing error, PV identity, WAL cross-check.</li>
+  </ul>
+  <h3>Glossary</h3>
+  <div class="tbl"><table><tbody>
+    <tr><td>WAL</td><td class="txt">Weighted average life: average repayment date minus average drawdown date. Measures the quantity of lending.</td></tr>
+    <tr><td>Exposure centre</td><td class="txt">Average date at which money is outstanding. WAL/2 for a bullet, about 2·WAL/3 for a straight amortiser.</td></tr>
+    <tr><td>Spot / quoted spread</td><td class="txt">Spread of a bond maturing at T: an average of the credit cost over years 0 to T.</td></tr>
+    <tr><td>Forward / yearly cost</td><td class="txt">Credit cost of one specific year. What actually prices money lent in that year.</td></tr>
+    <tr><td>λ (default intensity)</td><td class="txt">Market-implied probability of default per year, given survival so far.</td></tr>
+    <tr><td>Survival S(t)</td><td class="txt">Market-implied probability of no default by t.</td></tr>
+    <tr><td>Risky annuity</td><td class="txt">PV of 1 per year on the loan's balance, allowing for discounting and default. Converts bp into money.</td></tr>
+    <tr><td>Shortcut</td><td class="txt">Pricing the loan at the bond curve read at its WAL.</td></tr>
+    <tr><td>Wedge / net saving</td><td class="txt">Fair price minus the price charged. Positive: the borrower saves.</td></tr>
+  </tbody></table></div>
+  <footer>Prepared from the WAL-wedge calculator workbook. Market data as entered for this example; replace with live data before use.</footer>
+</section>
+</main>
+</div>
+
+<script>
+// WAL-wedge engine (JS port of the workbook / Python reference). Rates as decimals.
+const ENG = (() => {
+  function fill(vals) {
+    const k = []; vals.forEach((v, i) => { if (v !== null && v !== undefined && !Number.isNaN(v)) k.push(i); });
+    const out = vals.map((v, i) => {
+      if (v !== null && v !== undefined && !Number.isNaN(v)) return v;
+      let p = -1, n = -1;
+      for (const j of k) { if (j < i) p = j; if (j > i && n < 0) n = j; }
+      if (p >= 0 && n >= 0) return vals[p] + (vals[n] - vals[p]) * (i - p) / (n - p);
+      if (p >= 0) return vals[p];
+      return vals[n];
+    });
+    return { out, last: k.length ? k[k.length - 1] + 1 : 0 };
+  }
+  function swapDfs(rates, alpha, r6) {
+    const r = fill(rates).out; const D = [1]; let ann = 0;
+    for (let k = 0; k < 30; k++) { const d = (1 - r[k] * alpha * ann) / (1 + r[k] * alpha); ann += d; D.push(d); }
+    const g = [1];
+    for (let i = 1; i <= 60; i++) {
+      if (i % 2 === 0) g.push(D[i / 2]); else g.push(Math.sqrt(D[(i - 1) / 2] * D[(i + 1) / 2]));
+    }
+    if (r6 !== null && r6 !== undefined) g[1] = 1 / (1 + r6 * 182.5 / 360);
+    return g;
+  }
+  function model(curve, kind, dfg, R, x, y, Xbp, ycomp) {
+    ycomp = ycomp || 1;
+    const F = fill(curve); let q = F.out.slice(); const last = F.last;
+    if (kind === 'fixed') q = q.map(v => 2 * (Math.pow(1 + v / ycomp, ycomp / 2) - 1));
+    const a = 0.5; const fa = [null]; for (let i = 1; i <= 60; i++) fa.push(dfg[i - 1] / dfg[i] - 1);
+    const S = [1]; const lam = []; let cumC = 0, cumAnn = 0;
+    for (let b = 1; b <= 30; b++) {
+      let l;
+      if (b <= last) {
+        const sb = q[b - 1], i1 = 2 * b - 1, i2 = 2 * b, Sp = S[S.length - 1];
+        const K = cumC + sb * cumAnn;
+        const g1 = kind === 'float' ? fa[i1] + sb * a : sb * a;
+        const g2 = kind === 'float' ? fa[i2] + sb * a + 1 : sb * a + 1;
+        const D1 = dfg[i1], D2 = dfg[i2];
+        const a2 = D2 * Sp * (g2 - R), a1 = Sp * (D1 * (g1 - R) + D2 * R), a0 = K + D1 * Sp * R - 1;
+        const u = (-a1 + Math.sqrt(a1 * a1 - 4 * a2 * a0)) / (2 * a2); l = -2 * Math.log(u);
+      } else l = lam[lam.length - 1];
+      lam.push(l);
+      for (const i of [2 * b - 1, 2 * b]) {
+        const Sprev = S[S.length - 1], Si = Sprev * Math.exp(-l * a);
+        cumC += kind === 'float' ? dfg[i] * (Si * fa[i] + R * (Sprev - Si)) : dfg[i] * R * (Sprev - Si);
+        cumAnn += dfg[i] * Si * a; S.push(Si);
+      }
+    }
+    const D = Math.round(2 * x), Rn = Math.round(2 * y), n = D + Rn, DDc = Math.max(D, 1);
+    const per = []; let WAL = 0, B = 0, sk = 0, sf = 0, cg = 0;
+    for (let i = 1; i <= 60; i++) {
+      const O = i <= n ? Math.min(i, DDc) / DDc - Math.max(0, Math.min(i - 1, n) - D) / Rn : 0;
+      const P = (i > D && i <= n) ? 1 / Rn : 0;
+      const w = dfg[i] * S[i] * a * O; const p = S[i] / S[i - 1];
+      const c = (1 - p) * (1 + fa[i] - R) / (p * a); const f = fa[i] / a; const k = kind === 'float' ? c : f + c;
+      per.push({ t: i / 2, O, P, DF: dfg[i], S: S[i], w, c, f, k, lam: lam[Math.ceil(i / 2) - 1] });
+      WAL += O * a; B += w; sk += w * k; sf += w * f; cg += (i / 2 - 0.25) * O * a;
+    }
+    const fair = sk / B, wf = sf / B;
+    const qq = F.out; const fl = Math.min(Math.max(WAL, 1), 30); const lo = Math.max(1, Math.min(29, Math.floor(fl)));
+    let sc = qq[lo - 1] + (qq[lo] - qq[lo - 1]) * (fl - lo); const scQuoted = sc;
+    if (kind === 'fixed') sc = 2 * (Math.pow(1 + sc / ycomp, ycomp / 2) - 1);
+    const charged = sc + Xbp / 1e4; const wedge = fair - charged;
+    let after = 0, tot = 0;
+    for (const e of per) { const s = e.w * (e.k - charged); tot += s; after += s * Math.max(0, Math.min(1, (e.t - WAL) / a)); }
+    return { lam, S, per, WAL, B, fair, wf, scQuoted, shortcut: sc, charged, wedge_bp: wedge * 1e4,
+             pvUnit: tot, pvAfterUnit: after, pvBeforeUnit: tot - after, cg: cg / WAL, maturity: n / 2, qfill: qq, last };
+  }
+  return { fill, swapDfs, model };
+})();
+
+
+</script>
+<script>
+(function(){
+const Zq={1:-19,2:-15,3:-14,4:-2,5:6,6:13,7:24,8:30,9:37,10:42,11:46,14:61,15:65,18:74,20:78,25:89,28:92};
+const Yq={1:3.032,2:3.242,3:3.349,4:3.431,5:3.522,6:3.597,7:3.726,8:3.804,9:3.888,10:3.942,11:3.995,14:4.198,15:4.256,18:4.320,20:4.349,25:4.349,28:4.376};
+const Sq={1:3.270,2:3.420,3:3.450,4:3.440,5:3.440,6:3.440,7:3.440,8:3.450,10:3.470,15:3.510,20:3.470,30:3.290};
+const z=[],y=[],s=[];for(let k=1;k<=30;k++){z.push(k in Zq?Zq[k]/1e4:null);y.push(k in Yq?Yq[k]/100:null);s.push(k in Sq?Sq[k]/100:null);}
+const R0=0.4, R6=0.03019, DFG=ENG.swapDfs(s,1,R6);
+const BASE={float:ENG.model(z,'float',DFG,R0,1,23,0,1),fixed:ENG.model(y,'fixed',DFG,R0,1,23,0,1)};
+const $=id=>document.getElementById(id);
+const fbp=(v,d=1)=>(v*1e4).toFixed(d), fpc=(v,d=3)=>(v*100).toFixed(d)+'%';
+const money=v=>(v<0?'−€':'€')+(Math.abs(v)/1e6).toFixed(1)+'m';
+const sgn=(v,d=2)=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(d);
+const C={acc:'var(--accent)',gain:'var(--gain)',loss:'var(--loss)',amber:'var(--amber)',ink:'var(--ink)',muted:'var(--muted)',violet:'var(--violet)'};
+
+function chart(el,o){
+  const W=o.w||720,H=o.h||300,m=Object.assign({l:58,r:18,t:16,b:40},o.m||{});
+  const X=v=>m.l+(v-o.x.min)/(o.x.max-o.x.min)*(W-m.l-m.r);
+  const Y=v=>H-m.b-(v-o.y.min)/(o.y.max-o.y.min)*(H-m.t-m.b);
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.label||''}">`;
+  for(const t of o.y.ticks){s+=`<line class="grid${Math.abs(t)<1e-12?' zero':''}" x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tk" x="${m.l-8}" y="${Y(t)+4}" text-anchor="end">${o.y.fmt?o.y.fmt(t):t}</text>`;}
+  for(const t of o.x.ticks){s+=`<text class="tk" x="${X(t)}" y="${H-m.b+17}" text-anchor="middle">${o.x.fmt?o.x.fmt(t):t}</text>`;}
+  if(o.x.label)s+=`<text class="al" x="${(m.l+W-m.r)/2}" y="${H-6}" text-anchor="middle">${o.x.label}</text>`;
+  if(o.y.label)s+=`<text class="al" x="14" y="${(m.t+H-m.b)/2}" text-anchor="middle" transform="rotate(-90 14 ${(m.t+H-m.b)/2})">${o.y.label}</text>`;
+  s+=`<clipPath id="cp${o.id}"><rect x="${m.l}" y="${m.t-2}" width="${W-m.l-m.r}" height="${H-m.t-m.b+4}"/></clipPath><g clip-path="url(#cp${o.id})">`;
+  for(const L of o.layers){
+    if(L.type==='rect'){s+=`<rect x="${X(L.x0)}" y="${Y(L.y1)}" width="${Math.max(0,X(L.x1)-X(L.x0))}" height="${Math.max(0,Y(L.y0)-Y(L.y1))}" style="fill:${L.fill};opacity:${L.op??1}"/>`;}
+    else if(L.type==='bars'){for(const b of L.data){const y0=Math.min(b.y0,b.y1),y1=Math.max(b.y0,b.y1);s+=`<rect x="${X(b.x0)+0.5}" y="${Y(y1)}" width="${Math.max(0.5,X(b.x1)-X(b.x0)-1)}" height="${Math.max(0.5,Y(y0)-Y(y1))}" style="fill:${b.fill};opacity:${b.op??1}"/>`;}}
+    else if(L.type==='area'){const p=L.pts.map(([a,b])=>`${X(a)},${Y(b)}`).join(' ');s+=`<polygon points="${X(L.pts[0][0])},${Y(L.base)} ${p} ${X(L.pts[L.pts.length-1][0])},${Y(L.base)}" style="fill:${L.fill};opacity:${L.op??.18}"/>`;}
+    else if(L.type==='line'){s+=`<polyline points="${L.pts.map(([a,b])=>`${X(a)},${Y(b)}`).join(' ')}" style="fill:none;stroke:${L.stroke};stroke-width:${L.w||2};${L.dash?'stroke-dasharray:'+L.dash:''}" stroke-linejoin="round"/>`;}
+    else if(L.type==='dots'){for(const [a,b,hollow] of L.pts)s+=`<circle cx="${X(a)}" cy="${Y(b)}" r="${L.r||3.6}" style="fill:${hollow?'var(--panel)':L.fill};stroke:${L.fill};stroke-width:1.6"/>`;}
+    else if(L.type==='hline'){s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(L.y)}" y2="${Y(L.y)}" style="stroke:${L.stroke};stroke-width:${L.w||1.6};${L.dash?'stroke-dasharray:'+L.dash:''}"/>`;}
+    else if(L.type==='vline'){s+=`<line x1="${X(L.x)}" x2="${X(L.x)}" y1="${m.t}" y2="${H-m.b}" style="stroke:${L.stroke};stroke-width:${L.w||1.5};${L.dash?'stroke-dasharray:'+L.dash:''}"/>`;}
+  }
+  s+='</g>';
+  for(const L of o.layers){
+    if(L.label&&(L.type==='vline'||L.type==='hline')){
+      const tx=L.type==='vline'?X(L.x)+(L.anchor==='end'?-6:6):(L.lx!==undefined?X(L.lx):(L.anchor==='start'?m.l+6:W-m.r-4)), ty=L.type==='vline'?m.t+12+(L.dy||0):Y(L.y)-6+(L.dy||0);
+      s+=`<text class="lab" x="${tx}" y="${ty}" text-anchor="${L.type==='vline'?(L.anchor||'start'):(L.anchor||'end')}" style="fill:${L.stroke}">${L.label}</text>`;}
+  }
+  s+='</svg>';el.innerHTML=s;
+}
+const legend=(el,items)=>{el.innerHTML=items.map(([c,t,k])=>`<span><i class="${k||''}" style="background:${c}"></i>${t}</span>`).join('');};
+const ticks=(a,b,st)=>{const r=[];for(let v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)r.push(+v.toFixed(10));return r;};
+const segBind=(ids,fn)=>{ids.forEach(id=>$(id).addEventListener('click',()=>{ids.forEach(j=>$(j).setAttribute('aria-pressed',j===id?'true':'false'));fn(id);}));};
+
+/* ---- 02 curves ---- */
+function drawCurves(mode){
+  const zf=ENG.fill(z).out, yf=ENG.fill(y).out, sf=ENG.fill(s).out;
+  if(mode==='z'){
+    chart($('ch-curves'),{id:'cz',label:'Z-spread curve',x:{min:0,max:30.5,ticks:ticks(0,30,5),fmt:v=>v+'y',label:'Maturity (years)'},y:{min:-30,max:100,ticks:ticks(-20,100,20),label:'Z-spread (bp)'},
+      layers:[{type:'line',pts:zf.slice(0,28).map((v,i)=>[i+1,v*1e4]),stroke:C.acc},{type:'vline',x:12.5,stroke:C.amber,dash:'4 4',label:'WAL 12.5y → 53.5 bp'},
+        {type:'dots',fill:C.acc,pts:zf.slice(0,28).map((v,i)=>[i+1,v*1e4,z[i]===null])}]});
+    legend($('lg-curves'),[[C.acc,'Z-spread (bp)'],[C.amber,'WAL = 12.5 years']]);
+  } else {
+    chart($('ch-curves'),{id:'cy',label:'YTM and swap curves',x:{min:0,max:30.5,ticks:ticks(0,30,5),fmt:v=>v+'y',label:'Maturity (years)'},y:{min:2.9,max:4.6,ticks:ticks(3,4.6,0.25),fmt:v=>v.toFixed(2)+'%',label:'Rate'},
+      layers:[{type:'line',pts:yf.slice(0,28).map((v,i)=>[i+1,v*100]),stroke:C.violet},{type:'line',pts:sf.map((v,i)=>[i+1,v*100]),stroke:C.amber},
+        {type:'vline',x:12.5,stroke:C.muted,dash:'4 4',label:'WAL 12.5y'},
+        {type:'dots',fill:C.violet,pts:yf.slice(0,28).map((v,i)=>[i+1,v*100,y[i]===null])},{type:'dots',fill:C.amber,pts:sf.map((v,i)=>[i+1,v*100,s[i]===null])}]});
+    legend($('lg-curves'),[[C.violet,'Bond YTM (annual)'],[C.amber,'Swap par rate (vs 6M EURIBOR)']]);
+  }
+}
+segBind(['cv-z','cv-y'],id=>drawCurves(id==='cv-z'?'z':'y')); drawCurves('z');
+
+/* ---- 02 profile ---- */
+function drawProfile(){
+  const r=BASE.float, ov=$('ov-bullet').checked;
+  const bars=r.per.filter(e=>e.O>0).map(e=>({x0:e.t-0.5,x1:e.t,y0:0,y1:e.O*5,fill:C.acc,op:.75}));
+  const L=[];
+  if(ov)L.push({type:'rect',x0:0,x1:12.5,y0:0,y1:5,fill:C.amber,op:.18},{type:'line',pts:[[0,5],[12.5,5],[12.5,0]],stroke:C.amber,w:1.5});
+  L.push({type:'bars',data:bars},{type:'vline',x:12.5,stroke:C.ink,dash:'5 4',label:'WAL 12.5y'},{type:'vline',x:r.cg,stroke:C.gain,w:2,label:'loan exposure centre '+r.cg.toFixed(2)+'y',dy:18});
+  if(ov)L.push({type:'vline',x:6.25,stroke:C.amber,w:2,label:'bullet centre 6.25y',anchor:'end',dy:36});
+  chart($('ch-profile'),{id:'pf',label:'Balance outstanding',x:{min:0,max:24.5,ticks:ticks(0,24,2),fmt:v=>v+'y',label:'Years from signing'},y:{min:0,max:5.6,ticks:[0,1,2,3,4,5],fmt:v=>'€'+v+'bn',label:'Outstanding'},layers:L});
+  legend($('lg-profile'),[[C.acc,'Loan balance (half-yearly)','blk']].concat(ov?[[C.amber,'12.5y bullet, same WAL','blk']]:[]).concat([[C.gain,'Centre of gravity of the balance']]));
+}
+$('ov-bullet').addEventListener('change',drawProfile); drawProfile();
+
+/* ---- 03 spot vs yearly ---- */
+function drawSpot(){
+  const b=+$('yr').value; $('yr-o').value=b;
+  const r=BASE.float, q=r.qfill.map(v=>v*1e4);
+  const yc=[];for(let k=1;k<=24;k++)yc.push((r.per[2*k-2].c+r.per[2*k-1].c)/2*1e4);
+  const bars=yc.map((v,i)=>({x0:i,x1:i+1,y0:0,y1:v,fill:i+1===b?C.loss:C.loss,op:i+1===b?.85:.22}));
+  chart($('ch-spot'),{id:'sp',label:'Spot vs yearly cost',x:{min:0,max:24.5,ticks:ticks(0,24,2),fmt:v=>v+'y',label:'Year'},y:{min:-40,max:180,ticks:ticks(-40,180,20),label:'bp'},
+    layers:[{type:'bars',data:bars},{type:'line',pts:q.slice(0,24).map((v,i)=>[i+1,v]),stroke:C.acc,w:2.5},{type:'dots',fill:C.acc,pts:q.slice(0,24).map((v,i)=>[i+1,v,z[i]===null])}]});
+  legend($('lg-spot'),[[C.acc,'Quoted Z-spread to that maturity (average)'],[C.loss,'Cost of that single year (exact)','blk']]);
+  const rough=b*q[b-1]-(b-1)*(b>1?q[b-2]:0);
+  $('ro-spot').innerHTML=`<div><div class="k">Quote at ${b}y</div><div class="v">${q[b-1].toFixed(1)} bp</div></div><div><div class="k">Rough peel</div><div class="v">${rough.toFixed(1)} bp</div></div><div><div class="k">Exact cost of year ${b}</div><div class="v">${yc[b-1].toFixed(1)} bp</div></div><div><div class="k">λ year ${b}</div><div class="v">${(r.lam[b-1]*1e4).toFixed(1)} bp</div></div>`;
+}
+$('yr').addEventListener('input',drawSpot); drawSpot();
+
+/* ---- 04 rectangle & triangle ---- */
+function drawTri(){
+  const W=+$('wsl').value; $('wsl-o').value=W.toFixed(1)+' y';
+  const c=t=>2*W/3+(t-2*W/3)*0.06; // linear cost illustration: 10bp + 8bp/yr
+  chart($('ch-tri'),{id:'tr',label:'Bullet rectangle and amortiser triangle',x:{min:0,max:31,ticks:ticks(0,30,5),fmt:v=>v+'y',label:'Years'},y:{min:0,max:1.15,ticks:[0,.25,.5,.75,1],fmt:v=>(v*100).toFixed(0)+'%',label:'Balance outstanding'},
+    layers:[{type:'rect',x0:0,x1:W,y0:0,y1:1,fill:C.amber,op:.22},{type:'line',pts:[[0,1],[W,1],[W,0]],stroke:C.amber,w:1.6},
+      {type:'area',pts:[[0,1],[2*W,0]],base:0,fill:C.acc,op:.22},{type:'line',pts:[[0,1],[2*W,0]],stroke:C.acc,w:2},
+      {type:'vline',x:W/2,stroke:C.amber,w:2,label:'bullet centre '+(W/2).toFixed(2)+'y',anchor:'end'},{type:'vline',x:2*W/3,stroke:C.acc,w:2,label:'amortiser centre '+(2*W/3).toFixed(2)+'y',dy:18},{type:'vline',x:W,stroke:C.muted,dash:'4 4',label:'WAL '+W.toFixed(1)+'y',dy:36}]});
+  legend($('lg-tri'),[[C.amber,'Bullet maturing at the WAL','blk'],[C.acc,'Straight amortiser, maturity 2 × WAL','blk']]);
+  $('ro-tri').innerHTML=`<div><div class="k">Area (= WAL) both</div><div class="v">${W.toFixed(2)}</div></div><div><div class="k">Bullet centre</div><div class="v">${(W/2).toFixed(2)} y</div></div><div><div class="k">Amortiser centre</div><div class="v">${(2*W/3).toFixed(2)} y</div></div><div><div class="k">Gap</div><div class="v">${(W/6).toFixed(2)} y</div></div>`;
+}
+$('wsl').addEventListener('input',drawTri); drawTri();
+
+/* ---- 04 sandbox ---- */
+const SB={flat:[50,0,0],straight:[10,4,0],flatten:[-10,9,-0.15],steepen:[20,1,0.12],invert:[110,-3,0]};
+function sbCurve(a,g,c){const v=[];for(let T=1;T<=30;T++)v.push((a+g*(T-1)+c*(T-1)*(T-1))/1e4);return v;}
+function drawSB(){
+  const a=+$('sb-a').value,g=+$('sb-g').value,c=+$('sb-c').value;
+  $('sb-a-o').value=a+' bp';$('sb-g-o').value=g+' bp';$('sb-c-o').value=c.toFixed(2);
+  const cv=sbCurve(a,g,c), r=ENG.model(cv,'float',DFG,R0,1,23,0,1);
+  const yc=[];for(let k=1;k<=24;k++)yc.push((r.per[2*k-2].c+r.per[2*k-1].c)/2*1e4);
+  const all=cv.slice(0,24).map(v=>v*1e4).concat(yc);const lo=Math.min(-20,Math.floor(Math.min(...all)/20)*20),hi=Math.max(100,Math.ceil(Math.max(...all)/20)*20);
+  chart($('ch-sb'),{id:'sb',label:'Sandbox curve',x:{min:0,max:24.5,ticks:ticks(0,24,2),fmt:v=>v+'y',label:'Year'},y:{min:lo,max:hi,ticks:ticks(lo,hi,(hi-lo)>200?40:20),label:'bp'},
+    layers:[{type:'bars',data:yc.map((v,i)=>({x0:i,x1:i+1,y0:0,y1:v,fill:C.loss,op:.22}))},{type:'line',pts:cv.slice(0,24).map((v,i)=>[i+1,v*1e4]),stroke:C.acc,w:2.5},
+      {type:'hline',y:r.charged*1e4,stroke:C.amber,dash:'6 4',label:'shortcut '+fbp(r.charged)+' bp',anchor:'start',dy:r.fair>=r.charged?18:-6},{type:'hline',y:r.fair*1e4,stroke:C.gain,w:2,label:'fair '+fbp(r.fair)+' bp',anchor:'start',dy:r.fair>=r.charged?0:18}]});
+  legend($('lg-sb'),[[C.acc,'Quoted curve'],[C.loss,'Cost of each year','blk'],[C.amber,'Shortcut (curve at WAL)'],[C.gain,'Fair price']]);
+  const rule=c===0?(g*r.WAL/3).toFixed(1)+' bp':'n/a (curved)';
+  $('ro-sb').innerHTML=`<div><div class="k">Shortcut</div><div class="v">${fbp(r.charged)} bp</div></div><div><div class="k">Fair</div><div class="v">${fbp(r.fair)} bp</div></div><div><div class="k">Saving</div><div class="v ${r.wedge_bp>0.005?'g':r.wedge_bp<-0.005?'l':''}">${sgn(r.wedge_bp)} bp</div></div><div><div class="k">Rule of thumb g·WAL/3</div><div class="v">${rule}</div></div>`;
+}
+['sb-a','sb-g','sb-c'].forEach(id=>$(id).addEventListener('input',()=>{document.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed','false'));drawSB();}));
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{const p=SB[b.dataset.p];$('sb-a').value=p[0];$('sb-g').value=p[1];$('sb-c').value=p[2];document.querySelectorAll('[data-p]').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));drawSB();}));
+drawSB();
+
+/* ---- 06 lambda ---- */
+function drawLam(kind){
+  const r=BASE[kind], lam=r.lam.slice(0,24).map(v=>v*1e4);
+  chart($('ch-lam'),{id:'lm',h:240,label:'Default intensity',x:{min:0,max:24.5,ticks:ticks(0,24,2),fmt:v=>v+'y',label:'Year'},y:{min:-60,max:360,ticks:ticks(-60,360,60),label:'λ (bp per year)'},
+    layers:[{type:'bars',data:lam.map((v,i)=>({x0:i,x1:i+1,y0:0,y1:v,fill:v<0?C.loss:C.violet,op:.8}))}]});
+  const pts=[[0,1]].concat(r.per.slice(0,48).map(e=>[e.t,e.S]));
+  chart($('ch-surv'),{id:'sv',h:220,label:'Survival probability',x:{min:0,max:24.5,ticks:ticks(0,24,2),fmt:v=>v+'y',label:'Years'},y:{min:0.6,max:1.02,ticks:[0.6,0.7,0.8,0.9,1],fmt:v=>(v*100).toFixed(0)+'%',label:'Survival'},
+    layers:[{type:'area',pts,base:0.6,fill:C.acc,op:.14},{type:'line',pts,stroke:C.acc,w:2.4},{type:'hline',y:1,stroke:C.muted,dash:'3 4'}]});
+  legend($('lg-lam'),[[C.violet,'λ by year','blk'],[C.loss,'Negative λ (bonds richer than swaps)','blk'],[C.acc,'Survival probability S(t)']]);
+}
+segBind(['lm-f','lm-x'],id=>drawLam(id==='lm-f'?'float':'fixed')); drawLam('float');
+
+/* ---- 07 block sum ---- */
+(function(){const b=[[0.5247992688946758,0.0012586030730914852],[0.3062108735513425,0.009985684915819632],[0.13428863542738612,0.014753017125332649],[0.03470122212659554,0.015353886825999816]];
+  let t=0;const parts=b.map(([sh,k])=>{t+=sh*k;return `<span class="t c1">${(sh*100).toFixed(1)}%</span> × <span class="t c4">${(k*1e4).toFixed(1)}</span>`;});
+  $('blk-sum').innerHTML=parts.join(' + ')+` = <span class="t c2">${(t*1e4).toFixed(1)} bp</span>`;})();
+
+/* ---- cost / contribution chart (07 and lab) ---- */
+function drawCost(r,kind,elA,elB,lg,cap,N){
+  const isF=kind==='float', sc=isF?1e4:100, unit=isF?' bp':'%';
+  const per=r.per.filter(e=>e.O>0), ch=r.charged*sc, mat=r.maturity;
+  const vals=per.map(e=>e.k*sc).concat([ch]);
+  let lo=Math.min(...vals),hi=Math.max(...vals);const st=isF?(hi-lo>200?40:20):0.25;lo=Math.floor(lo/st)*st;hi=Math.ceil(hi/st)*st;if(hi-lo<st*2)hi=lo+st*3;
+  const bars=per.map(e=>({x0:e.t-0.5,x1:e.t,y0:ch,y1:e.k*sc,fill:e.k*sc>=ch?C.gain:C.loss,op:.55}));
+  chart(elA,{id:'ca'+elA.id,h:260,label:'Fair cost per half-year',x:{min:0,max:mat+0.5,ticks:ticks(0,mat,mat>16?2:1),fmt:v=>v+'y',label:'Years'},
+    y:{min:lo,max:hi,ticks:ticks(lo,hi,st),fmt:v=>isF?v.toFixed(0):v.toFixed(2)+'%',label:isF?'bp':'rate'},
+    layers:[{type:'bars',data:bars},{type:'hline',y:ch,stroke:C.amber,w:2,dash:'6 4',label:'charged '+(isF?ch.toFixed(1)+' bp':ch.toFixed(3)+'%'),anchor:'start'},
+      {type:'vline',x:r.WAL,stroke:C.ink,dash:'4 4',label:'WAL '+r.WAL.toFixed(2)+'y'}]});
+  let cum=0;const cpts=[[0,0]];per.forEach(e=>{cum+=e.w*(e.k-r.charged)*N;cpts.push([e.t,cum]);});
+  const cv=cpts.map(p=>p[1]);let l2=Math.min(...cv),h2=Math.max(...cv);
+  const span=Math.max(h2-l2,1);const mag=Math.pow(10,Math.floor(Math.log10(span)));const st2=span/mag>5?2*mag:span/mag>2?mag:mag/2;
+  l2=Math.floor(l2/st2)*st2;h2=Math.ceil(h2/st2)*st2;if(l2===h2)h2=l2+st2;
+  const fm=v=>{const a=Math.abs(v);return (v<0?'−':'')+'€'+(a>=1e9?(a/1e9).toFixed(1)+'bn':(a/1e6).toFixed(st2<1e6?1:0)+'m');};
+  chart(elB,{id:'cb'+elB.id,h:220,label:'Running total of the saving',x:{min:0,max:mat+0.5,ticks:ticks(0,mat,mat>16?2:1),fmt:v=>v+'y',label:'Years'},
+    y:{min:l2,max:h2,ticks:ticks(l2,h2,st2),fmt:fm,label:'PV saved, running total'},
+    layers:[{type:'area',pts:cpts,base:0,fill:C.acc,op:.12},{type:'line',pts:cpts,stroke:C.ink,w:2.2},{type:'hline',y:0,stroke:C.muted,w:1},{type:'vline',x:r.WAL,stroke:C.ink,dash:'4 4',label:'WAL'}]});
+  legend(lg,[[C.gain,'Half-year dearer than charged (borrower gains)','blk'],[C.loss,'Half-year cheaper than charged (borrower overpays)','blk'],[C.amber,'Price charged'],[C.ink,'Running PV total of the saving']]);
+  if(cap)cap.textContent=`The running total adds each half-year's weight × (its cost − the price charged), in euros of today. It falls while half-years are cheaper than the price charged (loss phase), turns once they become dearer, and ends at ${money(r.pvUnit*N)}, the PV saving. Late half-years move the line less per bp of gap because their weights are small, yet the gaps there are large.`;
+}
+segBind(['pr-f','pr-x'],id=>{const k=id==='pr-f'?'float':'fixed';drawCost(BASE[k],k,$('ch-cost'),$('ch-contrib'),$('lg-cost'),$('cap-cost'),5e9);});
+drawCost(BASE.float,'float',$('ch-cost'),$('ch-contrib'),$('lg-cost'),$('cap-cost'),5e9);
+
+/* ---- converter ---- */
+function conv(){
+  const a=parseFloat($('cv-in').value);if(!isFinite(a)||a<0){$('ro-conv').innerHTML='<div><div class="k">Input</div><div class="v">Enter a yield in %</div></div>';return;}
+  const r=a/100, sa=2*(Math.sqrt(1+r)-1), h=sa/2, re=h*(1+h);
+  $('ro-conv').innerHTML=`<div><div class="k">Annual coupon</div><div class="v">${a.toFixed(4)}%</div></div><div><div class="k">Semi-annual equivalent</div><div class="v">${(sa*100).toFixed(4)}%</div></div><div><div class="k">Difference</div><div class="v">${((r-sa)*1e4).toFixed(2)} bp</div></div>`;
+  $('cap-conv').textContent=`On €100: the bond pays €${a.toFixed(4)} at month 12. The loan pays €${(h*100).toFixed(4)} at month 6, which reinvested for six months grows to €${(re*100).toFixed(4)}, plus €${(h*100).toFixed(4)} at month 12: €${((re+h)*100).toFixed(4)} in total, the same as the bond.`;
+}
+$('cv-in').addEventListener('input',conv); conv();
+
+/* ---- lab ---- */
+let LK='float';
+function scen(kind,name){
+  const raw=kind==='float'?z:y; const f=ENG.fill(raw).out; const piv=BASE[kind].scQuoted;
+  const map={case:v=>v,flat:v=>piv,steep:v=>piv+2*(v-piv),half:v=>piv+0.5*(v-piv),invert:v=>2*piv-v,nonneg:v=>v};
+  if(name==='nonneg'){ const sw=ENG.fill(s).out; return raw.map((v,i)=>v===null?null:(kind==='float'?Math.max(0,v):Math.max(v,sw[i]))); }
+  if(name==='case') return raw;
+  return f.map(map[name]);
+}
+function lab(){
+  let x0=+$('lb-x0').value,y0=+$('lb-y0').value; if(x0+y0>30){y0=30-x0;$('lb-y0').value=y0;}
+  const X=+$('lb-X').value,R=+$('lb-R').value; let N=parseFloat($('lb-N').value); if(!isFinite(N)||N<=0)N=5;
+  $('lb-x0-o').value=x0.toFixed(1)+' y';$('lb-y0-o').value=y0.toFixed(1)+' y';$('lb-X-o').value=(X>0?'+':'')+X+' bp';$('lb-R-o').value=(R*100).toFixed(0)+'%';
+  const sc=$('lb-sc').value; const cv=scen(LK,sc);
+  const r=ENG.model(cv,LK,DFG,R,x0,y0,X,1); const isF=LK==='float';
+  const neg=r.lam.slice(0,Math.ceil(r.maturity)).some(v=>v<0), beyond=r.maturity>r.last;
+  const fmtP=v=>isF?fbp(v,1)+' bp':fpc(v,3);
+  $('ro-lab').innerHTML=`<div><div class="k">WAL / maturity</div><div class="v">${r.WAL.toFixed(2)} / ${r.maturity.toFixed(1)}y</div></div>
+   <div><div class="k">Exposure centre</div><div class="v">${r.cg.toFixed(2)} y</div></div>
+   <div><div class="k">Charged (row 12)</div><div class="v">${fmtP(r.charged)}</div></div>
+   <div><div class="k">Fair (row 13)</div><div class="v">${fmtP(r.fair)}</div></div>
+   <div><div class="k">Net saving</div><div class="v ${r.wedge_bp>0.005?'g':r.wedge_bp<-0.005?'l':''}">${sgn(r.wedge_bp)} bp</div></div>
+   <div><div class="k">PV saving</div><div class="v ${r.pvUnit>0?'g':r.pvUnit<0?'l':''}">${money(r.pvUnit*N*1e9)}</div></div>
+   <div><div class="k">Loss phase PV</div><div class="v l">${money(r.pvBeforeUnit*N*1e9)}</div></div>
+   <div><div class="k">Benefit phase PV</div><div class="v g">${money(r.pvAfterUnit*N*1e9)}</div></div>
+   <div><div class="k">Nominal saving</div><div class="v">${money(r.wedge_bp/1e4*N*1e9*r.WAL)}</div></div>
+   <div><div class="k">Risky annuity</div><div class="v">${r.B.toFixed(3)}</div></div>`;
+  drawCost(r,LK,$('ch-lab'),$('ch-lab2'),$('lg-lab'),null,N*1e9);
+  const w=[];if(neg)w.push('negative λ somewhere in the loan\'s life (short bonds richer than swaps)');if(beyond)w.push('loan maturity beyond the last bond quote, last λ extended');
+  $('cap-lab').textContent=(w.length?'Flags: '+w.join('; ')+'. ':'No flags. ')+'Bottom panel: running PV total of the saving.';
+}
+segBind(['lb-f','lb-x'],id=>{LK=id==='lb-f'?'float':'fixed';lab();});
+['lb-x0','lb-y0','lb-X','lb-R','lb-N','lb-sc'].forEach(id=>$(id).addEventListener('input',lab));
+lab();
+
+/* ---- route highlight ---- */
+const links=[...document.querySelectorAll('nav.route a')];const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));const on=links.find(a=>a.classList.contains('on'));if(on&&window.innerWidth<=920)on.scrollIntoView({block:'nearest',inline:'center'});}});},{rootMargin:'-30% 0px -60% 0px'});
+secs.forEach(s=>s&&io.observe(s));
+})();
+</script>
+
+</body></html>
