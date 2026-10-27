@@ -38,7 +38,7 @@ nav.route a span{font-family:var(--f-mono);font-size:11px;opacity:.8}
 nav.route a:hover,nav.route a.on{color:var(--ink);border-left-color:var(--accent)}
 nav.route a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 main{min-width:0}
-h1,h2,h3,h4{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0}
+h1,h2,h3,h4{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0;max-width:var(--measure)}
 h1{font-size:clamp(38px,6vw,64px);font-weight:800;letter-spacing:-.02em}
 h2{font-size:clamp(28px,3.6vw,38px);font-weight:700;letter-spacing:-.01em}
 h3{font-size:22px;font-weight:700;margin-top:34px}
@@ -56,7 +56,7 @@ a{color:var(--accent)}
 /* hero */
 .hero{padding-block:8px 36px}
 .hero .sub{font-size:21px;max-width:var(--measure);margin-top:18px;line-height:1.45}
-.case{margin-top:30px;max-width:var(--measure);display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.case{margin-top:30px;max-width:var(--measure);display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
 .case>div{background:var(--panel);padding:16px 18px;min-width:0}
 .case .k{font-family:var(--f-display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .case .v{font-family:var(--f-mono);font-size:22px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
