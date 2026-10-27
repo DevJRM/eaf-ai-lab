@@ -337,14 +337,14 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <div><h4>Exposure centre</h4><p>Centre of gravity of the <b>balance outstanding</b>. Answers: on average, when is the money lent out? This is what the credit curve prices.</p></div>
   </div>
 
-  <h3>Splitting the exposure centre in two</h3>
+  <h3>The exposure centre: a baseline plus a dispersion term</h3>
   <div class="fx">
     <div class="eq">exposure centre = <span class="t c1">WAL / 2</span> + <span class="t c4">(spread of repayment dates)²</span> ÷ <span class="t c3">(2 × WAL)</span></div>
     <dl>
       <dt><span class="t c1">WAL / 2</span></dt><dd>Where a bullet's exposure sits.</dd>
       <dt><span class="t c4">spread²</span></dt><dd>The variance of the repayment dates. Zero for a bullet (one date); large for a loan repaid over 23 years.</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">So the wedge comes from how <em>dispersed</em> the repayments are, which WAL ignores completely. There is no single standard name for the exposure centre; "exposure-weighted average time" describes it. Its cousins are WAL (centre of repayments) and Macaulay duration (centre of discounted cash flows, the textbook seesaw picture).</p>
+    <p class="muted" style="margin-bottom:0">The wedge ultimately comes from how <em>dispersed</em> the loan's repayments are over time &mdash; a dimension WAL does not capture at all, since WAL only tracks their average date. This exposure centre has no standard name in finance; "exposure-weighted average time" is a reasonable description. Its closest relatives are WAL, the centre of gravity of the repayments themselves, and Macaulay duration, the textbook centre of gravity of discounted cash flows (the classic seesaw picture).</p>
   </div>
   <details>
     <summary>Where this formula comes from, and what it proves</summary>
