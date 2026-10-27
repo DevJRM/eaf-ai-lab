@@ -303,9 +303,10 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <tr><td>13</td><td>56 bp (interp.)</td><td>13×56 − 12×51 = 116 bp</td><td>139.8 bp</td></tr>
       <tr><td>20</td><td>78 bp</td><td>20×78 − 19×76 = 116 bp</td><td>145.8 bp</td></tr>
     </tbody></table></div>
-  <div class="warn"><b>Trap: weighting the quoted curve gets the sign wrong</b>
-    <p>A tempting shortcut-of-the-shortcut is to weight the <em>quoted</em> curve by how much of the loan is outstanding each year. For this case that gives <b>18.0 bp</b>, which would say the borrower <em>overpays</em> by −35.5 bp against the 53.5bp charged. The correct method says it <em>underpays</em> by 8.82 bp. Weighting averages double-counts the early years, because every long-dated quote already contains them.</p>
-    <p>The fixed case shows the same reversal: quoted-curve weighting gives 3.610% against 4.0554% charged (−44.6 bp), while the correct answer is +8.02 bp.</p></div>
+  <div class="warn"><b>Trap: weighting the quoted curve flips the sign</b>
+    <p>It is tempting to skip the peeling step above and weight the <em>quoted</em> curve itself by how much of the loan is outstanding each year. Don't: a quoted point is already an average cost to that maturity, so every long-dated quote has the cheap early years baked into it. Weighting the quotes directly counts those early years again and again, which drags the result down toward the short end.</p>
+    <p>For this case that gives <b>18.0 bp</b> — far below the 53.5bp actually charged — making it look as if the borrower <em>overpays</em> by 35.5bp. Peel the years first, as above, and the true fair cost is 62.3bp: the borrower is actually <em>underpaying</em>, by 8.82bp. Same inputs, opposite conclusion.</p>
+    <p>The fixed case shows the same reversal: weighting the quotes directly gives 3.610%, against the 4.0554% charged — an apparent 44.6bp overpayment — while the correct, peeled calculation gives +8.02bp: an underpayment.</p></div>
   <div class="take"><b>Takeaway</b><p>Never price exposure in year <i>t</i> at the curve's quote for maturity <i>t</i>. Convert the curve into the cost of each year first. In this case year 10 alone costs about 99.0 bp, more than twice the 42bp the 10-year quote shows.</p></div>
 </section>
 
