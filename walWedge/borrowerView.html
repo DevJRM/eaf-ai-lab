@@ -23,8 +23,11 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--rule);
   margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:10px max(16px,env(safe-area-inset-left,0px))}
 .bar .in{max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:space-between}
+.bar .left{display:flex;align-items:center;gap:16px}
 .bar .nm{font-family:var(--f-display);font-size:17px;font-weight:500}
 .bar .nm span{color:var(--muted);font-style:italic;font-weight:400}
+.back-link{font-family:var(--f-body);font-size:13px;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.back-link:hover{color:var(--accent)}
 .tog{display:inline-flex;border:1px solid var(--rule);border-radius:999px;padding:3px;background:var(--soft)}
 .tog button{font:inherit;font-size:14px;font-weight:600;border:0;background:transparent;color:var(--muted);padding:7px 16px;border-radius:999px;cursor:pointer}
 .tog button[aria-pressed="true"]{background:var(--accent);color:var(--paper)}
@@ -101,7 +104,10 @@ details li,details p{font-size:15px}
 </style>
 
 <div class="bar"><div class="in">
-  <div class="nm">Amortising loan pricing <span>indicative analysis</span></div>
+  <div class="left">
+    <a class="back-link" href="index.html">&larr; WAL Wedge</a>
+    <div class="nm">Amortising loan pricing <span>indicative analysis</span></div>
+  </div>
   <div class="tog" role="group" aria-label="Interest basis">
     <button type="button" id="m-float" aria-pressed="true">Floating rate</button>
     <button type="button" id="m-fixed" aria-pressed="false">Fixed rate</button>
