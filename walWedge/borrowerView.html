@@ -51,8 +51,6 @@ p{margin:14px 0}
 .figs .v.a{color:var(--accent)}
 .figs .d{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.45}
 section.s{padding-block:56px 6px;border-top:1px solid var(--rule);margin-top:48px}
-.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 40px;align-items:start}
-@media (max-width:820px){.cols{grid-template-columns:minmax(0,1fr)}}
 .terms{width:100%;border-collapse:collapse;font-size:15px}
 .terms th,.terms td{text-align:left;padding:10px 0;border-bottom:1px solid var(--rule);vertical-align:top}
 .terms th{font-weight:500;color:var(--muted);width:38%;padding-right:16px}
@@ -127,7 +125,7 @@ details li,details p{font-size:15px}
   <div class="figs">
     <div><div class="k">Benefit per year</div><div class="v a" data-v="wedgeBig"></div><div class="d">Below the cost of funding the same profile at your own curve.</div></div>
     <div><div class="k">Value today</div><div class="v a" data-v="pv"></div><div class="d">Present value over the life of the loan.</div></div>
-    <div><div class="k">Over the life of the loan</div><div class="v" data-v="nom"></div><div class="d">Undiscounted, about <span data-v="peryr"></span> a year on average over 24 years.</div></div>
+    <div><div class="k">Over life of the loan</div><div class="v" data-v="nom"></div><div class="d">Undiscounted, about <span data-v="peryr"></span> a year on average over 24 years.</div></div>
     <div><div class="k">Relative saving</div><div class="v" data-v="pct"></div><div class="d" data-v="pctTxt"></div></div>
   </div>
 </header>
@@ -136,23 +134,17 @@ details li,details p{font-size:15px}
 <section class="s" id="loan">
   <div class="lab"><span class="n">1</span>The proposed loan</div>
   <h2>EUR 5bn, drawn over one year and repaid over 23</h2>
-  <div class="cols">
-    <div>
-      <table class="terms"><tbody>
-        <tr><th>Amount</th><td>EUR 5,000,000,000</td></tr>
-        <tr><th>Drawdown</th><td>Two equal tranches, at signing and at month 6</td></tr>
-        <tr><th>Repayment</th><td>46 equal semi-annual instalments of about EUR 108.7m, from month 18 to year 24</td></tr>
-        <tr><th>Final maturity</th><td>24 years</td></tr>
-        <tr><th>Average life</th><td>12.5 years</td></tr>
-        <tr><th>Interest</th><td data-v="interest"></td></tr>
-        <tr><th>Pricing reference</th><td data-v="pricingRef"></td></tr>
-      </tbody></table>
-    </div>
-    <div>
-      <p>The loan's average life is the average time each euro is outstanding: 12.75 years from signing to the average repayment date, less 0.25 years for the phased drawdown.</p>
-      <p>The repayment profile is what drives this analysis. A 12.5-year bond returns all of its principal in year 12.5. This loan returns principal gradually, and about EUR 1.0bn is still outstanding in year 20.</p>
-    </div>
-  </div>
+  <table class="terms"><tbody>
+    <tr><th>Amount</th><td>EUR 5,000,000,000</td></tr>
+    <tr><th>Drawdown</th><td>Two equal tranches, at signing and at month 6</td></tr>
+    <tr><th>Repayment</th><td>46 equal semi-annual instalments of about EUR 108.7m, from month 18 to year 24</td></tr>
+    <tr><th>Final maturity</th><td>24 years</td></tr>
+    <tr><th>Average life</th><td>12.5 years</td></tr>
+    <tr><th>Interest</th><td data-v="interest"></td></tr>
+    <tr><th>Pricing reference</th><td data-v="pricingRef"></td></tr>
+  </tbody></table>
+  <p>The loan's average life is the average time each euro is outstanding: 12.75 years from signing to the average repayment date, less 0.25 years for the phased drawdown.</p>
+  <p>The repayment profile is what drives this analysis. A 12.5-year bond returns all of its principal in year 12.5. This loan returns principal gradually, and about EUR 1.0bn is still outstanding in year 20.</p>
   <div class="ex">
     <div class="et">Exhibit 1</div><div class="eh">Loan balance compared with a 12.5-year bond</div>
     <div class="cb" id="c-profile"></div>
