@@ -1,0 +1,486 @@
+<!doctype html><html><head><link rel="stylesheet" href="/eaf-ai-lab/assets/auth.css"><script>try{if(sessionStorage.getItem('eaf_restricted_authenticated')==='true'){document.documentElement.classList.add('eaf-authed');}}catch(e){}</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><div id="auth-overlay"><div id="auth-modal"><h2>🔒 EAF AI Lab — Restricted</h2><p>Please enter your password</p><input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password" autofocus/><button onclick="checkPassword()">Access</button><div id="auth-error">❌ Incorrect password. Please try again.</div></div></div><script src="/eaf-ai-lab/assets/auth.js"></script>
+<title>WAL Wedge Client View</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a bound pitch document — slim sticky header with the rate toggle, one reading column, full-width exhibit panels. */
+:root{
+  --paper:#F8F4F2; --panel:#FFFFFF; --ink:#26151A; --muted:#6F5B60; --rule:#E4D7D7; --soft:#F2E9E8;
+  --accent:#7B1E30; --accent-soft:#F4E2E5; --brass:#A27628; --brass-soft:#F5ECD9; --rust:#5F6F83; --rust-soft:#E6EAF0;
+  --f-display:"Newsreader", "Iowan Old Style", Georgia, serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r:8px; color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16.5px;line-height:1.62;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--rule);
+  margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:10px max(16px,env(safe-area-inset-left,0px))}
+.bar .in{max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:space-between}
+.bar .nm{font-family:var(--f-display);font-size:17px;font-weight:500}
+.bar .nm span{color:var(--muted);font-style:italic;font-weight:400}
+.tog{display:inline-flex;border:1px solid var(--rule);border-radius:999px;padding:3px;background:var(--soft)}
+.tog button{font:inherit;font-size:14px;font-weight:600;border:0;background:transparent;color:var(--muted);padding:7px 16px;border-radius:999px;cursor:pointer}
+.tog button[aria-pressed="true"]{background:var(--accent);color:var(--paper)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.doc{max-width:900px;margin:0 auto;padding-block:40px 80px}
+h1,h2,h3{font-family:var(--f-display);font-weight:500;text-wrap:wrap;margin:0;line-height:1.12}
+h1{font-size:clamp(36px,5.6vw,58px);letter-spacing:-.01em}
+h2{font-size:clamp(27px,3.4vw,36px)}
+h3{font-size:21px;font-weight:600;margin-top:30px}
+p{margin:14px 0}
+.lab{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:12px}
+.lab .n{font-family:var(--f-mono);color:var(--muted);margin-right:10px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:14px;color:var(--muted);margin:22px 0 0}
+.meta label{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.meta input{font:inherit;color:var(--ink);background:transparent;border:0;border-bottom:1px dotted var(--muted);padding:1px 2px;min-width:0;width:16ch}
+.sub{font-size:19px;margin-top:22px;line-height:1.55}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;margin-top:34px}
+.figs>div{background:var(--panel);padding:18px 20px;min-width:0}
+.figs .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.figs .v{white-space:nowrap;font-family:var(--f-display);font-size:clamp(28px,3.3vw,34px);font-weight:500;line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums}
+.figs .v.a{color:var(--accent)}
+.figs .d{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.45}
+section.s{padding-block:56px 6px;border-top:1px solid var(--rule);margin-top:48px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 40px;align-items:start}
+@media (max-width:820px){.cols{grid-template-columns:minmax(0,1fr)}}
+.terms{width:100%;border-collapse:collapse;font-size:15px}
+.terms th,.terms td{text-align:left;padding:10px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.terms th{font-weight:500;color:var(--muted);width:38%;padding-right:16px}
+.terms td{font-variant-numeric:tabular-nums}
+.ex{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:18px 20px 14px;margin:26px 0;min-width:0}
+.ex .et{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--muted)}
+.ex .eh{font-family:var(--f-display);font-size:20px;margin-top:4px}
+.ex .cap{font-size:14px;color:var(--muted);margin-top:10px;line-height:1.5}
+.cb{overflow-x:auto;margin-top:12px}
+svg.ch{width:100%;min-width:520px;height:auto;display:block;font-family:var(--f-mono)}
+svg.ch .tk{font-size:11px;fill:var(--muted)}
+svg.ch .al{font-size:11.5px;fill:var(--muted);font-family:var(--f-body)}
+svg.ch .lb{font-size:12px;font-family:var(--f-body);font-weight:600}
+svg.ch .grid{stroke:var(--rule);stroke-width:1}
+.lg{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin-top:8px}
+.lg i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.lg i.b{width:12px;height:12px;border-radius:2px}
+.pr{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:24px 0}
+.pr>div{border-top:2px solid var(--accent);padding-top:14px;min-width:0}
+.pr h3{margin-top:0;font-size:20px}
+.pr p{font-size:15.5px}
+.big{font-family:var(--f-display);font-size:22px;line-height:1.45;margin:22px 0}
+.big b{font-weight:600;color:var(--accent)}
+.impl{list-style:none;padding:0;margin:20px 0;display:grid;gap:0}
+.impl li{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);gap:8px 28px;padding:16px 0;border-bottom:1px solid var(--rule)}
+.impl li:first-child{border-top:1px solid var(--rule)}
+.impl b{font-family:var(--f-display);font-size:19px;font-weight:600;line-height:1.3}
+.impl span{color:var(--ink)}
+@media (max-width:700px){.impl li{grid-template-columns:minmax(0,1fr)}}
+.tbl{overflow-x:auto;margin:16px 0}
+table.d{border-collapse:collapse;font-size:15px;min-width:100%;font-variant-numeric:tabular-nums}
+table.d th,table.d td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap}
+table.d th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+table.d td:first-child,table.d th:first-child{text-align:left;white-space:normal}
+table.d tr.hl td{background:var(--accent-soft);font-weight:600}
+.num{font-family:var(--f-mono);font-size:.93em;font-variant-numeric:tabular-nums}
+.pos{color:var(--accent);font-weight:600}.neg{color:var(--rust);font-weight:600}
+.callout{background:var(--accent-soft);border-radius:var(--r);padding:16px 20px;margin:22px 0}
+.callout p{margin:6px 0}
+details{border-top:1px solid var(--rule);padding:12px 0}
+details:last-of-type{border-bottom:1px solid var(--rule)}
+summary{cursor:pointer;font-family:var(--f-display);font-size:19px;list-style:none;display:grid;grid-template-columns:1fr auto;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--f-mono);color:var(--accent)}
+details[open] summary::after{content:"−"}
+details>div{padding-top:4px}
+details li,details p{font-size:15px}
+.disc{font-size:13px;color:var(--muted);margin-top:56px;border-top:1px solid var(--rule);padding-top:18px;line-height:1.55}
+</style>
+
+<div class="bar"><div class="in">
+  <div class="nm">Amortising loan pricing <span>indicative analysis</span></div>
+  <div class="tog" role="group" aria-label="Interest basis">
+    <button type="button" id="m-float" aria-pressed="true">Floating rate</button>
+    <button type="button" id="m-fixed" aria-pressed="false">Fixed rate</button>
+  </div>
+</div></div>
+
+<div class="doc">
+<!-- ============ COVER ============ -->
+<header>
+  <div class="lab">For discussion</div>
+  <h1>Priced at your 12.5-year point, repaid over 24 years</h1>
+  <div class="meta">
+    <label for="cl">Prepared for <input id="cl" type="text" value="" placeholder="Client name" autocomplete="off"></label>
+    <label for="dt">Market data as of <input id="dt" type="text" value="27 October 2026" autocomplete="off"></label>
+  </div>
+  <p class="sub">We propose to price your EUR 5bn amortising loan off your own <span data-v="curveName"></span>, at the point that matches the loan's average life of 12.5 years. Because a quarter of the loan's exposure sits beyond that point, out to year 24, this pricing is worth a measurable amount to you. On today's curve we estimate it at <b data-v="wedgeTxt"></b> a year, or <b data-v="pv"></b> in present-value terms.</p>
+  <div class="figs">
+    <div><div class="k">Benefit per year</div><div class="v a" data-v="wedgeBig"></div><div class="d">Below the cost of funding the same profile at your own curve.</div></div>
+    <div><div class="k">Value today</div><div class="v a" data-v="pv"></div><div class="d">Present value over the life of the loan.</div></div>
+    <div><div class="k">Over the life of the loan</div><div class="v" data-v="nom"></div><div class="d">Undiscounted, about <span data-v="peryr"></span> a year on average over 24 years.</div></div>
+    <div><div class="k">Relative saving</div><div class="v" data-v="pct"></div><div class="d" data-v="pctTxt"></div></div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section class="s" id="loan">
+  <div class="lab"><span class="n">1</span>The proposed loan</div>
+  <h2>EUR 5bn, drawn over one year and repaid over 23</h2>
+  <div class="cols">
+    <div>
+      <table class="terms"><tbody>
+        <tr><th>Amount</th><td>EUR 5,000,000,000</td></tr>
+        <tr><th>Drawdown</th><td>Two equal tranches, at signing and at month 6</td></tr>
+        <tr><th>Repayment</th><td>46 equal semi-annual instalments of about EUR 108.7m, from month 18 to year 24</td></tr>
+        <tr><th>Final maturity</th><td>24 years</td></tr>
+        <tr><th>Average life</th><td>12.5 years</td></tr>
+        <tr><th>Interest</th><td data-v="interest"></td></tr>
+        <tr><th>Pricing reference</th><td data-v="pricingRef"></td></tr>
+      </tbody></table>
+    </div>
+    <div>
+      <p>The loan's average life is the average time each euro is outstanding: 12.75 years from signing to the average repayment date, less 0.25 years for the phased drawdown.</p>
+      <p>The repayment profile is what drives this analysis. A 12.5-year bond returns all of its principal in year 12.5. This loan returns principal gradually, and about EUR 1.0bn is still outstanding in year 20.</p>
+    </div>
+  </div>
+  <div class="ex">
+    <div class="et">Exhibit 1</div><div class="eh">Loan balance compared with a 12.5-year bond</div>
+    <div class="cb" id="c-profile"></div>
+    <div class="lg"><span><i class="b" style="background:var(--accent)"></i>Loan balance outstanding</span><span><i class="b" style="background:var(--brass);opacity:.5"></i>12.5-year bond of the same amount</span></div>
+    <p class="cap">Both carry the same total principal-years. The loan keeps part of its balance outstanding for 11.5 years after the bond would have been repaid.</p>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="s" id="price">
+  <div class="lab"><span class="n">2</span>How the price is set</div>
+  <h2>Your bond curve, read at the loan's average life</h2>
+  <p>The standard way to translate a borrower's bond curve into a loan price is to read the curve at the loan's average life. It is simple, transparent and easy to verify against observable bond levels. It is how we propose to price this loan.</p>
+  <div class="ex">
+    <div class="et">Exhibit 2</div><div class="eh" data-v="ex2Title"></div>
+    <div class="cb" id="c-curve"></div>
+    <div class="lg" id="lg-curve"></div>
+    <p class="cap" data-v="ex2Cap"></p>
+  </div>
+  <p class="big" data-v="priceSentence"></p>
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="s" id="cost">
+  <div class="lab"><span class="n">3</span>Why the price works in your favour</div>
+  <h2>Your curve charges more for later years, and this loan reaches them</h2>
+  <p>A bond yield or spread tells you what investors charge to lend to you until a given date. To see what your curve implies for this particular loan, we price each six-month period of the loan separately, at the level your curve implies for that period, and then average across the life of the loan using the balance outstanding in each period.</p>
+  <p>Two features of your curve and of the loan explain the result.</p>
+  <div class="pr">
+    <div>
+      <h3>A quoted level is an average</h3>
+      <p data-v="p1"></p>
+    </div>
+    <div>
+      <h3>The same average life does not mean the same timing</h3>
+      <p>A 12.5-year bond and this loan have the same average life, but they place their money differently in time. The bond's principal is outstanding, on average, at year 6.25. The loan's is outstanding, on average, at year 8.26, and 24% of its principal-years fall after year 12.5. On a rising curve, later exposure costs more.</p>
+    </div>
+  </div>
+  <div class="ex">
+    <div class="et">Exhibit 3</div><div class="eh">What your curve implies for each six-month period, against the price you pay</div>
+    <div class="cb" id="c-cost"></div>
+    <div class="lg" id="lg-cost"></div>
+    <p class="cap" data-v="ex3Cap"></p>
+  </div>
+  <p class="big" data-v="fairSentence"></p>
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="s" id="benefit">
+  <div class="lab"><span class="n">4</span>The net benefit</div>
+  <h2>What you give up early, and what you gain later</h2>
+  <p>Up to the average-life date, the price you pay is above what your curve implies for those years. After it, the price is well below. The second effect is larger, because the later years are where your curve is steepest. The figures below are in today's money, discounted at swap rates and adjusted for credit risk on the same basis as your bonds.</p>
+  <div class="ex">
+    <div class="et">Exhibit 4</div><div class="eh">Benefit to you, present value</div>
+    <div class="cb" id="c-wf"></div>
+    <p class="cap">Signing to year 12.5 compared with year 12.5 to year 24. Basis points are expressed per year over the life of the loan.</p>
+  </div>
+  <div class="tbl"><table class="d">
+    <thead><tr><th>Period</th><th>Present value</th><th>Per year</th></tr></thead>
+    <tbody>
+      <tr><td>Signing to average life (0–12.5 years)</td><td class="neg" data-v="loss"></td><td class="neg" data-v="lossbp"></td></tr>
+      <tr><td>Average life to final maturity (12.5–24 years)</td><td class="pos" data-v="gain"></td><td class="pos" data-v="gainbp"></td></tr>
+      <tr class="hl"><td>Net benefit</td><td data-v="pv"></td><td data-v="wedgeTxt"></td></tr>
+      <tr><td>Undiscounted over the life</td><td data-v="nom"></td><td></td></tr>
+    </tbody></table></div>
+  <div class="callout" data-mode="fixed" hidden><p>For the fixed-rate loan, the benefit is entirely credit-driven: <b>+9.25bp</b> comes from your credit curve. The interest-rate component slightly reduces it, by 1.23bp, because swap rates decline beyond 15 years.</p></div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="s" id="implications">
+  <div class="lab"><span class="n">5</span>What this means for you</div>
+  <h2>Long-dated funding at a medium-term price</h2>
+  <ul class="impl">
+    <li><b>Cheaper than your own bond market for this profile</b><span data-v="impl1"></span></li>
+    <li><b>Fixed for the life of the loan</b><span data-v="impl2"></span></li>
+    <li><b>24-year funding at a 12.5-year price</b><span>Part of your funding runs to year 24, where your curve implies its highest cost. Under average-life pricing, that part of the loan is priced at your 12.5-year level.</span></li>
+    <li><b>A smoother redemption profile</b><span>Principal is repaid in 46 equal instalments rather than in a single bullet, which spreads refinancing needs and reduces concentration risk in your debt profile.</span></li>
+    <li><b>Before fees on both sides</b><span>The comparison excludes bond issuance costs and any new-issue premium, which would increase the benefit, and the loan's own fees, which would reduce it. We will show the net figure once fees are agreed.</span></li>
+  </ul>
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="s" id="robust">
+  <div class="lab"><span class="n">6</span>How robust is the figure</div>
+  <h2>It depends on the shape of your curve, not on the assumptions around it</h2>
+  <p>We tested the result against the inputs that are not observable in your bond prices: the swap curve and the recovery assumption. None of them moves it by more than about 1bp. The last two rows show what does matter, which is how steep your curve is over the life of the loan.</p>
+  <div class="tbl"><table class="d">
+    <thead><tr><th>Scenario</th><th>Floating</th><th>Fixed</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td>Base case</td><td>8.82bp</td><td>8.02bp</td></tr>
+      <tr><td>Swap curve 30bp higher across all tenors</td><td>8.70bp</td><td>8.89bp</td></tr>
+      <tr><td>Recovery assumption 20% instead of 40%</td><td>8.99bp</td><td>8.19bp</td></tr>
+      <tr><td>Recovery assumption 60% instead of 40%</td><td>8.49bp</td><td>7.68bp</td></tr>
+      <tr><td>Your curve half as steep around the 12.5-year point</td><td>4.49bp</td><td>4.35bp</td></tr>
+      <tr><td>Your curve twice as steep around the 12.5-year point</td><td>17.00bp</td><td>14.79bp</td></tr>
+    </tbody></table></div>
+  <p>The benefit scales with the slope of your curve. If your curve steepens before signing, the benefit grows; if it flattens, the benefit shrinks. Because the price is set at signing, the benefit measured on the signing-date curve is the one you secure.</p>
+</section>
+
+<!-- ============ 7 ============ -->
+<section class="s" id="method">
+  <div class="lab"><span class="n">7</span>Methodology</div>
+  <h2>How the figures are derived</h2>
+  <p>The analysis uses a standard reduced-form credit valuation, the same approach used to value credit default swaps and to build issuer curves. Your bond curve is the only source of credit information.</p>
+  <details><summary>Market inputs</summary><div><ul>
+    <li data-mode="float">Your bond Z-spread curve, 1 to 28 years, quoted against the EUR swap curve.</li>
+    <li data-mode="fixed" hidden>Your bond yield curve, 1 to 28 years, annual compounding.</li>
+    <li>EUR swap curve against 6-month EURIBOR, 1 to 30 years, and the 6-month EURIBOR fixing of 3.019%.</li>
+    <li>Recovery rate of 40%, the market convention for senior unsecured debt.</li>
+    <li>Tenors without a quote are interpolated linearly between the nearest quoted tenors.</li>
+  </ul></div></details>
+  <details><summary>Steps</summary><div><ol>
+    <li>Build risk-free discount factors from the swap curve.</li>
+    <li>Derive, year by year, the default intensity that reprices each of your bonds exactly to its quoted level. This turns each quoted level, which is an average to maturity, into the cost of each individual year.</li>
+    <li>Build the loan's half-yearly balance from its drawdown and repayment schedule.</li>
+    <li>Price each six-month period at the cost your curve implies for it, weighted by the balance outstanding, the discount factor and the probability of no default. The weighted average is the bond-equivalent price of the whole profile.</li>
+    <li>Compare it with the price read at the loan's average life. The difference, multiplied by the loan's credit-adjusted annuity of <span data-v="annuity"></span> years, gives the present value of the benefit.</li>
+  </ol></div></details>
+  <details><summary>Points to note</summary><div><ul>
+    <li>Your curve trades below swaps at maturities up to three years. The analysis uses it as quoted, which treats the short end as cheaper than swaps.</li>
+    <li data-mode="fixed" hidden>Your bond yields are annual. The loan pays semi-annually, so the loan rate is the semi-annual rate with the same yield as your annual bond yield: 4.0965% annual is 4.0554% semi-annual.</li>
+    <li>Each quoted level is treated as the price of a bond trading at par for that maturity. For bonds far from par, a fitted issuer curve gives a cleaner input.</li>
+    <li>Bond issuance costs, new-issue premium and loan fees are excluded from the headline figures.</li>
+  </ul></div></details>
+
+  <div class="disc">
+    <p>This document is indicative and provided for discussion purposes only. It does not constitute an offer, a commitment to lend, or investment, legal, tax or accounting advice. The figures are based on the market data at the date shown and on the assumptions described above; they will change with market conditions and with the final terms of any transaction. Any transaction would be subject to credit approval, documentation and market conditions at the time of execution.</p>
+  </div>
+</section>
+</div>
+
+<script>
+// WAL-wedge engine (JS port of the workbook / Python reference). Rates as decimals.
+const ENG = (() => {
+  function fill(vals) {
+    const k = []; vals.forEach((v, i) => { if (v !== null && v !== undefined && !Number.isNaN(v)) k.push(i); });
+    const out = vals.map((v, i) => {
+      if (v !== null && v !== undefined && !Number.isNaN(v)) return v;
+      let p = -1, n = -1;
+      for (const j of k) { if (j < i) p = j; if (j > i && n < 0) n = j; }
+      if (p >= 0 && n >= 0) return vals[p] + (vals[n] - vals[p]) * (i - p) / (n - p);
+      if (p >= 0) return vals[p];
+      return vals[n];
+    });
+    return { out, last: k.length ? k[k.length - 1] + 1 : 0 };
+  }
+  function swapDfs(rates, alpha, r6) {
+    const r = fill(rates).out; const D = [1]; let ann = 0;
+    for (let k = 0; k < 30; k++) { const d = (1 - r[k] * alpha * ann) / (1 + r[k] * alpha); ann += d; D.push(d); }
+    const g = [1];
+    for (let i = 1; i <= 60; i++) {
+      if (i % 2 === 0) g.push(D[i / 2]); else g.push(Math.sqrt(D[(i - 1) / 2] * D[(i + 1) / 2]));
+    }
+    if (r6 !== null && r6 !== undefined) g[1] = 1 / (1 + r6 * 182.5 / 360);
+    return g;
+  }
+  function model(curve, kind, dfg, R, x, y, Xbp, ycomp) {
+    ycomp = ycomp || 1;
+    const F = fill(curve); let q = F.out.slice(); const last = F.last;
+    if (kind === 'fixed') q = q.map(v => 2 * (Math.pow(1 + v / ycomp, ycomp / 2) - 1));
+    const a = 0.5; const fa = [null]; for (let i = 1; i <= 60; i++) fa.push(dfg[i - 1] / dfg[i] - 1);
+    const S = [1]; const lam = []; let cumC = 0, cumAnn = 0;
+    for (let b = 1; b <= 30; b++) {
+      let l;
+      if (b <= last) {
+        const sb = q[b - 1], i1 = 2 * b - 1, i2 = 2 * b, Sp = S[S.length - 1];
+        const K = cumC + sb * cumAnn;
+        const g1 = kind === 'float' ? fa[i1] + sb * a : sb * a;
+        const g2 = kind === 'float' ? fa[i2] + sb * a + 1 : sb * a + 1;
+        const D1 = dfg[i1], D2 = dfg[i2];
+        const a2 = D2 * Sp * (g2 - R), a1 = Sp * (D1 * (g1 - R) + D2 * R), a0 = K + D1 * Sp * R - 1;
+        const u = (-a1 + Math.sqrt(a1 * a1 - 4 * a2 * a0)) / (2 * a2); l = -2 * Math.log(u);
+      } else l = lam[lam.length - 1];
+      lam.push(l);
+      for (const i of [2 * b - 1, 2 * b]) {
+        const Sprev = S[S.length - 1], Si = Sprev * Math.exp(-l * a);
+        cumC += kind === 'float' ? dfg[i] * (Si * fa[i] + R * (Sprev - Si)) : dfg[i] * R * (Sprev - Si);
+        cumAnn += dfg[i] * Si * a; S.push(Si);
+      }
+    }
+    const D = Math.round(2 * x), Rn = Math.round(2 * y), n = D + Rn, DDc = Math.max(D, 1);
+    const per = []; let WAL = 0, B = 0, sk = 0, sf = 0, cg = 0;
+    for (let i = 1; i <= 60; i++) {
+      const O = i <= n ? Math.min(i, DDc) / DDc - Math.max(0, Math.min(i - 1, n) - D) / Rn : 0;
+      const P = (i > D && i <= n) ? 1 / Rn : 0;
+      const w = dfg[i] * S[i] * a * O; const p = S[i] / S[i - 1];
+      const c = (1 - p) * (1 + fa[i] - R) / (p * a); const f = fa[i] / a; const k = kind === 'float' ? c : f + c;
+      per.push({ t: i / 2, O, P, DF: dfg[i], S: S[i], w, c, f, k, lam: lam[Math.ceil(i / 2) - 1] });
+      WAL += O * a; B += w; sk += w * k; sf += w * f; cg += (i / 2 - 0.25) * O * a;
+    }
+    const fair = sk / B, wf = sf / B;
+    const qq = F.out; const fl = Math.min(Math.max(WAL, 1), 30); const lo = Math.max(1, Math.min(29, Math.floor(fl)));
+    let sc = qq[lo - 1] + (qq[lo] - qq[lo - 1]) * (fl - lo); const scQuoted = sc;
+    if (kind === 'fixed') sc = 2 * (Math.pow(1 + sc / ycomp, ycomp / 2) - 1);
+    const charged = sc + Xbp / 1e4; const wedge = fair - charged;
+    let after = 0, tot = 0;
+    for (const e of per) { const s = e.w * (e.k - charged); tot += s; after += s * Math.max(0, Math.min(1, (e.t - WAL) / a)); }
+    return { lam, S, per, WAL, B, fair, wf, scQuoted, shortcut: sc, charged, wedge_bp: wedge * 1e4,
+             pvUnit: tot, pvAfterUnit: after, pvBeforeUnit: tot - after, cg: cg / WAL, maturity: n / 2, qfill: qq, last };
+  }
+  return { fill, swapDfs, model };
+})();
+
+
+</script>
+<script>
+(function(){
+const Zq={1:-19,2:-15,3:-14,4:-2,5:6,6:13,7:24,8:30,9:37,10:42,11:46,14:61,15:65,18:74,20:78,25:89,28:92};
+const Yq={1:3.032,2:3.242,3:3.349,4:3.431,5:3.522,6:3.597,7:3.726,8:3.804,9:3.888,10:3.942,11:3.995,14:4.198,15:4.256,18:4.320,20:4.349,25:4.349,28:4.376};
+const Sq={1:3.270,2:3.420,3:3.450,4:3.440,5:3.440,6:3.440,7:3.440,8:3.450,10:3.470,15:3.510,20:3.470,30:3.290};
+const z=[],y=[],s=[];for(let k=1;k<=30;k++){z.push(k in Zq?Zq[k]/1e4:null);y.push(k in Yq?Yq[k]/100:null);s.push(k in Sq?Sq[k]/100:null);}
+const DFG=ENG.swapDfs(s,1,0.03019), N=5e9;
+const R={float:ENG.model(z,'float',DFG,0.4,1,23,0,1),fixed:ENG.model(y,'fixed',DFG,0.4,1,23,0,1)};
+const $=id=>document.getElementById(id);
+const money=v=>(v<0?'−EUR ':'EUR ')+(Math.abs(v)/1e6).toFixed(1)+'m';
+const bp=v=>v.toFixed(2)+'bp';
+
+const T={
+ float:{
+  curveName:'bond Z-spread curve',
+  interest:'6-month EURIBOR plus a fixed margin, paid semi-annually',
+  pricingRef:'Margin equal to your Z-spread at 12.5 years: 53.5bp',
+  ex2Title:'Your Z-spread curve and the 12.5-year reading',
+  ex2Cap:'Your 12-year and 13-year spreads are interpolated at 51bp and 56bp, giving 53.5bp at 12.5 years. Hollow points are interpolated between quoted maturities.',
+  priceSentence:'The proposed margin is <b>53.5bp</b> over 6-month EURIBOR, equal to your Z-spread at 12.5 years.',
+  p1:'Your 20-year Z-spread of 78bp is the average cost of lending to you over all of years 1 to 20. Because your curve rises, the later years carry more of that cost. Lending to you during year 20 alone costs about <b>146bp</b>, close to twice the 20-year quote.',
+  fairSentence:'Priced period by period at your own curve, this repayment profile costs <b>62.3bp</b>. At 53.5bp, you pay <b>8.82bp a year less</b>.',
+  ex3Cap:'Bars show the margin your Z-spread curve implies for each six-month period of the loan. For about the first six years you pay more than those periods imply; from year 6 onwards you pay less, and the gap widens as the loan reaches the long end of your curve.',
+  impl1:'Funding this exact drawdown and repayment profile at your own Z-spread curve would cost 62.3bp. The proposed margin is 53.5bp, a benefit of 8.82bp a year, worth EUR 39.7m today.',
+  impl2:'The margin is set at signing and does not change for 24 years. The benefit is measured on your curve at signing and is not affected by later moves in EURIBOR.',
+  pct:'14%',pctTxt:'of the bond-equivalent margin of 62.3bp.'
+ },
+ fixed:{
+  curveName:'bond yield curve',
+  interest:'Fixed rate, paid semi-annually',
+  pricingRef:'Fixed rate equal to your bond yield at 12.5 years: 4.0965% annual, which is 4.0554% paid semi-annually',
+  ex2Title:'Your yield curve and the 12.5-year reading',
+  ex2Cap:'Your 12-year and 13-year yields are interpolated between the 11-year and 14-year quotes, giving 4.0965% at 12.5 years (annual compounding). Hollow points are interpolated. The swap curve is shown for reference.',
+  priceSentence:'The proposed fixed rate is <b>4.0554%</b> paid semi-annually, which gives the same yield as your <b>4.0965%</b> annual bond yield at 12.5 years.',
+  p1:'Your 20-year bond yield of 4.349% is the average cost of lending to you over all of years 1 to 20. Because your curve rises, the later years carry more of that cost. Lending to you during year 20 alone costs about <b>4.79%</b> (semi-annual).',
+  fairSentence:'Priced period by period at your own curve, this repayment profile costs <b>4.1355%</b> semi-annual, equivalent to 4.1783% annual. At 4.0554%, you pay <b>8.02bp a year less</b>.',
+  ex3Cap:'Bars show the fixed rate your yield curve implies for each six-month period of the loan, combining the risk-free forward rate and your credit cost. For about the first six years you pay more than those periods imply; from year 6 onwards you pay less.',
+  impl1:'Funding this exact drawdown and repayment profile at your own yield curve would cost 4.1355% semi-annual. The proposed rate is 4.0554%, a benefit of 8.02bp a year, worth EUR 35.8m today.',
+  impl2:'The rate is fixed at signing for 24 years. The benefit is measured on your curve at signing and is not affected by later moves in rates.',
+  pct:'1.9%',pctTxt:'of the bond-equivalent all-in rate of 4.1355%.'
+ }
+};
+function nums(m){const r=R[m];return {
+  wedgeTxt:bp(r.wedge_bp), wedgeBig:r.wedge_bp.toFixed(2)+'<span style="font-size:.5em">bp</span>',
+  pv:money(r.pvUnit*N), nom:money(r.wedge_bp/1e4*N*r.WAL), peryr:money(r.wedge_bp/1e4*N*r.WAL/r.maturity).replace(/\.(\d)m/,(a,b)=>'.'+b+'m'),
+  loss:money(r.pvBeforeUnit*N), gain:'+'+money(r.pvAfterUnit*N), lossbp:'−'+bp(Math.abs(r.pvBeforeUnit/r.B*1e4)), gainbp:'+'+bp(r.pvAfterUnit/r.B*1e4),
+  annuity:r.B.toFixed(2)};}
+const C={acc:'var(--accent)',brass:'var(--brass)',rust:'var(--rust)',ink:'var(--ink)',muted:'var(--muted)'};
+function chart(el,o){
+  const W=o.w||760,H=o.h||300,m=Object.assign({l:58,r:20,t:18,b:42},o.m||{});
+  const X=v=>m.l+(v-o.x.min)/(o.x.max-o.x.min)*(W-m.l-m.r), Y=v=>H-m.b-(v-o.y.min)/(o.y.max-o.y.min)*(H-m.t-m.b);
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.label}">`;
+  for(const t of o.y.ticks)s+=`<line class="grid" x1="${m.l}" x2="${W-m.r}" y1="${Y(t)}" y2="${Y(t)}"/><text class="tk" x="${m.l-8}" y="${Y(t)+4}" text-anchor="end">${o.y.fmt(t)}</text>`;
+  for(const t of o.x.ticks)s+=`<text class="tk" x="${X(t)}" y="${H-m.b+17}" text-anchor="middle">${o.x.fmt?o.x.fmt(t):t}</text>`;
+  if(o.x.label)s+=`<text class="al" x="${(m.l+W-m.r)/2}" y="${H-6}" text-anchor="middle">${o.x.label}</text>`;
+  for(const L of o.layers){
+    if(L.t==='bars')for(const b of L.d){const a=Math.min(b.y0,b.y1),c=Math.max(b.y0,b.y1);s+=`<rect x="${X(b.x0)+.5}" y="${Y(c)}" width="${Math.max(.5,X(b.x1)-X(b.x0)-1)}" height="${Math.max(.5,Y(a)-Y(c))}" style="fill:${b.f};opacity:${b.o??1}"/>`;}
+    else if(L.t==='rect')s+=`<rect x="${X(L.x0)}" y="${Y(L.y1)}" width="${X(L.x1)-X(L.x0)}" height="${Y(L.y0)-Y(L.y1)}" style="fill:${L.f};opacity:${L.o??1}"/>`;
+    else if(L.t==='line')s+=`<polyline points="${L.p.map(([a,b])=>X(a)+','+Y(b)).join(' ')}" style="fill:none;stroke:${L.c};stroke-width:${L.w||2};${L.dash?'stroke-dasharray:'+L.dash:''}" stroke-linejoin="round"/>`;
+    else if(L.t==='dots')for(const [a,b,h] of L.p)s+=`<circle cx="${X(a)}" cy="${Y(b)}" r="3.5" style="fill:${h?'var(--panel)':L.c};stroke:${L.c};stroke-width:1.6"/>`;
+    else if(L.t==='h')s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(L.y)}" y2="${Y(L.y)}" style="stroke:${L.c};stroke-width:${L.w||1.8};${L.dash?'stroke-dasharray:'+L.dash:''}"/>`+(L.lab?`<text class="lb" x="${m.l+6}" y="${Y(L.y)+(L.dy||-7)}" style="fill:${L.c}">${L.lab}</text>`:'');
+    else if(L.t==='v')s+=`<line x1="${X(L.x)}" x2="${X(L.x)}" y1="${m.t}" y2="${H-m.b}" style="stroke:${L.c};stroke-width:1.5;stroke-dasharray:4 4"/>`+(L.lab?`<text class="lb" x="${X(L.x)+(L.end?-6:6)}" y="${m.t+12}" text-anchor="${L.end?'end':'start'}" style="fill:${L.c}">${L.lab}</text>`:'');
+    else if(L.t==='txt')s+=`<text class="lb" x="${X(L.x)}" y="${Y(L.y)+(L.dy||0)}" text-anchor="middle" style="fill:${L.c}">${L.s}</text>`;
+    else if(L.t==='seg')s+=`<line x1="${X(L.x0)}" x2="${X(L.x1)}" y1="${Y(L.y)}" y2="${Y(L.y)}" style="stroke:${L.c};stroke-width:1.2;stroke-dasharray:3 3"/>`;
+  }
+  el.innerHTML=s+'</svg>';
+}
+const ticks=(a,b,st)=>{const r=[];for(let v=Math.ceil(a/st-1e-9)*st;v<=b+1e-9;v+=st)r.push(+v.toFixed(10));return r;};
+
+function profile(){
+  const r=R.float;
+  chart($('c-profile'),{label:'Loan balance against a 12.5-year bond',x:{min:0,max:24.5,ticks:ticks(0,24,2),fmt:v=>v+'y',label:'Years from signing'},
+   y:{min:0,max:5.6,ticks:[0,1,2,3,4,5],fmt:v=>'€'+v+'bn'},
+   layers:[{t:'rect',x0:0,x1:12.5,y0:0,y1:5,f:C.brass,o:.16},{t:'line',p:[[0,5],[12.5,5],[12.5,0]],c:C.brass,w:1.5},
+    {t:'bars',d:r.per.filter(e=>e.O>0).map(e=>({x0:e.t-.5,x1:e.t,y0:0,y1:e.O*5,f:C.acc,o:.8}))},
+    {t:'v',x:12.5,c:C.ink,lab:'Average life 12.5 years'}]});
+}
+function curve(m){
+  const r=R[m];
+  if(m==='float'){
+    const q=r.qfill.map(v=>v*1e4);
+    chart($('c-curve'),{label:'Z-spread curve',x:{min:0,max:28.5,ticks:ticks(0,28,4),fmt:v=>v+'y',label:'Maturity (years)'},y:{min:-30,max:100,ticks:ticks(-20,100,20),fmt:v=>v+'bp'},
+      layers:[{t:'h',y:0,c:C.muted,w:1},{t:'line',p:q.slice(0,28).map((v,i)=>[i+1,v]),c:C.acc,w:2.4},{t:'dots',c:C.acc,p:q.slice(0,28).map((v,i)=>[i+1,v,z[i]===null])},
+        {t:'seg',x0:0,x1:12.5,y:53.5,c:C.brass},{t:'v',x:12.5,c:C.brass,lab:'12.5 years: 53.5bp',end:true}]});
+    $('lg-curve').innerHTML='<span><i style="background:var(--accent)"></i>Your Z-spread curve</span><span><i style="background:var(--brass)"></i>Reading at the average life</span>';
+  } else {
+    const q=r.qfill.map(v=>v*100), sw=ENG.fill(s).out.map(v=>v*100);
+    chart($('c-curve'),{label:'Bond yield curve',x:{min:0,max:28.5,ticks:ticks(0,28,4),fmt:v=>v+'y',label:'Maturity (years)'},y:{min:2.9,max:4.5,ticks:ticks(3,4.5,0.25),fmt:v=>v.toFixed(2)+'%'},
+      layers:[{t:'line',p:sw.slice(0,28).map((v,i)=>[i+1,v]),c:C.muted,w:1.6,dash:'5 4'},{t:'line',p:q.slice(0,28).map((v,i)=>[i+1,v]),c:C.acc,w:2.4},{t:'dots',c:C.acc,p:q.slice(0,28).map((v,i)=>[i+1,v,y[i]===null])},
+        {t:'seg',x0:0,x1:12.5,y:r.scQuoted*100,c:C.brass},{t:'v',x:12.5,c:C.brass,lab:'12.5 years: 4.0965%',end:true}]});
+    $('lg-curve').innerHTML='<span><i style="background:var(--accent)"></i>Your bond yield (annual)</span><span><i style="background:var(--muted)"></i>EUR swap curve</span><span><i style="background:var(--brass)"></i>Reading at the average life</span>';
+  }
+}
+function cost(m){
+  const r=R[m], isF=m==='float', sc=isF?1e4:100, ch=r.charged*sc, per=r.per.filter(e=>e.O>0);
+  const v=per.map(e=>e.k*sc).concat([ch]); const st=isF?40:0.25;
+  const lo=Math.floor(Math.min(...v)/st)*st, hi=Math.ceil(Math.max(...v)/st)*st;
+  chart($('c-cost'),{label:'Implied cost per period against price paid',x:{min:0,max:24.5,ticks:ticks(0,24,2),fmt:v=>v+'y',label:'Years from signing'},
+    y:{min:lo,max:hi,ticks:ticks(lo,hi,st),fmt:v=>isF?v+'bp':v.toFixed(2)+'%'},
+    layers:[{t:'bars',d:per.map(e=>({x0:e.t-.5,x1:e.t,y0:ch,y1:e.k*sc,f:e.k*sc>=ch?C.acc:C.rust,o:.75}))},
+      {t:'h',y:ch,c:C.brass,w:2,dash:'6 4',lab:'Price you pay: '+(isF?'53.5bp':'4.0554%'),dy:-8},{t:'v',x:12.5,c:C.ink,lab:'Average life'}]});
+  $('lg-cost').innerHTML='<span><i class="b" style="background:var(--rust)"></i>Period cheaper than your price (you pay more)</span><span><i class="b" style="background:var(--accent)"></i>Period dearer than your price (you pay less)</span>';
+}
+function waterfall(m){
+  const r=R[m], a=r.pvBeforeUnit*N/1e6, b=r.pvAfterUnit*N/1e6, n=a+b;
+  const lo=Math.floor((Math.min(0,a)-8)/20)*20, hi=Math.ceil(Math.max(b+a,b,0)/20)*20+10;
+  chart($('c-wf'),{label:'Waterfall of the benefit',h:300,m:{l:70,b:34},x:{min:0,max:3,ticks:[.5,1.5,2.5],fmt:v=>['Years 0–12.5','Years 12.5–24','Net benefit'][Math.floor(v)]},y:{min:lo,max:hi,ticks:ticks(lo,hi,20),fmt:v=>(v<0?'−€':'€')+Math.abs(v)+'m'},
+    layers:[{t:'h',y:0,c:C.muted,w:1},
+      {t:'bars',d:[{x0:.15,x1:.85,y0:0,y1:a,f:C.rust,o:.85},{x0:1.15,x1:1.85,y0:a,y1:a+b,f:C.acc,o:.85},{x0:2.15,x1:2.85,y0:0,y1:n,f:C.ink,o:.85}]},
+      {t:'seg',x0:.85,x1:1.15,y:a,c:C.muted},{t:'seg',x0:1.85,x1:2.15,y:a+b,c:C.muted},
+      {t:'txt',x:.5,y:a,dy:18,s:money(a*1e6),c:C.rust},{t:'txt',x:1.5,y:a+b,dy:-8,s:'+'+money(b*1e6),c:C.acc},{t:'txt',x:2.5,y:n,dy:-8,s:money(n*1e6),c:C.ink}]});
+}
+function setMode(m){
+  ['float','fixed'].forEach(k=>$('m-'+k).setAttribute('aria-pressed',k===m?'true':'false'));
+  const t=Object.assign({},T[m],nums(m));
+  document.querySelectorAll('[data-v]').forEach(el=>{const k=el.dataset.v;if(k in t)el.innerHTML=t[k];});
+  document.querySelectorAll('[data-mode]').forEach(el=>{el.hidden=el.dataset.mode!==m;});
+  curve(m);cost(m);waterfall(m);
+  try{localStorage.setItem('wal-client-mode',m);}catch(e){}
+}
+$('m-float').addEventListener('click',()=>setMode('float'));
+$('m-fixed').addEventListener('click',()=>setMode('fixed'));
+['cl','dt'].forEach(id=>{const el=$(id);try{const v=localStorage.getItem('wal-client-'+id);if(v!==null)el.value=v;}catch(e){}
+  const fit=()=>{el.style.width=Math.max(12,el.value.length+2)+'ch';};fit();
+  el.addEventListener('input',()=>{fit();try{localStorage.setItem('wal-client-'+id,el.value);}catch(e){}});});
+profile();
+let start='float';try{const v=localStorage.getItem('wal-client-mode');if(v==='fixed')start='fixed';}catch(e){}
+setMode(start);
+})();
+</script>
+
+</body></html>

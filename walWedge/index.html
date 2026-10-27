@@ -32,7 +32,7 @@ nav.route a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 main{min-width:0}
 h1,h2,h3,h4{font-family:var(--f-display);text-wrap:balance;line-height:1.15;margin:0;max-width:var(--measure)}
 h1{font-size:clamp(38px,6vw,64px);font-weight:800;letter-spacing:-.02em}
-h2{font-size:clamp(28px,3.6vw,38px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(26px,3.2vw,34px);font-weight:700;letter-spacing:-.01em}
 h3{font-size:22px;font-weight:700;margin-top:34px}
 h4{font-size:16px;font-weight:700}
 p,li{max-width:var(--measure)}
@@ -143,6 +143,13 @@ details>div{padding-top:6px}
 kbd,code{font-family:var(--f-mono);font-size:.88em;background:var(--soft);padding:1px 5px;border-radius:4px}
 .wbref{font-family:var(--f-mono);font-size:12px;color:var(--muted);background:var(--soft);padding:1px 6px;border-radius:4px;white-space:nowrap}
 footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid var(--rule);padding-top:20px}
+.top-actions{position:fixed;top:18px;right:24px;z-index:60;display:flex;gap:10px}
+.top-actions a{display:inline-block;padding:10px 20px;border-radius:999px;font-family:var(--f-display);font-size:13px;font-weight:700;letter-spacing:.03em;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.08);transition:background-color .15s ease,transform .15s ease,box-shadow .15s ease}
+.top-actions a:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.top-actions .btn-calc{background:var(--panel);color:var(--accent);border:1.5px solid var(--accent)}
+.top-actions .btn-calc:hover{background:var(--accent-soft)}
+.top-actions .btn-borrower{background:var(--accent);color:#fff;border:1.5px solid var(--accent)}
+.top-actions .btn-borrower:hover{background:#5a0015;border-color:#5a0015}
 @media (max-width:920px){
   .wrap{grid-template-columns:minmax(0,1fr);gap:0;padding-top:0}
   nav.route{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--rule)}
@@ -153,11 +160,13 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   nav.route a.on{border-bottom-color:var(--accent)}
   body{font-size:16.5px}
   .hero{padding-top:24px}
+  .top-actions{position:static;justify-content:center;margin:14px 0 0;box-shadow:none}
 }
 </style>
 
-<div id="wal-download-bar" style="position:sticky;top:0;z-index:50;background:#800020;text-align:center;padding:12px 16px;font-family:'Bricolage Grotesque','Avenir Next','Segoe UI',system-ui,sans-serif;">
-  <a href="WAL_Wedge_Loan_vs_Bond_Calculator.xlsx" download style="display:inline-block;color:#fff;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;">⬇ Download calculator</a>
+<div class="top-actions">
+  <a class="btn-calc" href="WAL_Wedge_Loan_vs_Bond_Calculator.xlsx" download>Calculator</a>
+  <a class="btn-borrower" href="borrowerView.html">borrowerView</a>
 </div>
 <div class="wrap">
 <nav class="route" aria-label="Learning route">
