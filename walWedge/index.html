@@ -277,13 +277,14 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <li>The 2-year bond is the average of years 1 and 2. Year 1 is known, so year 2 follows.</li>
     <li>Continue out the curve. Each new bond adds exactly one unknown year.</li>
   </ul>
+  <p>Peeled this way, with every year weighted equally, this is a <b>simple-average approximation</b>. The page's full pricing engine instead runs a <b>full bootstrap</b>: it solves, year by year, for the default intensity that reprices each bond exactly, with discounting and default risk included. The formula below is the simple-average version, useful for intuition; the table that follows compares it with the full-bootstrap numbers actually used elsewhere on this page.</p>
   <div class="fx">
     <div class="eq">cost of year b ≈ <span class="t c1">b × spread(b)</span> − <span class="t c3">(b−1) × spread(b−1)</span></div>
     <dl>
       <dt><span class="t c1">b × spread(b)</span></dt><dd>Total credit cost of years 1 to b, if each year counted equally.</dd>
       <dt><span class="t c3">(b−1) × spread(b−1)</span></dt><dd>Total cost of years 1 to b−1, already known.</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">This rough version treats every year as equally important. The exact model also discounts later years and allows for default, so later years count less; a later year then needs a higher cost to move the average by the same amount. That is why the exact figures below are a bit higher than the rough ones.</p>
+    <p class="muted" style="margin-bottom:0">This simple-average approximation treats every year as equally important. The full bootstrap also discounts later years and allows for default, so later years count less; a later year then needs a higher cost to move the average by the same amount. That is why the full-bootstrap figures below are a bit higher than the simple-average ones.</p>
   </div>
   <figure>
     <div class="ft">Quoted Z-spread (average) vs the cost of each individual year</div>
@@ -294,7 +295,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <div class="readout" id="ro-spot"></div>
   </figure>
   <div class="tbl"><table>
-    <thead><tr><th>Year</th><th>Quoted Z-spread</th><th>Rough peel</th><th>Exact cost of that year</th></tr></thead>
+    <thead><tr><th>Year</th><th>Quoted Z-spread</th><th>Simple-average approx.</th><th>Full bootstrap (exact)</th></tr></thead>
     <tbody>
       <tr><td>1</td><td>−19 bp</td><td>−19 bp</td><td>−19.0 bp</td></tr>
       <tr><td>4</td><td>−2 bp</td><td>4×(−2) − 3×(−14) = 34 bp</td><td>36.6 bp</td></tr>
@@ -428,7 +429,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="pipe">
     <div><h4>Fill the gaps</h4><p>Interpolate missing years; convert YTMs to semi-annual terms.</p><span class="ws">Curves A–S</span></div>
     <div><h4>Risk-free curve</h4><p>Bootstrap discount factors from swap rates; pin 6M with the fixing.</p><span class="ws">Curves U–Z</span></div>
-    <div><h4>Peel λ</h4><p>One default intensity per year so each bond reprices to 100.</p><span class="ws">Calc_* H–P</span></div>
+    <div><h4>Bootstrap λ</h4><p>One default intensity per year so each bond reprices to 100.</p><span class="ws">Calc_* H–P</span></div>
     <div><h4>Half-year costs</h4><p>Turn each λ into a break-even margin c<sub>i</sub>.</p><span class="ws">Calc_* V–Y</span></div>
     <div><h4>Loan profile</h4><p>Balance outstanding in every half-year.</p><span class="ws">Calc_* Q–T</span></div>
     <div><h4>Weights</h4><p>Balance × 0.5 × discount × survival.</p><span class="ws">Calc_* U</span></div>
@@ -826,7 +827,7 @@ function drawSpot(){
     layers:[{type:'bars',data:bars},{type:'line',pts:q.slice(0,24).map((v,i)=>[i+1,v]),stroke:C.acc,w:2.5},{type:'dots',fill:C.acc,pts:q.slice(0,24).map((v,i)=>[i+1,v,z[i]===null])}]});
   legend($('lg-spot'),[[C.acc,'Quoted Z-spread to that maturity (average)'],[C.loss,'Cost of that single year (exact)','blk']]);
   const rough=b*q[b-1]-(b-1)*(b>1?q[b-2]:0);
-  $('ro-spot').innerHTML=`<div><div class="k">Quote at ${b}y</div><div class="v">${q[b-1].toFixed(1)} bp</div></div><div><div class="k">Rough peel</div><div class="v">${rough.toFixed(1)} bp</div></div><div><div class="k">Exact cost of year ${b}</div><div class="v">${yc[b-1].toFixed(1)} bp</div></div><div><div class="k">λ year ${b}</div><div class="v">${(r.lam[b-1]*1e4).toFixed(1)} bp</div></div>`;
+  $('ro-spot').innerHTML=`<div><div class="k">Quote at ${b}y</div><div class="v">${q[b-1].toFixed(1)} bp</div></div><div><div class="k">Simple-average approx.</div><div class="v">${rough.toFixed(1)} bp</div></div><div><div class="k">Full bootstrap (exact)</div><div class="v">${yc[b-1].toFixed(1)} bp</div></div><div><div class="k">λ year ${b}</div><div class="v">${(r.lam[b-1]*1e4).toFixed(1)} bp</div></div>`;
 }
 $('yr').addEventListener('input',drawSpot); drawSpot();
 
