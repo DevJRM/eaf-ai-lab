@@ -181,13 +181,14 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <li><a href="#case"><span>02</span>Our case</a></li>
     <li><a href="#spot"><span>03</span>Idea 1 · averages</a></li>
     <li><a href="#timing"><span>04</span>Idea 2 · timing</a></li>
-    <li><a href="#credit"><span>05</span>Credit and recovery</a></li>
-    <li><a href="#price"><span>06</span>Pricing the loan</a></li>
-    <li><a href="#results"><span>07</span>Results</a></li>
-    <li><a href="#lab"><span>08</span>The lab</a></li>
-    <li><a href="#math"><span>09</span>The full maths</a></li>
-    <li><a href="#faq"><span>10</span>Questions</a></li>
-    <li><a href="#limits"><span>11</span>Assumptions</a></li>
+    <li><a href="#measures"><span>05</span>Time measures</a></li>
+    <li><a href="#credit"><span>06</span>Credit and recovery</a></li>
+    <li><a href="#price"><span>07</span>Pricing the loan</a></li>
+    <li><a href="#results"><span>08</span>Results</a></li>
+    <li><a href="#lab"><span>09</span>The lab</a></li>
+    <li><a href="#math"><span>10</span>The full maths</a></li>
+    <li><a href="#faq"><span>11</span>Questions</a></li>
+    <li><a href="#limits"><span>12</span>Assumptions</a></li>
   </ol>
 </nav>
 
@@ -206,7 +207,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   </div>
 
   <div class="note"><b>How to use this page</b>
-    <p>It is built as a route. Sections 01–04 need no maths: they give the two ideas behind the result. Sections 05–07 show exactly how the workbook turns those ideas into numbers, with this case's figures at every step. Section 08 is a lab where you can change the loan and the curve and watch the answer move. Section 09 is the full formula set for specialists, including the definitions of WAL and the exposure centre in one place. Section 10 answers the questions people usually ask.</p>
+    <p>It is built as a route. Sections 01–04 need no maths: they give the two ideas behind the result. Section 05 is a deep dive on the two measures of timing that everything else rests on. Sections 06–08 show exactly how the workbook turns those ideas into numbers, with this case's figures at every step. Section 09 is a lab where you can change the loan and the curve and watch the answer move. Section 10 is the full formula set for specialists. Section 11 answers the questions people usually ask.</p>
     <p>All numbers are produced by the same engine as the Excel workbook, with these inputs: EUR, swap curve vs 6M EURIBOR, 6M EURIBOR fixing 3.0190%, recovery 40%, loan margin exactly at the curve (X = 0). The page and the workbook agree to the cent.</p>
   </div>
 </section>
@@ -347,7 +348,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt><span class="t c1">WAL / 2</span></dt><dd>Where a bullet's exposure sits.</dd>
       <dt><span class="t c4">spread²</span></dt><dd>The variance of the repayment dates. Zero for a bullet (one date); large for a loan repaid over 23 years.</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">The wedge ultimately comes from how <em>dispersed</em> the loan's repayments are over time &mdash; a dimension WAL does not capture at all, since WAL only tracks their average date. This exposure centre has no standard name in finance; "exposure-weighted average time" is a reasonable description. Its closest relatives are WAL, the centre of gravity of the repayments themselves, and Macaulay duration, the textbook centre of gravity of discounted cash flows (the classic seesaw picture). Section 09 collects all three, with their geometry and units, in one place.</p>
+    <p class="muted" style="margin-bottom:0">The wedge ultimately comes from how <em>dispersed</em> the loan's repayments are over time &mdash; a dimension WAL does not capture at all, since WAL only tracks their average date. This exposure centre has no standard name in finance; "exposure-weighted average time" is a reasonable description. Its closest relatives are WAL, the centre of gravity of the repayments themselves, and Macaulay duration, the textbook centre of gravity of discounted cash flows (the classic seesaw picture). Section 05 defines both properly, with diagrams, geometry and units, and sets them beside Macaulay duration.</p>
   </div>
   <details>
     <summary>Where this formula comes from, and what it proves</summary>
@@ -420,15 +421,143 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 </section>
 
 <!-- ================================================================ 05 -->
+<section id="measures" class="lvl">
+  <div class="eyebrow">05 · Deep dive · The two measures of timing</div>
+  <h2>WAL and the exposure centre, defined properly</h2>
+  <p>Two numbers describe <em>when</em> a facility's money is at risk: the <b>WAL</b> and the <b>exposure centre</b>. Both are averages of dates measured in years, both have appeared already, and they are constantly mistaken for one another. Everything from here on rests on telling them apart, so this section defines each one properly, shows what it looks like, and sets them side by side.</p>
+
+  <h3>WAL, defined two ways</h3>
+  <div class="fx"><div class="eq"><span class="t c1">WAL</span> = Σ (principal repaid at t) · t ÷ principal &nbsp;&nbsp;=&nbsp;&nbsp; <span class="t c2">Σ O<sub>i</sub> · a</span></div>
+    <dl>
+      <dt><span class="t c1">by repayment</span></dt><dd>The average date on which principal comes back, each date weighted by how much is repaid then. For a bullet there is one date, so WAL = maturity.</dd>
+      <dt><span class="t c2">by balance</span></dt><dd>The total principal-years the loan consumes, per unit of principal: add up the balance outstanding in each half-year, times the length of the half-year. Geometrically, the <b>area</b> under the balance-outstanding curve.</dd>
+    </dl>
+    <p class="muted" style="margin-bottom:0">Units reconcile either way: EUR × years ÷ EUR = years. Both give 12.50 years for this loan.</p></div>
+
+  <p>Those two definitions look unrelated — one is about repayments, the other about outstanding balance — yet they always give the same number. The quickest way to see why is to stop thinking about rates and dates, and picture the loan as a physical <b>stack of money</b>.</p>
+  <p>Stack the principal up, with the slice that will be repaid <em>first</em> on top. As each instalment is paid, the stack is shaved off the top, so the outline of the stack over time is exactly the balance-outstanding curve. Now shade in the whole stack over its life. Every square of that shaded shape is one euro being outstanding for one year — a <b>euro-year</b>. The total area is all the euro-years the loan consumes, and there are only two ways to add it up.</p>
+  <figure>
+    <div class="ft">The same area, swept two ways</div>
+    <div class="fs">A straight amortiser, drawn without a drawdown period so the shape stays clean. The shaded area is identical in both panels.</div>
+    <div class="chartbox">
+    <svg class="ch" viewBox="0 0 760 250" role="img" aria-label="Two sweeps of the same triangular area: vertical slices give the balance outstanding at each date, horizontal slices give how long each slice of principal stayed out">
+      <!-- panel A -->
+      <text class="lb" x="60" y="26">Sweep 1 · by date</text>
+      <polygon points="60,180 60,52 320,180" style="fill:var(--accent);opacity:.13"/>
+      <g style="stroke:var(--accent);stroke-width:1;opacity:.55">
+        <line x1="80" y1="180" x2="80" y2="62"/><line x1="100" y1="180" x2="100" y2="72"/>
+        <line x1="120" y1="180" x2="120" y2="82"/><line x1="140" y1="180" x2="140" y2="92"/>
+        <line x1="160" y1="180" x2="160" y2="102"/><line x1="180" y1="180" x2="180" y2="112"/>
+        <line x1="220" y1="180" x2="220" y2="132"/><line x1="240" y1="180" x2="240" y2="142"/>
+        <line x1="260" y1="180" x2="260" y2="152"/><line x1="280" y1="180" x2="280" y2="162"/>
+        <line x1="300" y1="180" x2="300" y2="172"/>
+      </g>
+      <line x1="200" y1="180" x2="200" y2="122" style="stroke:var(--accent);stroke-width:3.5"/>
+      <line x1="60" y1="52" x2="320" y2="180" style="stroke:var(--accent);stroke-width:2.2"/>
+      <line class="grid" x1="60" y1="180" x2="330" y2="180"/><line class="grid" x1="60" y1="44" x2="60" y2="180"/>
+      <text class="tk" x="56" y="50" text-anchor="end">€5bn</text><text class="tk" x="56" y="184" text-anchor="end">0</text>
+      <text class="tk" x="60" y="198">0y</text><text class="tk" x="320" y="198" text-anchor="middle">maturity</text>
+      <text class="tk" x="200" y="214" text-anchor="middle">one column</text>
+      <text class="al" x="195" y="232" text-anchor="middle">"how much is still out at this date?"</text>
+      <!-- panel B -->
+      <text class="lb" x="430" y="26">Sweep 2 · by euro</text>
+      <polygon points="430,180 430,52 690,180" style="fill:var(--accent);opacity:.13"/>
+      <g style="stroke:var(--accent);stroke-width:1;opacity:.55">
+        <line x1="430" y1="62" x2="450" y2="62"/><line x1="430" y1="72" x2="470" y2="72"/>
+        <line x1="430" y1="82" x2="491" y2="82"/><line x1="430" y1="92" x2="511" y2="92"/>
+        <line x1="430" y1="102" x2="532" y2="102"/><line x1="430" y1="112" x2="552" y2="112"/>
+        <line x1="430" y1="132" x2="593" y2="132"/><line x1="430" y1="142" x2="613" y2="142"/>
+        <line x1="430" y1="152" x2="634" y2="152"/><line x1="430" y1="162" x2="654" y2="162"/>
+        <line x1="430" y1="172" x2="674" y2="172"/>
+      </g>
+      <line x1="430" y1="122" x2="573" y2="122" style="stroke:var(--accent);stroke-width:3.5"/>
+      <line x1="430" y1="52" x2="690" y2="180" style="stroke:var(--accent);stroke-width:2.2"/>
+      <line class="grid" x1="430" y1="180" x2="700" y2="180"/><line class="grid" x1="430" y1="44" x2="430" y2="180"/>
+      <text class="tk" x="426" y="50" text-anchor="end">€5bn</text><text class="tk" x="426" y="184" text-anchor="end">0</text>
+      <text class="tk" x="430" y="198">0y</text><text class="tk" x="690" y="198" text-anchor="middle">maturity</text>
+      <text class="tk" x="502" y="214" text-anchor="middle">one row</text>
+      <text class="al" x="560" y="232" text-anchor="middle">"how long did this slice stay out?"</text>
+    </svg>
+    </div>
+    <figcaption>Sweep 1 adds up the columns: the balance outstanding at each date, which is <code>Σ O<sub>i</sub>·a</code>. Sweep 2 adds up the rows: each slice of principal, multiplied by the time from drawdown to the day it is repaid, which is the average repayment date times the principal. Neither sweep can win — they are measuring one area.</figcaption>
+  </figure>
+  <p>That is the whole reason "average repayment date" and "total principal-years per euro" are one number. It also shows, at a glance, why WAL is blind to dispersion: an area can be pushed around in time, stretched late or bunched early, without its total changing at all. Two loans with very different shapes can cover identical area — which is exactly the bullet-versus-amortiser case in section 04.</p>
+
+  <h3>The exposure centre: where the shape balances</h3>
+  <p>The WAL is the <em>area</em> of that stack of money. The exposure centre asks a different question of the same shape: not how big it is, but where it sits. Cut the shape out of card and rest it on a knife edge. The point where it balances is the exposure centre.</p>
+  <p>This is worth doing for the two shapes section 04 drew. Both carry the same WAL of 12.5 years — the same area, the same euro-years — so by the WAL they are the same loan. They do not balance in the same place.</p>
+  <figure>
+    <div class="ft">Same area, same WAL, different balance point</div>
+    <div class="fs">A bullet repaid at 12.5 years, and a straight amortiser running to 25 years. To carry the same area, the amortiser has to run twice as long.</div>
+    <div class="chartbox">
+    <svg class="ch" viewBox="0 0 760 240" role="img" aria-label="A bullet drawn as a rectangle balancing at 6.25 years, and a same-WAL straight amortiser drawn as a triangle balancing later, at 8.33 years">
+      <!-- panel A: bullet -->
+      <text class="lb" x="60" y="24">Bullet · all repaid at 12.5y</text>
+      <rect x="60" y="58" width="160" height="100" style="fill:var(--accent);opacity:.13"/>
+      <rect x="60" y="58" width="160" height="100" style="fill:none;stroke:var(--accent);stroke-width:2.2"/>
+      <line x1="220" y1="44" x2="220" y2="158" style="stroke:var(--muted);stroke-width:1.4;stroke-dasharray:4 4"/>
+      <text class="tk" x="224" y="50">WAL 12.5y</text>
+      <line x1="140" y1="50" x2="140" y2="158" style="stroke:var(--accent);stroke-width:2;stroke-dasharray:5 3"/>
+      <polygon points="131,160 149,160 140,176" style="fill:var(--accent)"/>
+      <line class="grid" x1="50" y1="158" x2="300" y2="158"/>
+      <text class="al" x="140" y="196" text-anchor="middle">balances at 6.25y</text>
+      <text class="tk" x="140" y="214" text-anchor="middle">= WAL / 2</text>
+      <!-- panel B: amortiser -->
+      <text class="lb" x="380" y="24">Straight amortiser · runs to 25y</text>
+      <polygon points="380,158 380,58 700,158" style="fill:var(--accent);opacity:.13"/>
+      <polyline points="380,158 380,58 700,158" style="fill:none;stroke:var(--accent);stroke-width:2.2"/>
+      <line x1="540" y1="44" x2="540" y2="158" style="stroke:var(--muted);stroke-width:1.4;stroke-dasharray:4 4"/>
+      <text class="tk" x="544" y="50">WAL 12.5y</text>
+      <line x1="487" y1="50" x2="487" y2="158" style="stroke:var(--accent);stroke-width:2;stroke-dasharray:5 3"/>
+      <polygon points="478,160 496,160 487,176" style="fill:var(--accent)"/>
+      <line class="grid" x1="370" y1="158" x2="710" y2="158"/>
+      <text class="al" x="487" y="196" text-anchor="middle">balances at 8.33y</text>
+      <text class="tk" x="487" y="214" text-anchor="middle">= 2 × WAL / 3</text>
+    </svg>
+    </div>
+    <figcaption>The dashed grey line is the WAL, identical in both. The balance point is not: the bullet's weight is spread evenly, so it balances halfway along, while the amortiser is tall at the start and tapers to a long thin tail, which drags its balance point past the WAL. On a rising curve that later balance point is the entire wedge.</figcaption>
+  </figure>
+
+  <div class="fx"><div class="eq"><span class="t c1">exposure centre</span> = Σ t<sub>i</sub>·O<sub>i</sub> ÷ Σ O<sub>i</sub> &nbsp;&nbsp;=&nbsp;&nbsp; <span class="t c3">WAL/2 + variance(repayment dates) ÷ (2·WAL)</span></div>
+    <dl>
+      <dt><span class="t c1">as a sum</span></dt><dd>Every half-year's date, weighted by how much is outstanding then. The denominator is the WAL, so the area divides out: the exposure centre says nothing about <em>how much</em> exposure there is, only about <em>when</em> it sits.</dd>
+      <dt><span class="t c3">as a split</span></dt><dd>The same number, written as a bullet's balance point plus a penalty for how spread out the repayments are (section 04).</dd>
+    </dl>
+    <p class="muted" style="margin-bottom:0">It is this quantity, not the WAL, that the credit curve actually prices.</p></div>
+
+  <h4>Where the closed forms come from</h4>
+  <p>A <b>closed form</b> is just a formula that hands you the answer directly, instead of making you add up sixty half-year terms. The balance point of an arbitrary shape has no closed form — you have to do the sum. But the two shapes above are not arbitrary, and schoolroom geometry already knows where each one balances:</p>
+  <ul>
+    <li>A <b>rectangle</b> balances in the middle. The bullet's exposure is spread evenly from day one to maturity, so it balances at half its length: <b>WAL/2</b>.</li>
+    <li>A <b>triangle</b> balances one third of the way along from its tall side. The amortiser's triangle has to be twice as long as the bullet to hold the same area, so one third of that double length lands at <b>2 × WAL/3</b>.</li>
+  </ul>
+  <p>So the centroid and the closed forms are not two different things: the centroid is the definition, and the closed form is the shortcut that exists only when the shape is simple enough to recognise. A real schedule — a drawdown ramp, uneven instalments, a grace period — is not a clean triangle, so the model ignores the shortcut and computes the weighted average directly. That is why this loan lands at 8.26 years rather than exactly on the 8.33 the triangle predicts.</p>
+
+  <h3>Side by side</h3>
+  <div class="tbl"><table class="cmp">
+    <thead><tr><th></th><th>WAL</th><th>Exposure centre</th><th>Macaulay duration</th></tr></thead>
+    <tbody>
+      <tr><td>Averages</td><td>Repayment dates</td><td>Every moment the money is out</td><td>Cash-flow dates</td></tr>
+      <tr><td>Weighted by</td><td>Principal repaid</td><td>Balance outstanding</td><td>Discounted cash flow</td></tr>
+      <tr><td>Geometry</td><td>Area under the balance curve</td><td>Balance point of the same curve</td><td>Balance point of the PVs</td></tr>
+      <tr><td>Units</td><td>Years</td><td>Years</td><td>Years</td></tr>
+      <tr><td>12.5y bullet</td><td>12.50 y</td><td>6.25 y</td><td>—</td></tr>
+      <tr><td>This loan</td><td>12.50 y</td><td>8.26 y</td><td>—</td></tr>
+      <tr><td>Used for</td><td>Reading the curve (the shortcut)</td><td>Where the credit cost really sits</td><td>Interest-rate sensitivity; not used here</td></tr>
+    </tbody></table></div>
+  <p>The first two columns are the point of this page. Equal WAL means equal <em>quantity</em> of exposure — the same block of euro-years — which is exactly why a 12.5-year bullet is a fair comparison for this loan. It does not mean equal exposure <em>in time</em>: the bullet's sits at 6.25 years, the loan's at 8.26. The shortcut prices as if only the WAL column existed; the exposure-centre column is where the wedge comes from.</p>
+</section>
+
+<!-- ================================================================ 06 -->
 <section id="credit" class="lvl">
-  <div class="eyebrow">05 · Credit, default and recovery</div>
+  <div class="eyebrow">06 · Credit, default and recovery</div>
   <h2>Two questions: how likely is default, and how much is lost</h2>
   <p>Ideas 1 and 2 were about <em>when</em> a loan is exposed. This section is about what that exposure costs. A lender's margin has to cover its expected loss, and an expected loss is always the same two things multiplied together: the chance the borrower defaults, and the share of the money that does not come back. Everything below is one of those two.</p>
   <div class="fx"><div class="eq"><span class="t c2">credit margin</span> ≈ <span class="t c1">λ</span> × <span class="t c4">(1 − R)</span> &nbsp;&nbsp;⇔&nbsp;&nbsp; <span class="t c1">λ</span> ≈ <span class="t c2">credit margin</span> ÷ <span class="t c4">(1 − R)</span></div>
     <dl><dt><span class="t c1">λ</span></dt><dd><b>How likely.</b> The default intensity, or hazard rate: the chance of defaulting in a given year.</dd>
     <dt><span class="t c4">1 − R</span></dt><dd><b>How much is lost.</b> The share not recovered: 60% with 40% recovery.</dd>
     <dt><span class="t c2">margin</span></dt><dd>Floating: the Z-spread. Fixed: the YTM minus the swap rate of the same maturity (both in semi-annual terms).</dd></dl>
-    <p class="muted" style="margin-bottom:0">Year 10: the year's own cost is 99.0 bp, so λ ≈ 99 ÷ 0.6 ≈ 165bp; the exact model gives 159.6 bp. Dividing by 0.6 slightly overshoots: what is lost on default is the principal <em>plus</em> the half-year's interest, less recovery, so the exact break-even is c ≈ λ × (1 − R + f·a) ≈ λ × 0.617 here (section 09).</p></div>
+    <p class="muted" style="margin-bottom:0">Year 10: the year's own cost is 99.0 bp, so λ ≈ 99 ÷ 0.6 ≈ 165bp; the exact model gives 159.6 bp. Dividing by 0.6 slightly overshoots: what is lost on default is the principal <em>plus</em> the half-year's interest, less recovery, so the exact break-even is c ≈ λ × (1 − R + f·a) ≈ λ × 0.617 here (section 10).</p></div>
 
   <h3>How likely: the default intensity λ</h3>
   <p>The model expresses each year's credit cost as a <b>default intensity</b> λ, also called a hazard rate.</p>
@@ -461,12 +590,12 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt><span class="t c3">1 + f·a − R</span></dt><dd>Lost per unit still owed: the principal, plus the half-year's interest due, less what is recovered.</dd>
       <dt><span class="t c1">O<sub>i</sub></span></dt><dd>The balance still outstanding in that half-year. Severity applies to what is owed <em>then</em>, not to the original EUR 5bn.</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">The same O<sub>i</sub> appears in the recovery term of the loan's present value, R·(S<sub>i−1</sub> − S<sub>i</sub>)·O<sub>i</sub>, and in the weights w<sub>i</sub> that average the per-period costs (section 09).</p></div>
+    <p class="muted" style="margin-bottom:0">The same O<sub>i</sub> appears in the recovery term of the loan's present value, R·(S<sub>i−1</sub> − S<sub>i</sub>)·O<sub>i</sub>, and in the weights w<sub>i</sub> that average the per-period costs (section 10).</p></div>
   <p>For a bullet bond the distinction is invisible: the balance is 100% of face for the whole life, so "40% of what is owed" and "40% of the face" are the same number. You cannot get it wrong. For an amortising loan the two part company every six months, and only one of them is right.</p>
   <p>Suppose the borrower defaults in year 20. About 19.57% of the original EUR 5bn is still outstanding then, so the lender recovers 40% of <em>that</em>: roughly EUR 0.39bn. Applying 40% to the original EUR 5bn instead would claim EUR 2bn of recovery on a position where under EUR 1bn is still owed. The loss given default would turn <em>negative</em> — the model would treat a late default as a windfall — and the late years, which is where the wedge lives, would price as almost free.</p>
 
   <h3>Why the recovery assumption itself barely matters</h3>
-  <p>Changing the recovery rate moves the answer very little: 8.99 bp at 20% recovery, 8.82 at 40%, 8.49 at 60% (section 07). That looks surprising until you notice that R enters the model twice, in opposite directions.</p>
+  <p>Changing the recovery rate moves the answer very little: 8.99 bp at 20% recovery, 8.82 at 40%, 8.49 at 60% (section 08). That looks surprising until you notice that R enters the model twice, in opposite directions.</p>
   <div class="duo">
     <div><h4>Going in: backing out λ</h4><p>The bond quotes are fixed market data. A higher recovery means each default costs less, so a <em>higher</em> λ is needed to explain the same observed spread.</p></div>
     <div><h4>Coming out: pricing the loan</h4><p>That higher λ is then multiplied by a smaller loss per default. The two moves are close to proportional, so most of the change cancels.</p></div>
@@ -483,7 +612,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 
 <!-- ================================================================ 07 -->
 <section id="price" class="lvl">
-  <div class="eyebrow">06 · From yearly costs to a loan price</div>
+  <div class="eyebrow">07 · From yearly costs to a loan price</div>
   <h2>A weighted average of the half-year costs</h2>
   <p>The whole calculation, from your inputs to row 13 of the Results tab, is a sequence of seven steps.</p>
   <div class="pipe">
@@ -553,7 +682,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 
 <!-- ================================================================ 08 -->
 <section id="results" class="lvl">
-  <div class="eyebrow">07 · What the borrower saves</div>
+  <div class="eyebrow">08 · What the borrower saves</div>
   <h2>Results for the EUR 5bn case</h2>
   <div class="tbl"><table>
     <thead><tr><th>Metric</th><th>Floating vs Z-spread</th><th>Fixed vs YTM</th><th>Results row</th></tr></thead>
@@ -603,7 +732,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 
 <!-- ================================================================ 09 -->
 <section id="lab" class="lvl">
-  <div class="eyebrow">08 · Try it</div>
+  <div class="eyebrow">09 · Try it</div>
   <h2>The lab</h2>
   <p>The full engine runs in this page. It starts on the case above; change anything and every number updates. Curve scenarios transform the case's own curves so you can see what drives the answer.</p>
   <figure>
@@ -642,91 +771,9 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 
 <!-- ================================================================ 10 -->
 <section id="math" class="lvl">
-  <div class="eyebrow">09 · For specialists</div>
+  <div class="eyebrow">10 · For specialists</div>
   <h2>The full maths, annotated</h2>
   <p>Notation: half-year periods i = 1…60, t<sub>i</sub> = i/2, accrual a = 0.5, recovery R. All quantities per unit of notional.</p>
-
-  <h3>The time measures, in one place</h3>
-  <p>Two numbers describe <em>when</em> a facility's money is at risk: the <b>WAL</b> and the <b>exposure centre</b>. They are easy to confuse, because both are averages of dates measured in years, and for a bullet they look almost interchangeable. They are collected here, with the textbook third cousin, because the rest of the document uses them constantly.</p>
-
-  <h4>WAL, defined two ways</h4>
-  <div class="fx"><div class="eq"><span class="t c1">WAL</span> = Σ (principal repaid at t) · t ÷ principal &nbsp;&nbsp;=&nbsp;&nbsp; <span class="t c2">Σ O<sub>i</sub> · a</span></div>
-    <dl>
-      <dt><span class="t c1">by repayment</span></dt><dd>The average date on which principal comes back, each date weighted by how much is repaid then. For a bullet there is one date, so WAL = maturity.</dd>
-      <dt><span class="t c2">by balance</span></dt><dd>The total principal-years the loan consumes, per unit of principal: add up the balance outstanding in each half-year, times the length of the half-year. Geometrically, the <b>area</b> under the balance-outstanding curve.</dd>
-    </dl>
-    <p class="muted" style="margin-bottom:0">Units reconcile either way: EUR × years ÷ EUR = years. Both give 12.50 years for this loan.</p></div>
-
-  <p>Those two definitions look unrelated — one is about repayments, the other about outstanding balance — yet they always give the same number. The quickest way to see why is to stop thinking about rates and dates, and picture the loan as a physical <b>stack of money</b>.</p>
-  <p>Stack the principal up, with the slice that will be repaid <em>first</em> on top. As each instalment is paid, the stack is shaved off the top, so the outline of the stack over time is exactly the balance-outstanding curve. Now shade in the whole stack over its life. Every square of that shaded shape is one euro being outstanding for one year — a <b>euro-year</b>. The total area is all the euro-years the loan consumes, and there are only two ways to add it up.</p>
-  <figure>
-    <div class="ft">The same area, swept two ways</div>
-    <div class="fs">A straight amortiser, drawn without a drawdown period so the shape stays clean. The shaded area is identical in both panels.</div>
-    <div class="chartbox">
-    <svg class="ch" viewBox="0 0 760 250" role="img" aria-label="Two sweeps of the same triangular area: vertical slices give the balance outstanding at each date, horizontal slices give how long each slice of principal stayed out">
-      <!-- panel A -->
-      <text class="lb" x="60" y="26">Sweep 1 · by date</text>
-      <polygon points="60,180 60,52 320,180" style="fill:var(--accent);opacity:.13"/>
-      <g style="stroke:var(--accent);stroke-width:1;opacity:.55">
-        <line x1="80" y1="180" x2="80" y2="62"/><line x1="100" y1="180" x2="100" y2="72"/>
-        <line x1="120" y1="180" x2="120" y2="82"/><line x1="140" y1="180" x2="140" y2="92"/>
-        <line x1="160" y1="180" x2="160" y2="102"/><line x1="180" y1="180" x2="180" y2="112"/>
-        <line x1="220" y1="180" x2="220" y2="132"/><line x1="240" y1="180" x2="240" y2="142"/>
-        <line x1="260" y1="180" x2="260" y2="152"/><line x1="280" y1="180" x2="280" y2="162"/>
-        <line x1="300" y1="180" x2="300" y2="172"/>
-      </g>
-      <line x1="200" y1="180" x2="200" y2="122" style="stroke:var(--accent);stroke-width:3.5"/>
-      <line x1="60" y1="52" x2="320" y2="180" style="stroke:var(--accent);stroke-width:2.2"/>
-      <line class="grid" x1="60" y1="180" x2="330" y2="180"/><line class="grid" x1="60" y1="44" x2="60" y2="180"/>
-      <text class="tk" x="56" y="50" text-anchor="end">€5bn</text><text class="tk" x="56" y="184" text-anchor="end">0</text>
-      <text class="tk" x="60" y="198">0y</text><text class="tk" x="320" y="198" text-anchor="middle">maturity</text>
-      <text class="tk" x="200" y="214" text-anchor="middle">one column</text>
-      <text class="al" x="195" y="232" text-anchor="middle">"how much is still out at this date?"</text>
-      <!-- panel B -->
-      <text class="lb" x="430" y="26">Sweep 2 · by euro</text>
-      <polygon points="430,180 430,52 690,180" style="fill:var(--accent);opacity:.13"/>
-      <g style="stroke:var(--accent);stroke-width:1;opacity:.55">
-        <line x1="430" y1="62" x2="450" y2="62"/><line x1="430" y1="72" x2="470" y2="72"/>
-        <line x1="430" y1="82" x2="491" y2="82"/><line x1="430" y1="92" x2="511" y2="92"/>
-        <line x1="430" y1="102" x2="532" y2="102"/><line x1="430" y1="112" x2="552" y2="112"/>
-        <line x1="430" y1="132" x2="593" y2="132"/><line x1="430" y1="142" x2="613" y2="142"/>
-        <line x1="430" y1="152" x2="634" y2="152"/><line x1="430" y1="162" x2="654" y2="162"/>
-        <line x1="430" y1="172" x2="674" y2="172"/>
-      </g>
-      <line x1="430" y1="122" x2="573" y2="122" style="stroke:var(--accent);stroke-width:3.5"/>
-      <line x1="430" y1="52" x2="690" y2="180" style="stroke:var(--accent);stroke-width:2.2"/>
-      <line class="grid" x1="430" y1="180" x2="700" y2="180"/><line class="grid" x1="430" y1="44" x2="430" y2="180"/>
-      <text class="tk" x="426" y="50" text-anchor="end">€5bn</text><text class="tk" x="426" y="184" text-anchor="end">0</text>
-      <text class="tk" x="430" y="198">0y</text><text class="tk" x="690" y="198" text-anchor="middle">maturity</text>
-      <text class="tk" x="502" y="214" text-anchor="middle">one row</text>
-      <text class="al" x="560" y="232" text-anchor="middle">"how long did this slice stay out?"</text>
-    </svg>
-    </div>
-    <figcaption>Sweep 1 adds up the columns: the balance outstanding at each date, which is <code>Σ O<sub>i</sub>·a</code>. Sweep 2 adds up the rows: each slice of principal, multiplied by the time from drawdown to the day it is repaid, which is the average repayment date times the principal. Neither sweep can win — they are measuring one area.</figcaption>
-  </figure>
-  <p>That is the whole reason "average repayment date" and "total principal-years per euro" are one number. It also shows, at a glance, why WAL is blind to dispersion: an area can be pushed around in time, stretched late or bunched early, without its total changing at all. Two loans with very different shapes can cover identical area — which is exactly the bullet-versus-amortiser case in section 04.</p>
-
-  <h4>Exposure centre</h4>
-  <div class="fx"><div class="eq"><span class="t c1">exposure centre</span> = Σ t<sub>i</sub>·O<sub>i</sub> ÷ Σ O<sub>i</sub> &nbsp;&nbsp;=&nbsp;&nbsp; <span class="t c3">WAL/2 + variance(repayment dates) ÷ (2·WAL)</span></div>
-    <dl>
-      <dt><span class="t c1">centroid</span></dt><dd>The average date weighted by how much is outstanding then. Geometrically, the <b>balance point</b> of the same curve whose area is the WAL.</dd>
-      <dt><span class="t c3">closed forms</span></dt><dd>Bullet: WAL/2 (a rectangle balances in the middle). Straight amortiser: 2·WAL/3 (a triangle balances a third of the way from its tall side). Anything else sits between WAL/2 and its own maturity.</dd>
-    </dl>
-    <p class="muted" style="margin-bottom:0">The denominator is the WAL, so the area divides out: the exposure centre carries no information about <em>how much</em> exposure there is, only about <em>when</em> it sits. It is this quantity, not the WAL, that the credit curve actually prices.</p></div>
-
-  <h4>Side by side</h4>
-  <div class="tbl"><table class="cmp">
-    <thead><tr><th></th><th>WAL</th><th>Exposure centre</th><th>Macaulay duration</th></tr></thead>
-    <tbody>
-      <tr><td>Averages</td><td>Repayment dates</td><td>Every moment the money is out</td><td>Cash-flow dates</td></tr>
-      <tr><td>Weighted by</td><td>Principal repaid</td><td>Balance outstanding</td><td>Discounted cash flow</td></tr>
-      <tr><td>Geometry</td><td>Area under the balance curve</td><td>Balance point of the same curve</td><td>Balance point of the PVs</td></tr>
-      <tr><td>Units</td><td>Years</td><td>Years</td><td>Years</td></tr>
-      <tr><td>12.5y bullet</td><td>12.50 y</td><td>6.25 y</td><td>—</td></tr>
-      <tr><td>This loan</td><td>12.50 y</td><td>8.26 y</td><td>—</td></tr>
-      <tr><td>Used for</td><td>Reading the curve (the shortcut)</td><td>Where the credit cost really sits</td><td>Interest-rate sensitivity; not used here</td></tr>
-    </tbody></table></div>
-  <p>The first two columns are the point of this page. Equal WAL means equal <em>quantity</em> of exposure — the same block of euro-years — which is exactly why a 12.5-year bullet is a fair comparison for this loan. It does not mean equal exposure <em>in time</em>: the bullet's sits at 6.25 years, the loan's at 8.26. The shortcut prices as if only the WAL column existed; the exposure-centre column is where the wedge comes from.</p>
 
   <h3>Risk-free discount factors</h3>
   <div class="fx"><div class="eq">DF(k) = (1 − <span class="t c1">r<sub>k</sub></span>·α·Σ<sub>j&lt;k</sub>DF(j)) ÷ (1 + <span class="t c1">r<sub>k</sub></span>·α) &nbsp;&nbsp; DF(k−½) = √(DF(k−1)·DF(k)) &nbsp;&nbsp; DF(½) = 1 ÷ (1 + <span class="t c3">r<sub>6M</sub></span>·182.5/360)</div>
@@ -761,7 +808,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 
 <!-- ================================================================ 11 -->
 <section id="faq" class="lvl">
-  <div class="eyebrow">10 · Questions people ask</div>
+  <div class="eyebrow">11 · Questions people ask</div>
   <h2>Questions and answers</h2>
   <details><summary>What if the bond curve is flat? What if it is straight?</summary><div><p>Flat: every year costs the same, so it does not matter when the money is lent and the shortcut is right (saving ≈ 0; 0.002 bp in this case, a modelling residue). Straight and rising: there is a saving roughly equal to slope × WAL ÷ 3, because the amortiser's exposure sits later than the bullet's. Curvature then adds (steepening) or subtracts (flattening). See section 04.</p></div></details>
   <details><summary>Isn't the WAL already a centre of gravity? Why is it different?</summary><div><p>WAL is the centre of gravity of the <em>repayments</em>. The credit curve prices the <em>balance outstanding</em>, whose centre of gravity is WAL/2 for a bullet and about 2·WAL/3 for a straight amortiser (8.26 years for this loan vs 6.25 for the bullet). There is no standard name; "exposure-weighted average time" describes it. Macaulay duration is the textbook relative.</p></div></details>
@@ -782,7 +829,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 
 <!-- ================================================================ 12 -->
 <section id="limits" class="lvl">
-  <div class="eyebrow">11 · Read before quoting a number</div>
+  <div class="eyebrow">12 · Read before quoting a number</div>
   <h2>Assumptions and limitations</h2>
   <ul>
     <li><b>Bond quotes as par bonds.</b> Each Z-spread is treated as the spread of a floating bullet at par for that tenor, each YTM as the coupon of a par bullet. Exact for bonds near par; for deep discount or premium lines, prefer a fitted issuer curve (Bloomberg CRVF / BVAL).</li>
