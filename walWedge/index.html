@@ -436,19 +436,20 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt><span class="t c2">O<sub>i</sub></span></dt><dd>The balance outstanding in half-year i, as a fraction of the original principal. It starts at 1 and steps down to 0.</dd>
       <dt><span class="t c3">a</span></dt><dd>The length of each period, 0.5 years. Half-years are used because the loan pays semi-annually.</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">Units: a fraction of principal (no unit) × years = <b>years</b>. Written in money instead of fractions it is EUR × years ÷ EUR, which is years again.</p></div>
+    <p class="muted" style="margin-bottom:0">Units: O<sub>i</sub> is a fraction, so fraction × years = <b>years</b>. Note that a division is already hidden inside O<sub>i</sub>. Had the balance been written in euros, the sum would come out in euro-years, and you would still have to divide by the principal to get back to years — which is exactly what expressing the balance as a fraction does up front.</p></div>
 
   <h4>Way 2 · by euro — follow the money</h4>
   <p>Forget the balance and take the euros one at a time. Each euro is drawn on some date and repaid on some later date, and the gap between the two is how long that euro was working. Average that gap over every euro borrowed. In words: <em>the average time a euro stays out</em>.</p>
   <div class="fx"><div class="eq"><span class="t c1">WAL</span> = <span class="t c2">average repayment date</span> − <span class="t c4">average drawdown date</span> = <span class="t c2">12.75</span> − <span class="t c4">0.25</span> = 12.50</div>
     <dl>
-      <dt><span class="t c2">average repayment date</span></dt><dd>Each repayment date weighted by how much principal comes back on it. Here 46 equal instalments evenly spread from 1.5 to 24 years, averaging 12.75.</dd>
-      <dt><span class="t c4">average drawdown date</span></dt><dd>The same calculation on the way in. Here half the money is drawn at signing and half at month 6, averaging 0.25. Subtracting it is what stops the loan being credited for time before the money was actually advanced.</dd>
+      <dt><span class="t c2">average repayment date</span></dt><dd>Each repayment date weighted by how much principal comes back on it. Here the 46 instalments are equal and evenly spaced, so their weighted average is simply the midpoint of the first and the last: (1.5 + 24) ÷ 2 = <b>12.75</b> years.</dd>
+      <dt><span class="t c4">average drawdown date</span></dt><dd>The same calculation on the way in. Here half the money is drawn at signing and half at month 6: (½ × 0) + (½ × 0.5) = <b>0.25</b> years. Subtracting it is what stops the loan being credited for time before the money was actually advanced.</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">Units: years − years = <b>years</b>. When everything is drawn at once on day one the second term is zero and WAL is simply the average repayment date — which is why a bullet's WAL equals its maturity.</p></div>
+    <p class="muted" style="margin-bottom:0">Units: years − years = <b>years</b>. Both terms are averages weighted by principal, so each has already been divided by the amount borrowed. When everything is drawn at once on day one the second term is zero and WAL is simply the average repayment date — which is why a bullet's WAL equals its maturity.</p></div>
 
   <h4>Why the two agree</h4>
   <p>Put side by side, the two ways share one thing: both are totalling <b>euro-years</b> — one euro being outstanding for one year. Way 1 collects euro-years by date, Way 2 collects the same euro-years by euro. Neither can be larger than the other, because they are inventories of the same thing.</p>
+  <p>That also settles the units. The raw total is genuinely in euro-years: this loan consumes 5bn × 12.5 = <b>62.5bn euro-years</b>. WAL reports that total <em>per euro borrowed</em>, so the euros cancel and what is left is <b>years</b> — read it as "the average euro stayed out for 12.5 years". Both formulas above have that division already built in, which is why neither shows it explicitly.</p>
   <p>To see it, picture the loan as a physical <b>stack of money</b>. Stack the principal up with the slice that will be repaid <em>first</em> on top. As each instalment is paid the stack is shaved off the top, so the outline of the stack over time is exactly the balance-outstanding curve. Shade the whole stack over its life: every square of that shape is one euro-year, and the total area is every euro-year the loan consumes. Sweeping that area vertically is Way 1; sweeping it horizontally is Way 2.</p>
   <figure>
     <div class="ft">The same area, swept two ways</div>
