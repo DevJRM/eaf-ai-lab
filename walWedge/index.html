@@ -376,6 +376,23 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt>÷ 3</dt><dd>Carries the dispersion of a straight amortiser's repayments. A bullet has no dispersion, so its wedge is exactly zero: the shortcut prices it correctly.</dd>
     </dl>
     <p class="muted" style="margin-bottom:0">For a curve of 10bp rising 4bp a year and our loan: 4 × 12.5 ÷ 3 = <b>16.7 bp</b>, against the engine's exact <b>13.55 bp</b>. The rule of thumb counts every year equally; the engine discounts later years and allows for default, which gives the long tail less weight and brings the figure down.</p></div>
+  <details>
+    <summary>How the two facts combine into the rule of thumb</summary>
+    <div>
+      <p><b>Write the straight curve.</b> Let the quoted curve be <code>quoted(t) = a + g &times; t</code>: it starts at <code>a</code> and rises <code>g</code> each year. Fact 2 says the per-year costs it averages must rise twice as fast, so <code>cost(t) = a + 2g &times; t</code>. (Check it: average <code>a + 2g &times; t</code> from 0 to T and the quoted curve comes back out as <code>a + g &times; T</code>.)</p>
+      <p><b>What the borrower is charged.</b> The shortcut reads the <em>quoted</em> curve at the WAL: <code>charged = a + g &times; WAL</code>.</p>
+      <p><b>What is actually fair.</b> Fact 1 says the loan prices at a single point &mdash; its exposure centre E &mdash; and pays the <em>per-year</em> cost there: <code>fair = a + 2g &times; E</code>.</p>
+      <p><b>Subtract the two.</b> <code>wedge = (a + 2g &times; E) &minus; (a + g &times; WAL) = g &times; (2E &minus; WAL)</code>. The level <code>a</code> cancels out, which is exactly why the rule of thumb depends on the slope alone and not on where the curve sits.</p>
+      <p>That leaves one number to find per shape, and both were derived earlier:</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Shape</th><th>Exposure centre E</th><th>2E &minus; WAL</th><th>Wedge</th></tr></thead>
+        <tbody>
+          <tr><td class="txt">Bullet</td><td>WAL / 2</td><td>0</td><td>0</td></tr>
+          <tr><td class="txt">Straight amortiser</td><td>2 × WAL / 3</td><td>WAL / 3</td><td>g × WAL / 3</td></tr>
+        </tbody></table></div>
+      <p>So the <b>÷ 3</b> is simply <code>2 &times; (2/3) &minus; 1</code>: what is left after doubling the amortiser's exposure centre and taking off the WAL the shortcut charges at. A bullet sits exactly at WAL/2, so the two prices meet and its wedge is zero. Every amortiser sits beyond WAL/2, so every amortiser has a positive wedge.</p>
+    </div>
+  </details>
   <p>From there the shape of the curve decides the size:</p>
   <ul>
     <li><b>Flat curve:</b> every year costs the same, so timing cannot matter. Wedge ≈ 0. In this case the engine returns 0.002 bp: a technical residue because the model holds default intensity constant within each year while the first six months use the 6M fixing. Without the 6M fixing it is 0.000 bp.</li>
