@@ -427,22 +427,36 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <p>Two numbers describe <em>when</em> a facility's money is at risk: the <b>WAL</b> and the <b>exposure centre</b>. Both are averages of dates measured in years, both have appeared already, and they are constantly mistaken for one another. Everything from here on rests on telling them apart, so this section defines each one properly, shows what it looks like, and sets them side by side.</p>
 
   <h3>WAL, defined two ways</h3>
-  <div class="fx"><div class="eq"><span class="t c1">WAL</span> = Σ (principal repaid at t) · t ÷ principal &nbsp;&nbsp;=&nbsp;&nbsp; <span class="t c2">Σ O<sub>i</sub> · a</span></div>
-    <dl>
-      <dt><span class="t c1">by repayment</span></dt><dd>The average date on which principal comes back, each date weighted by how much is repaid then. For a bullet there is one date, so WAL = maturity.</dd>
-      <dt><span class="t c2">by balance</span></dt><dd>The total principal-years the loan consumes, per unit of principal: add up the balance outstanding in each half-year, times the length of the half-year. Geometrically, the <b>area</b> under the balance-outstanding curve.</dd>
-    </dl>
-    <p class="muted" style="margin-bottom:0">Units reconcile either way: EUR × years ÷ EUR = years. Both give 12.50 years for this loan.</p></div>
+  <p>WAL answers one question: <b>how much lending is there, and for how long?</b> There are two routes to it. They look like different quantities — one watches the loan's balance, the other follows individual euros — and they always land on the same number. Both are set out below, then the reason they agree.</p>
 
-  <p>Those two definitions look unrelated — one is about repayments, the other about outstanding balance — yet they always give the same number. The quickest way to see why is to stop thinking about rates and dates, and picture the loan as a physical <b>stack of money</b>.</p>
-  <p>Stack the principal up, with the slice that will be repaid <em>first</em> on top. As each instalment is paid, the stack is shaved off the top, so the outline of the stack over time is exactly the balance-outstanding curve. Now shade in the whole stack over its life. Every square of that shaded shape is one euro being outstanding for one year — a <b>euro-year</b>. The total area is all the euro-years the loan consumes, and there are only two ways to add it up.</p>
+  <h4>Way 1 · by date — watch the balance</h4>
+  <p>Stand at each date in turn and ask how much is still owed at that moment. Multiply by how long that moment lasts, and add up across the life of the loan. In words: <em>how much is out, and for how long, totted up period by period</em>. Geometrically it is the <b>area</b> under the balance-outstanding curve.</p>
+  <div class="fx"><div class="eq"><span class="t c1">WAL</span> = Σ <span class="t c2">O<sub>i</sub></span> · <span class="t c3">a</span></div>
+    <dl>
+      <dt><span class="t c2">O<sub>i</sub></span></dt><dd>The balance outstanding in half-year i, as a fraction of the original principal. It starts at 1 and steps down to 0.</dd>
+      <dt><span class="t c3">a</span></dt><dd>The length of each period, 0.5 years. Half-years are used because the loan pays semi-annually.</dd>
+    </dl>
+    <p class="muted" style="margin-bottom:0">Units: a fraction of principal (no unit) × years = <b>years</b>. Written in money instead of fractions it is EUR × years ÷ EUR, which is years again.</p></div>
+
+  <h4>Way 2 · by euro — follow the money</h4>
+  <p>Forget the balance and take the euros one at a time. Each euro is drawn on some date and repaid on some later date, and the gap between the two is how long that euro was working. Average that gap over every euro borrowed. In words: <em>the average time a euro stays out</em>.</p>
+  <div class="fx"><div class="eq"><span class="t c1">WAL</span> = <span class="t c2">average repayment date</span> − <span class="t c4">average drawdown date</span> = <span class="t c2">12.75</span> − <span class="t c4">0.25</span> = 12.50</div>
+    <dl>
+      <dt><span class="t c2">average repayment date</span></dt><dd>Each repayment date weighted by how much principal comes back on it. Here 46 equal instalments evenly spread from 1.5 to 24 years, averaging 12.75.</dd>
+      <dt><span class="t c4">average drawdown date</span></dt><dd>The same calculation on the way in. Here half the money is drawn at signing and half at month 6, averaging 0.25. Subtracting it is what stops the loan being credited for time before the money was actually advanced.</dd>
+    </dl>
+    <p class="muted" style="margin-bottom:0">Units: years − years = <b>years</b>. When everything is drawn at once on day one the second term is zero and WAL is simply the average repayment date — which is why a bullet's WAL equals its maturity.</p></div>
+
+  <h4>Why the two agree</h4>
+  <p>Put side by side, the two ways share one thing: both are totalling <b>euro-years</b> — one euro being outstanding for one year. Way 1 collects euro-years by date, Way 2 collects the same euro-years by euro. Neither can be larger than the other, because they are inventories of the same thing.</p>
+  <p>To see it, picture the loan as a physical <b>stack of money</b>. Stack the principal up with the slice that will be repaid <em>first</em> on top. As each instalment is paid the stack is shaved off the top, so the outline of the stack over time is exactly the balance-outstanding curve. Shade the whole stack over its life: every square of that shape is one euro-year, and the total area is every euro-year the loan consumes. Sweeping that area vertically is Way 1; sweeping it horizontally is Way 2.</p>
   <figure>
     <div class="ft">The same area, swept two ways</div>
-    <div class="fs">A straight amortiser, drawn without a drawdown period so the shape stays clean. The shaded area is identical in both panels.</div>
+    <div class="fs">A straight amortiser drawn with everything advanced on day one, so the shape stays a clean triangle and each euro's time out is simply its repayment date. The shaded area is identical in both panels.</div>
     <div class="chartbox">
     <svg class="ch" viewBox="0 0 760 250" role="img" aria-label="Two sweeps of the same triangular area: vertical slices give the balance outstanding at each date, horizontal slices give how long each slice of principal stayed out">
       <!-- panel A -->
-      <text class="lb" x="60" y="26">Sweep 1 · by date</text>
+      <text class="lb" x="60" y="26">Way 1 · by date</text>
       <polygon points="60,180 60,52 320,180" style="fill:var(--accent);opacity:.13"/>
       <g style="stroke:var(--accent);stroke-width:1;opacity:.55">
         <line x1="80" y1="180" x2="80" y2="62"/><line x1="100" y1="180" x2="100" y2="72"/>
@@ -460,7 +474,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <text class="tk" x="200" y="214" text-anchor="middle">one column</text>
       <text class="al" x="195" y="232" text-anchor="middle">"how much is still out at this date?"</text>
       <!-- panel B -->
-      <text class="lb" x="430" y="26">Sweep 2 · by euro</text>
+      <text class="lb" x="430" y="26">Way 2 · by euro</text>
       <polygon points="430,180 430,52 690,180" style="fill:var(--accent);opacity:.13"/>
       <g style="stroke:var(--accent);stroke-width:1;opacity:.55">
         <line x1="430" y1="62" x2="450" y2="62"/><line x1="430" y1="72" x2="470" y2="72"/>
@@ -479,9 +493,9 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <text class="al" x="560" y="232" text-anchor="middle">"how long did this slice stay out?"</text>
     </svg>
     </div>
-    <figcaption>Sweep 1 adds up the columns: the balance outstanding at each date, which is <code>Σ O<sub>i</sub>·a</code>. Sweep 2 adds up the rows: each slice of principal, multiplied by the time from drawdown to the day it is repaid, which is the average repayment date times the principal. Neither sweep can win — they are measuring one area.</figcaption>
+    <figcaption>Way 1 adds up the columns: how much is outstanding at each date, which is <code>Σ O<sub>i</sub>·a</code>. Way 2 adds up the rows: each slice of principal, multiplied by the time from the day it is drawn to the day it is repaid. Neither sweep can win — they are measuring one area, so the two definitions cannot disagree.</figcaption>
   </figure>
-  <p>That is the whole reason "average repayment date" and "total principal-years per euro" are one number. It also shows, at a glance, why WAL is blind to dispersion: an area can be pushed around in time, stretched late or bunched early, without its total changing at all. Two loans with very different shapes can cover identical area — which is exactly the bullet-versus-amortiser case in section 04.</p>
+  <p>That is the whole reason "average time a euro stays out" and "total principal-years per euro" are one number. The picture also shows, at a glance, why WAL is blind to dispersion: an area can be pushed around in time, stretched late or bunched early, without its total changing at all. Two loans with very different shapes can cover identical area — which is exactly the bullet-versus-amortiser case in section 04.</p>
 
   <h3>The exposure centre: where the shape balances</h3>
   <p>The WAL is the <em>area</em> of that stack of money. The exposure centre asks a different question of the same shape: not how big it is, but where it sits. Cut the shape out of card and rest it on a knife edge. The point where it balances is the exposure centre.</p>
