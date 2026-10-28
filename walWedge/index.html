@@ -534,23 +534,25 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   </figure>
 
   <h4>The definition · as a sum</h4>
-  <p>Go through the half-years one at a time, note the date, and weight it by how much is still outstanding then. Periods carrying a lot of balance pull the average towards themselves; periods carrying none have no say at all. In words: <em>the average date, weighted by exposure rather than by repayment</em>.</p>
-  <div class="fx"><div class="eq">exposure centre = Σ <span class="t c1">t<sub>i</sub></span>·<span class="t c2">O<sub>i</sub></span> ÷ <span class="t c3">Σ O<sub>i</sub></span></div>
+  <p>Go through the half-years one at a time, note the date, and weight it by how much is still outstanding then. Periods carrying a lot of balance pull the average towards themselves; periods carrying none have no say at all.</p>
+  <p>Both WAL and the exposure centre are averages of dates, which is why they are so easily confused, but they average different sets of dates with different weights. WAL averages the dates money comes <em>back</em>, weighted by how much comes back on each. The exposure centre averages <em>every</em> date the money is out, weighted by how much is out then.</p>
+  <div class="fx"><div class="eq">exposure centre = Σ <span class="t c1">t<sub>i</sub></span>·<span class="t c2">O<sub>i</sub>·a</span> ÷ <span class="t c3">WAL</span></div>
     <dl>
-      <dt><span class="t c1">t<sub>i</sub></span></dt><dd>The date of half-year i, in years from signing.</dd>
-      <dt><span class="t c2">O<sub>i</sub></span></dt><dd>The balance outstanding in that half-year, as a fraction of principal — the same O<sub>i</sub> as in Way 1 above. It is the weight.</dd>
-      <dt><span class="t c3">Σ O<sub>i</sub></span></dt><dd>The sum of the weights, which is the WAL divided by the period length. Dividing by it is what turns a total into an average.</dd>
+      <dt><span class="t c1">t<sub>i</sub></span></dt><dd>The middle of half-year i, in years from signing. The middle rather than the end, because the balance sits there for the whole period, not just at its close.</dd>
+      <dt><span class="t c2">O<sub>i</sub>·a</span></dt><dd>The euro-years consumed in that half-year: the balance outstanding, as a fraction of principal, times the 0.5-year length of the period. Exactly one column of the stack from Way 1.</dd>
+      <dt><span class="t c3">WAL</span></dt><dd>The total euro-years, since that is all the WAL is. Dividing by it is what turns a total into an average.</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">Units: (years × fraction) ÷ fraction = <b>years</b>. The fractions cancel, and with them every trace of <em>how much</em> exposure there is. What survives is purely <em>when</em> it sits — which is why this, and not the WAL, is the number the credit curve prices.</p></div>
+    <p class="muted" style="margin-bottom:0">So the whole thing reads: every euro-year, tagged with the date it happened, divided by all the euro-years. Units: (years × years) ÷ years = <b>years</b>. The euro-years cancel, and with them every trace of <em>how much</em> exposure there is. What survives is purely <em>when</em> it sits — which is why this, and not the WAL, is the number the credit curve prices.</p></div>
 
   <h4>The same number · as a split</h4>
   <p>That sum can be rearranged into two pieces that each mean something on their own: a baseline every loan starts from, and a penalty for spreading repayments out in time. Section 04 derives it and uses it to explain the wedge; it is repeated here because it is the clearest statement of what the exposure centre actually measures.</p>
-  <div class="fx"><div class="eq">exposure centre = <span class="t c2">WAL/2</span> + <span class="t c4">variance(repayment dates)</span> ÷ (2·WAL)</div>
+  <div class="fx"><div class="eq">exposure centre = <span class="t c2">WAL / 2</span> + <span class="t c4">(spread of repayment dates)²</span> ÷ (2 × WAL)</div>
     <dl>
-      <dt><span class="t c2">WAL/2</span></dt><dd>The baseline: where a loan balances if all its exposure is concentrated on a single date. No loan can sit earlier than this.</dd>
-      <dt><span class="t c4">variance</span></dt><dd>How spread out the repayment dates are around the WAL, in years squared. Zero for a bullet, which has one date; large for 46 instalments running over 23 years.</dd>
+      <dt><span class="t c2">WAL / 2</span></dt><dd>The baseline: where a loan balances if all its exposure is concentrated on a single date. No loan can sit earlier than this.</dd>
+      <dt><span class="t c4">spread²</span></dt><dd>The variance of the repayment dates: <b>spread</b> is their standard deviation, how far they typically sit from the WAL, so squaring it gives years squared. Zero for a bullet, which has one date; large for 46 instalments running over 23 years. Written the same way in section 04.</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">Units: years + (years² ÷ years) = <b>years</b>. That is what the division by 2·WAL is for — without it the two terms could not be added. Because a variance can never be negative, the second term only ever pushes the centre <em>later</em>.</p></div>
+    <p class="muted" style="margin-bottom:0">Units: years + (years² ÷ years) = <b>years</b>. That is what the division by 2 × WAL is for — without it the two terms could not be added. Because a variance can never be negative, the second term only ever pushes the centre <em>later</em>.</p></div>
+  <p><b>Why 2 appears twice.</b> It is the same 2 both times, and there is really only one division by it. The exposure centre starts life as a single fraction, (spread² + WAL²) ÷ (2 × WAL); splitting that fraction into two terms spreads the one division across both, and WAL² ÷ (2 × WAL) is simply WAL/2. The 2 itself comes from the life of a single euro: one drawn at the start and repaid after t years is outstanding right through that span, so its own exposure is centred halfway along it, at t/2.</p>
 
   <h4>Closed forms for the two basic shapes</h4>
   <p>For most schedules the sum above is the only way to get the answer. But for the two shapes in the diagram the answer is known in advance, straight from geometry — a formula that hands you the result rather than making you add up sixty terms. That is what a <b>closed form</b> is.</p>
