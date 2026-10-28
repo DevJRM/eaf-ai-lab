@@ -647,7 +647,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <p>Notation: half-year periods i = 1…60, t<sub>i</sub> = i/2, accrual a = 0.5, recovery R. All quantities per unit of notional.</p>
 
   <h3>The time measures, in one place</h3>
-  <p>Three numbers describe <em>when</em> a facility's money is at risk, and they are easy to confuse because all three are averages of dates, measured in years. They are collected here because the rest of the document uses them constantly.</p>
+  <p>Two numbers describe <em>when</em> a facility's money is at risk: the <b>WAL</b> and the <b>exposure centre</b>. They are easy to confuse, because both are averages of dates measured in years, and for a bullet they look almost interchangeable. They are collected here, with the textbook third cousin, because the rest of the document uses them constantly.</p>
 
   <h4>WAL, defined two ways</h4>
   <div class="fx"><div class="eq"><span class="t c1">WAL</span> = Σ (principal repaid at t) · t ÷ principal &nbsp;&nbsp;=&nbsp;&nbsp; <span class="t c2">Σ O<sub>i</sub> · a</span></div>
@@ -657,12 +657,54 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     </dl>
     <p class="muted" style="margin-bottom:0">Units reconcile either way: EUR × years ÷ EUR = years. Both give 12.50 years for this loan.</p></div>
 
-  <p>The two definitions look unrelated — one is about repayments, the other about outstanding balance — but they are the same number, because they count the same thing in two directions. Picture the loan as a block of <b>euro-years</b>: every euro borrowed, multiplied by how long it stays out.</p>
-  <ul>
-    <li><b>Count it by date</b> (down the columns): at each moment, how much is still outstanding? Add balance × time across all periods. That is <code>Σ O<sub>i</sub>·a</code>.</li>
-    <li><b>Count it by euro</b> (across the rows): each individual euro was outstanding from drawdown until the day it was repaid, so a euro repaid at date t contributes exactly t euro-years. Add euro × t across all repayments. That is the weighted average repayment date, times the principal.</li>
-  </ul>
-  <p>Same block, counted two ways, so the totals must agree. That is the whole reason "average repayment date" and "total principal-years per euro" are one number — and it is also why WAL is blind to dispersion: a block of euro-years can be rearranged in time without changing its total.</p>
+  <p>Those two definitions look unrelated — one is about repayments, the other about outstanding balance — yet they always give the same number. The quickest way to see why is to stop thinking about rates and dates, and picture the loan as a physical <b>stack of money</b>.</p>
+  <p>Stack the principal up, with the slice that will be repaid <em>first</em> on top. As each instalment is paid, the stack is shaved off the top, so the outline of the stack over time is exactly the balance-outstanding curve. Now shade in the whole stack over its life. Every square of that shaded shape is one euro being outstanding for one year — a <b>euro-year</b>. The total area is all the euro-years the loan consumes, and there are only two ways to add it up.</p>
+  <figure>
+    <div class="ft">The same area, swept two ways</div>
+    <div class="fs">A straight amortiser, drawn without a drawdown period so the shape stays clean. The shaded area is identical in both panels.</div>
+    <div class="chartbox">
+    <svg class="ch" viewBox="0 0 760 250" role="img" aria-label="Two sweeps of the same triangular area: vertical slices give the balance outstanding at each date, horizontal slices give how long each slice of principal stayed out">
+      <!-- panel A -->
+      <text class="lb" x="60" y="26">Sweep 1 · by date</text>
+      <polygon points="60,180 60,52 320,180" style="fill:var(--accent);opacity:.13"/>
+      <g style="stroke:var(--accent);stroke-width:1;opacity:.55">
+        <line x1="80" y1="180" x2="80" y2="62"/><line x1="100" y1="180" x2="100" y2="72"/>
+        <line x1="120" y1="180" x2="120" y2="82"/><line x1="140" y1="180" x2="140" y2="92"/>
+        <line x1="160" y1="180" x2="160" y2="102"/><line x1="180" y1="180" x2="180" y2="112"/>
+        <line x1="220" y1="180" x2="220" y2="132"/><line x1="240" y1="180" x2="240" y2="142"/>
+        <line x1="260" y1="180" x2="260" y2="152"/><line x1="280" y1="180" x2="280" y2="162"/>
+        <line x1="300" y1="180" x2="300" y2="172"/>
+      </g>
+      <line x1="200" y1="180" x2="200" y2="122" style="stroke:var(--accent);stroke-width:3.5"/>
+      <line x1="60" y1="52" x2="320" y2="180" style="stroke:var(--accent);stroke-width:2.2"/>
+      <line class="grid" x1="60" y1="180" x2="330" y2="180"/><line class="grid" x1="60" y1="44" x2="60" y2="180"/>
+      <text class="tk" x="56" y="50" text-anchor="end">€5bn</text><text class="tk" x="56" y="184" text-anchor="end">0</text>
+      <text class="tk" x="60" y="198">0y</text><text class="tk" x="320" y="198" text-anchor="middle">maturity</text>
+      <text class="tk" x="200" y="214" text-anchor="middle">one column</text>
+      <text class="al" x="195" y="232" text-anchor="middle">"how much is still out at this date?"</text>
+      <!-- panel B -->
+      <text class="lb" x="430" y="26">Sweep 2 · by euro</text>
+      <polygon points="430,180 430,52 690,180" style="fill:var(--accent);opacity:.13"/>
+      <g style="stroke:var(--accent);stroke-width:1;opacity:.55">
+        <line x1="430" y1="62" x2="450" y2="62"/><line x1="430" y1="72" x2="470" y2="72"/>
+        <line x1="430" y1="82" x2="491" y2="82"/><line x1="430" y1="92" x2="511" y2="92"/>
+        <line x1="430" y1="102" x2="532" y2="102"/><line x1="430" y1="112" x2="552" y2="112"/>
+        <line x1="430" y1="132" x2="593" y2="132"/><line x1="430" y1="142" x2="613" y2="142"/>
+        <line x1="430" y1="152" x2="634" y2="152"/><line x1="430" y1="162" x2="654" y2="162"/>
+        <line x1="430" y1="172" x2="674" y2="172"/>
+      </g>
+      <line x1="430" y1="122" x2="573" y2="122" style="stroke:var(--accent);stroke-width:3.5"/>
+      <line x1="430" y1="52" x2="690" y2="180" style="stroke:var(--accent);stroke-width:2.2"/>
+      <line class="grid" x1="430" y1="180" x2="700" y2="180"/><line class="grid" x1="430" y1="44" x2="430" y2="180"/>
+      <text class="tk" x="426" y="50" text-anchor="end">€5bn</text><text class="tk" x="426" y="184" text-anchor="end">0</text>
+      <text class="tk" x="430" y="198">0y</text><text class="tk" x="690" y="198" text-anchor="middle">maturity</text>
+      <text class="tk" x="502" y="214" text-anchor="middle">one row</text>
+      <text class="al" x="560" y="232" text-anchor="middle">"how long did this slice stay out?"</text>
+    </svg>
+    </div>
+    <figcaption>Sweep 1 adds up the columns: the balance outstanding at each date, which is <code>Σ O<sub>i</sub>·a</code>. Sweep 2 adds up the rows: each slice of principal, multiplied by the time from drawdown to the day it is repaid, which is the average repayment date times the principal. Neither sweep can win — they are measuring one area.</figcaption>
+  </figure>
+  <p>That is the whole reason "average repayment date" and "total principal-years per euro" are one number. It also shows, at a glance, why WAL is blind to dispersion: an area can be pushed around in time, stretched late or bunched early, without its total changing at all. Two loans with very different shapes can cover identical area — which is exactly the bullet-versus-amortiser case in section 04.</p>
 
   <h4>Exposure centre</h4>
   <div class="fx"><div class="eq"><span class="t c1">exposure centre</span> = Σ t<sub>i</sub>·O<sub>i</sub> ÷ Σ O<sub>i</sub> &nbsp;&nbsp;=&nbsp;&nbsp; <span class="t c3">WAL/2 + variance(repayment dates) ÷ (2·WAL)</span></div>
