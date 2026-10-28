@@ -356,10 +356,27 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   </details>
 
   <h3>Why a straight curve still produces a wedge</h3>
-  <p>If the cost of each year rises in a straight line, the price of any loan is simply the cost at its exposure centre. The bullet pays the cost at W/2; the amortiser pays the cost at 2W/3. On a rising line the second is higher. No curvature needed.</p>
-  <p>A straight <em>quoted</em> curve rising by g bp per year means each year's own cost rises by 2g per year (averages move half as fast as what they average). That gives a rule of thumb:</p>
+  <p>It is natural to assume the wedge needs a <em>curved</em> curve. It does not. A perfectly straight curve produces one too, and the exposure centre explains why. Two facts combine.</p>
+  <div class="duo">
+    <div><h4>1 · On a straight line, a loan prices at a single point</h4>
+      <p>Averaging a straight line gives the same answer as reading it once, at the average. So a loan's fair cost is simply the cost at its <b>exposure centre</b>: the bullet at WAL/2, the amortiser at 2 × WAL/3. On a rising line the amortiser's later centre means a higher cost — with no curvature anywhere.</p></div>
+    <div><h4>2 · The quoted curve rises at half the true rate</h4>
+      <p>A quoted point is an average of every year up to it, and an average always lags what it averages. If the quoted curve rises by <b>g</b> per year, each individual year's cost rises by <b>2g</b>. The shortcut reads the shallow curve; the loan actually pays the steep one.</p></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Straight curve starting at 10bp</th><th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th></tr></thead>
+    <tbody>
+      <tr><td class="txt">Quoted curve — rises 4bp a year</td><td>10 bp</td><td>14 bp</td><td>18 bp</td><td>22 bp</td></tr>
+      <tr><td class="txt">Cost of that year alone, simple-average peel — rises 8bp a year</td><td>10 bp</td><td>18 bp</td><td>26 bp</td><td>34 bp</td></tr>
+    </tbody></table></div>
+  <p>Put the two facts together and, for a straight curve, the wedge collapses to a rule of thumb:</p>
   <div class="fx"><div class="eq">wedge ≈ <span class="t c1">quoted-curve slope g</span> × <span class="t c3">WAL</span> ÷ 3</div>
-    <p class="muted" style="margin-bottom:0">For a straight curve of 10bp + 4bp per year and our loan: rule of thumb 4 × 12.5 / 3 = 16.7 bp; exact 13.55 bp. Discounting and default risk give the late years less weight, so the exact figure is lower.</p></div>
+    <dl>
+      <dt><span class="t c1">g</span></dt><dd>How fast the quoted curve rises, in bp per year.</dd>
+      <dt>÷ 3</dt><dd>Carries the dispersion of a straight amortiser's repayments. A bullet has no dispersion, so its wedge is exactly zero: the shortcut prices it correctly.</dd>
+    </dl>
+    <p class="muted" style="margin-bottom:0">For a curve of 10bp rising 4bp a year and our loan: 4 × 12.5 ÷ 3 = <b>16.7 bp</b>, against the engine's exact <b>13.55 bp</b>. The rule of thumb counts every year equally; the engine discounts later years and allows for default, which gives the long tail less weight and brings the figure down.</p></div>
+  <p>From there the shape of the curve decides the size:</p>
   <ul>
     <li><b>Flat curve:</b> every year costs the same, so timing cannot matter. Wedge ≈ 0. In this case the engine returns 0.002 bp: a technical residue because the model holds default intensity constant within each year while the first six months use the 6M fixing. Without the 6M fixing it is 0.000 bp.</li>
     <li><b>Straight and rising:</b> wedge proportional to the slope.</li>
