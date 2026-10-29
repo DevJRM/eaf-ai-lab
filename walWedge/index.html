@@ -624,7 +624,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <li>The 2-year bond spans years 1 and 2 — but λ<sub>1</sub> is now known, so λ<sub>2</sub> is again the only unknown.</li>
     <li>Carry on out the curve. Each new bond reaches one year further than the last, so each step adds exactly one new unknown and never more.</li>
   </ol>
-  <p>This is the same peeling idea as section 03, where each bond's quote was stripped back to the cost of its own final year. The difference is that section 03 did it with equal weights, as an approximation to build intuition, while here every year is discounted and default-adjusted, so the answer is exact.</p>
+  <p>This is the same peeling idea as section 03, where each bond's quote was stripped back to the cost of its own final year. What differs is how much each year counts towards the quote it is being stripped out of. Section 03 let every year count the same, which keeps the arithmetic simple enough to follow by hand. Here a year's contribution is discounted, and scaled by the chance the borrower is still alive to reach it, so distant years count for less — which is exactly why the peeled figures there came out below the ones the model actually uses.</p>
   <p>One last convenience: within a year the unknown enters only through the half-year survival ratio, and the resulting equation is a quadratic. It therefore has a closed-form solution — the model never has to search for an answer, so there is no Goal Seek and no iteration anywhere in the workbook. Section 10 sets out the equation and its solution in full.</p>
 
   <figure>
