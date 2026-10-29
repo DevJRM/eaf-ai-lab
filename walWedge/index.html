@@ -551,7 +551,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt><span class="t c3">straight amortiser</span></dt><dd>A triangle balances one third of the way along from its tall side. To hold the same area, the amortiser's triangle has to run twice as long as the bullet, and one third of that double length lands at 2 × WAL / 3.</dd>
     </dl>
     <p class="muted" style="margin-bottom:0">With WAL = 12.5 years: the bullet balances at 6.25, the amortiser at 8.33. Both figures are marked on the diagram above.</p></div>
-  <p>So the three boxes above are not three different quantities. The sum is the definition, the split is that same sum rearranged to show what drives it, and the closed forms are shortcuts that exist only when the shape is simple enough to recognise. A real schedule — a drawdown ramp, uneven instalments, a grace period — is not a clean triangle, so the model ignores the shortcuts and computes the weighted average directly. That is why this loan lands at 8.26 years rather than exactly on the 8.33 the triangle predicts.</p>
+  <p>So the three boxes above are not three different quantities. The sum is the definition, the split is that same sum rearranged to show what drives it, and the closed forms are available only when the shape is simple enough to recognise. A real schedule — a drawdown ramp, uneven instalments, a grace period — is not a clean triangle, so the model ignores them and computes the weighted average directly. That is why this loan lands at 8.26 years rather than exactly on the 8.33 the triangle predicts.</p>
 
   <h3>Side by side</h3>
   <div class="tbl"><table class="cmp">
@@ -590,10 +590,11 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="fx"><div class="eq"><span class="t c2">S(t)</span> = exp(−<span class="t c1">λ</span><sub>1</sub>) × exp(−<span class="t c1">λ</span><sub>2</sub>) × … = exp(−<span class="t c3">Σ λ up to t</span>)</div>
     <dl>
       <dt><span class="t c2">S(t)</span></dt><dd>The chance of still being alive at t. Starts at 1 and falls as the λs accumulate. Here S(24) = 0.660, so the market implies a 34% chance of default over the loan's life.</dd>
-      <dt>exp(−<span class="t c1">λ</span>)</dt><dd>The chance of getting through one year at intensity λ. The exponential appears because λ is a <em>rate</em>, not a probability: default is treated as something that can strike at any instant, so the chance of escaping a whole year compounds continuously. For small λ it is very close to 1 − λ, which is why λ = 1.596% reads as "about a 1.6% chance" — exactly, 1 − exp(−0.01596) = 1.58%.</dd>
+      <dt>exp(−<span class="t c1">λ</span>)</dt><dd>The chance of getting through one year without defaulting. The exponential is there because λ is a <em>rate</em> rather than a one-off probability: default can strike at any instant of the year, not just on its last day. Chop the year into n slices, and the chance of coming through any one slice is about 1 − λ/n, so the chance of coming through all of them is (1 − λ/n)<sup>n</sup>. Shrink the slices and that limit is exactly exp(−λ) — the same limit that turns a continuously compounded interest rate into e<sup>r</sup>.</dd>
       <dt><span class="t c3">Σ λ</span></dt><dd>The sum of every yearly intensity up to t. The engine actually steps in half-years, multiplying by exp(−λ·0.5) each time, which is the same thing.</dd>
     </dl>
     <p class="muted" style="margin-bottom:0">Nothing stops a negative λ feeding through: it makes a term greater than 1 and lifts S above 1, which is why this issuer shows S(1) = 1.0031 (see the warning below).</p></div>
+  <p>This also settles a loose end in the box further up, which said λ = 1.596% means "about a 1.6% chance" of defaulting that year. The exact figure is the chance of <em>not</em> surviving the year, 1 − exp(−0.01596) = <b>1.58%</b>. λ and the probability it implies are close but not identical, and they drift further apart the larger λ gets; at these levels the distinction does not matter for reading the chart, but the model always uses the exact form.</p>
   <p>S is not a side quantity — it is used three times downstream, and the result moves with it:</p>
   <ul>
     <li><b>In the weights</b> (section 07): each half-year is weighted by <code>DF × S × 0.5 × balance</code>, so late years count for less not only because of discounting but because they may never arrive.</li>
@@ -601,7 +602,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <li><b>In the recovery term</b> (below): what is recovered is paid only in the scenarios where default happens, and the size of that slice is again <code>S<sub>i−1</sub> − S<sub>i</sub></code>.</li>
   </ul>
 
-  <p>The model does not use the shortcut in the box above. For every year b, it finds the λ that makes a bond maturing at b worth exactly 100, valuing it half-year by half-year: coupons if the borrower survives, 40% if it defaults, all discounted on the swap curve. Earlier years are already solved, so each new year has one unknown, and the equation is a quadratic with a closed-form answer. No Goal Seek, no iteration.</p>
+  <p>That credit-margin relation is only an approximation, and the model never prices off it. (It is <em>not</em> what this page calls <b>the shortcut</b>; that term is reserved throughout for reading the bond curve at the WAL.) To get each λ exactly, the model instead finds, for every year b, the λ that makes a bond maturing at b worth exactly 100, valuing it half-year by half-year: coupons if the borrower survives, 40% if it defaults, all discounted on the swap curve. Earlier years are already solved, so each new year has one unknown, and the equation is a quadratic with a closed-form answer. No Goal Seek, no iteration.</p>
 
   <figure>
     <div class="ft">Implied default intensity and survival</div>
