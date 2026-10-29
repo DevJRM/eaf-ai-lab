@@ -582,7 +582,24 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <h3>How likely: the default intensity λ</h3>
   <p>The model expresses each year's credit cost as a <b>default intensity</b> λ, also called a hazard rate.</p>
   <div class="fx"><div class="eq">λ<sub>year b</sub> = probability of defaulting during year b, <span class="t c1">given no default so far</span></div>
-    <p class="muted" style="margin-bottom:0">λ = 1.6% in year 10 means: if the borrower reaches year 10 alive, there is about a 1.6% chance it defaults during year 10. The chances chain into a survival probability, S(t) = exp(−sum of λ up to t), the chance of still being alive at t.</p></div>
+    <p class="muted" style="margin-bottom:0">λ = 1.596% in year 10 means: if the borrower reaches year 10 alive, there is about a 1.6% chance it defaults during that year. The conditional clause is the important part — every λ is quoted on the assumption that the borrower got that far.</p></div>
+
+  <h4>From λ to survival</h4>
+  <p>Each λ describes one year in isolation. To price anything the model needs the opposite: the chance of reaching a date at all, because a margin due in year 20 is only collected if the borrower is still there in year 20. That number is the <b>survival probability</b> S(t), and it follows from the λs by chaining.</p>
+  <p>The chaining works precisely <em>because</em> each λ is conditional. Surviving to year 3 means surviving year 1, then surviving year 2 given you survived year 1, then year 3 given the first two. Conditional probabilities multiply, so survival is a running product of one-year survival terms — and a product of exponentials is the exponential of a sum, which is what collapses the chain into a single formula.</p>
+  <div class="fx"><div class="eq"><span class="t c2">S(t)</span> = exp(−<span class="t c1">λ</span><sub>1</sub>) × exp(−<span class="t c1">λ</span><sub>2</sub>) × … = exp(−<span class="t c3">Σ λ up to t</span>)</div>
+    <dl>
+      <dt><span class="t c2">S(t)</span></dt><dd>The chance of still being alive at t. Starts at 1 and falls as the λs accumulate. Here S(24) = 0.660, so the market implies a 34% chance of default over the loan's life.</dd>
+      <dt>exp(−<span class="t c1">λ</span>)</dt><dd>The chance of getting through one year at intensity λ. The exponential appears because λ is a <em>rate</em>, not a probability: default is treated as something that can strike at any instant, so the chance of escaping a whole year compounds continuously. For small λ it is very close to 1 − λ, which is why λ = 1.596% reads as "about a 1.6% chance" — exactly, 1 − exp(−0.01596) = 1.58%.</dd>
+      <dt><span class="t c3">Σ λ</span></dt><dd>The sum of every yearly intensity up to t. The engine actually steps in half-years, multiplying by exp(−λ·0.5) each time, which is the same thing.</dd>
+    </dl>
+    <p class="muted" style="margin-bottom:0">Nothing stops a negative λ feeding through: it makes a term greater than 1 and lifts S above 1, which is why this issuer shows S(1) = 1.0031 (see the warning below).</p></div>
+  <p>S is not a side quantity — it is used three times downstream, and the result moves with it:</p>
+  <ul>
+    <li><b>In the weights</b> (section 07): each half-year is weighted by <code>DF × S × 0.5 × balance</code>, so late years count for less not only because of discounting but because they may never arrive.</li>
+    <li><b>In each half-year's cost</b> (section 10): the chance of defaulting <em>in</em> a period is the drop in survival across it, <code>S<sub>i−1</sub> − S<sub>i</sub></code>, which is what turns λ into a break-even margin.</li>
+    <li><b>In the recovery term</b> (below): what is recovered is paid only in the scenarios where default happens, and the size of that slice is again <code>S<sub>i−1</sub> − S<sub>i</sub></code>.</li>
+  </ul>
 
   <p>The model does not use the shortcut in the box above. For every year b, it finds the λ that makes a bond maturing at b worth exactly 100, valuing it half-year by half-year: coupons if the borrower survives, 40% if it defaults, all discounted on the swap curve. Earlier years are already solved, so each new year has one unknown, and the equation is a quadratic with a closed-form answer. No Goal Seek, no iteration.</p>
 
