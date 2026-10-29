@@ -590,13 +590,42 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="fx"><div class="eq"><span class="t c2">S(t)</span> = exp(−<span class="t c1">λ</span><sub>1</sub>) × exp(−<span class="t c1">λ</span><sub>2</sub>) × … = exp(−<span class="t c3">Σ λ up to t</span>)</div>
     <dl>
       <dt><span class="t c2">S(t)</span></dt><dd>The chance of still being alive at t. Starts at 1 and falls as the λs accumulate. Here S(24) = 0.660, so the market implies a 34% chance of default over the loan's life.</dd>
-      <dt>exp(−<span class="t c1">λ</span>)</dt><dd>The chance of getting through one year without defaulting. If a borrower could only fail on one date a year, this would simply be 1 − λ = 98.404%. But default can strike on any day, so survival has to compound through the year, which gives exp(−λ) = 98.417%. At these levels the two barely differ — the implied chance of defaulting in year 10 is 1.596% one way and 1.584% the other.</dd>
-      <dt><span class="t c3">Σ λ</span></dt><dd>The sum of every yearly intensity up to t. The engine steps in half-years, multiplying by exp(−λ·0.5) each time — and this is the practical reason the exponential is used rather than 1 − λ. Two half-year exponentials multiply back to exactly the one-year figure, whereas halving the linear version does not: (1 − λ/2)² misses 1 − λ by about 0.6bp. Only the exponential gives the same answer however the time is sliced.</dd>
+      <dt>exp(−<span class="t c1">λ</span>)</dt><dd>The chance of getting through one year at intensity λ: 98.417% in year 10. Why the exponential, rather than simply 1 − λ, is worked through below.</dd>
+      <dt><span class="t c3">Σ λ</span></dt><dd>The sum of every yearly intensity up to t. The engine steps in half-years, multiplying by exp(−λ·0.5) each time.</dd>
     </dl>
     <p class="muted" style="margin-bottom:0">Nothing stops a negative λ feeding through: it makes a term greater than 1 and lifts S above 1, which is why this issuer shows S(1) = 1.0031 (see the warning below).</p></div>
+
+  <h4>Why exp, and not simply 1 − λ</h4>
+  <p>Start with the simplest possible picture. If the borrower could only fail on <em>one</em> date — say the last day of the year — then λ would be that single date's probability, and surviving the year would just be <code>1 − λ</code>: 98.404% in year 10.</p>
+  <p>But a borrower can fail on any day. So split the year in two and let each half carry half the intensity. Surviving the year now means surviving both halves, <code>(1 − λ/2) × (1 − λ/2)</code>, which comes to 98.410% — close to the first answer, but not the same. Split it into months instead and the answer shifts again. Each extra split spreads the same total intensity over more, smaller chances to fail:</p>
+  <div class="tbl"><table class="cmp">
+    <thead><tr><th>Year split into</th><th>Surviving one slice</th><th>Surviving the whole year</th></tr></thead>
+    <tbody>
+      <tr><td>1 slice</td><td>1 − λ = 98.4037%</td><td>98.4037%</td></tr>
+      <tr><td>2 half-years</td><td>1 − λ/2 = 99.2018%</td><td>98.4101%</td></tr>
+      <tr><td>12 months</td><td>1 − λ/12 = 99.8670%</td><td>98.4153%</td></tr>
+      <tr><td>365 days</td><td>1 − λ/365 = 99.9956%</td><td>98.4163%</td></tr>
+      <tr class="tot"><td>every instant</td><td>—</td><td>98.4164% = exp(−λ)</td></tr>
+    </tbody></table></div>
+  <p>The answers climb and then stop moving. That settling value <em>is</em> <code>exp(−λ)</code> — it is simply where <code>(1 − λ/n)<sup>n</sup></code> ends up once the slices are small enough that splitting again changes nothing. Taking the exponential is just the compact way of saying "default is allowed at any instant, not only on scheduled dates".</p>
+  <p>The practical gain is consistency. Because the model steps in half-years, it needs a survival figure that does not depend on how the time is chopped up, and only the exponential has that property: <code>exp(−λ/2)</code> applied twice gives back <code>exp(−λ)</code> exactly, whereas <code>(1 − λ/2)²</code> misses <code>1 − λ</code> by about 0.6bp. Over 48 half-years those small inconsistencies would accumulate.</p>
   <h4>How each λ is actually found</h4>
-  <p>The credit-margin relation in the first box is only an approximation, and the model never prices off it. It solves for each λ directly instead, and it needs survival to do so — which is why survival had to come first.</p>
-  <p>For every year b, the model finds the λ that makes a bond maturing at b worth exactly 100, valuing it half-year by half-year: coupons if the borrower survives, 40% if it defaults, all discounted on the swap curve. Survival enters twice there — it scales each coupon, and the gap between one period's survival and the next is the slice of scenarios in which recovery is paid instead. Earlier years are already solved, so each new year adds exactly one unknown, and the equation turns out to be a quadratic with a closed-form answer. No Goal Seek, no iteration. Section 10 sets out the equation and its solution in full.</p>
+  <p>The credit-margin relation in the first box is a rule of thumb, and the model does not price off it. It recovers the λs from the bond prices themselves, one year at a time.</p>
+  <p>The condition it imposes is simple: <b>every quoted bond, valued with the model's own λs, must come back to the price the market actually shows.</b> The quotes are par levels — each Z-spread is the spread that would make a bond of that maturity trade at par — so the target price is 100.</p>
+  <p>Valuing a bond once default is allowed takes three ingredients, and survival drives two of them:</p>
+  <ul>
+    <li><b>Coupons</b>, which arrive only if the borrower is still alive, so each one is scaled by the survival probability on its date.</li>
+    <li><b>Recovery</b>, 40% of face, which arrives only if the borrower fails — and the chance of failing in a given half-year is the <em>drop</em> in survival across it.</li>
+    <li><b>Discounting</b> on the swap curve, applied to both.</li>
+  </ul>
+  <p>That is what makes the calculation unwind so neatly, one year at a time:</p>
+  <ol>
+    <li>The 1-year bond spans only year 1, so its price depends on λ<sub>1</sub> and nothing else. One equation, one unknown.</li>
+    <li>The 2-year bond spans years 1 and 2 — but λ<sub>1</sub> is now known, so λ<sub>2</sub> is again the only unknown.</li>
+    <li>Carry on out the curve. Each new bond reaches one year further than the last, so each step adds exactly one new unknown and never more.</li>
+  </ol>
+  <p>This is the same peeling idea as section 03, where each bond's quote was stripped back to the cost of its own final year. The difference is that section 03 did it with equal weights, as an approximation to build intuition, while here every year is discounted and default-adjusted, so the answer is exact.</p>
+  <p>One last convenience: within a year the unknown enters only through the half-year survival ratio, and the resulting equation is a quadratic. It therefore has a closed-form solution — the model never has to search for an answer, so there is no Goal Seek and no iteration anywhere in the workbook. Section 10 sets out the equation and its solution in full.</p>
 
   <figure>
     <div class="ft">Implied default intensity and survival</div>
