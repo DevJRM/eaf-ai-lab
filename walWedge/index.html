@@ -376,7 +376,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   </details>
   <p>From there the shape of the curve decides the size:</p>
   <ul>
-    <li><b>Flat curve:</b> every year costs the same, so timing cannot matter. Wedge ≈ 0. In this case the engine returns 0.002 bp: a technical residue because the model holds default intensity constant within each year while the first six months use the 6M fixing. Without the 6M fixing it is 0.000 bp.</li>
+    <li><b>Flat curve:</b> every year costs the same, so timing cannot matter and the wedge should be exactly zero. The engine returns <b>0.002 bp</b> instead. That is not an economic effect but an artefact of how year 1 is built: the model gives both of its half-years the same credit intensity, yet prices the first six months off the actual 6M EURIBOR fixing while the second follows from the 1-year swap rate. The two halves are therefore not quite interchangeable, and a flat curve cannot cancel to the last decimal. Remove the fixing and the residue disappears: the wedge is then 0.000 bp.</li>
     <li><b>Straight and rising:</b> wedge proportional to the slope.</li>
     <li><b>Curved:</b> a curve that flattens at the long end (the usual shape) shrinks the wedge, because the loan's tail lands where costs grow more slowly. A curve that steepens further out enlarges it.</li>
   </ul>
@@ -584,7 +584,11 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="fx"><div class="eq">λ<sub>year b</sub> = probability of defaulting during year b, <span class="t c1">given no default so far</span></div>
     <p class="muted" style="margin-bottom:0">λ = 1.596% in year 10 means: if the borrower reaches year 10 alive, there is about a 1.6% chance it defaults during that year. The conditional clause is the important part — every λ is quoted on the assumption that the borrower got that far.</p></div>
 
-  <h4>From λ to survival</h4>
+  <p>Each λ covers a single year in isolation. Pricing needs two further things: the chance of <em>reaching</em> a date at all — the survival probability <b>S(t) = exp(−Σλ)</b>, which is what weights every later cash flow — and a way to recover the λs from the bond quotes in the first place. Both are set out below.</p>
+
+  <details>
+    <summary>From λ to survival</summary>
+    <div>
   <p>Each λ describes one year in isolation. To price anything the model needs the opposite: the chance of reaching a date at all, because a margin due in year 20 is only collected if the borrower is still there in year 20. That number is the <b>survival probability</b> S(t), and it follows from the λs by chaining.</p>
   <p>The chaining works precisely <em>because</em> each λ is conditional. Surviving to year 3 means surviving year 1, then surviving year 2 given you survived year 1, then year 3 given the first two. Conditional probabilities multiply, so survival is a running product of one-year survival terms — and a product of exponentials is the exponential of a sum, which is what collapses the chain into a single formula.</p>
   <div class="fx"><div class="eq"><span class="t c2">S(t)</span> = exp(−<span class="t c1">λ</span><sub>1</sub>) × exp(−<span class="t c1">λ</span><sub>2</sub>) × … = exp(−<span class="t c3">Σ λ up to t</span>)</div>
@@ -594,8 +598,11 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt><span class="t c3">Σ λ</span></dt><dd>The sum of every yearly intensity up to t. The engine steps in half-years, multiplying by exp(−λ·0.5) each time.</dd>
     </dl>
     <p class="muted" style="margin-bottom:0">Nothing stops a negative λ feeding through: it makes a term greater than 1 and lifts S above 1, which is why this issuer shows S(1) = 1.0031 (see the warning below).</p></div>
-
-  <h4>Why exp, and not simply 1 − λ</h4>
+    </div>
+  </details>
+  <details>
+    <summary>Why exp, and not simply 1 − λ</summary>
+    <div>
   <p>Start with the simplest possible picture. If the borrower could only fail on <em>one</em> date — say the last day of the year — then λ would be that single date's probability, and surviving the year would just be <code>1 − λ</code>: 98.404% in year 10.</p>
   <p>But a borrower can fail on any day. So split the year in two and let each half carry half the intensity. Surviving the year now means surviving both halves, <code>(1 − λ/2) × (1 − λ/2)</code>, which comes to 98.410% — close to the first answer, but not the same. Split it into months instead and the answer shifts again. Each extra split spreads the same total intensity over more, smaller chances to fail:</p>
   <div class="tbl"><table class="cmp">
@@ -609,7 +616,11 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     </tbody></table></div>
   <p>The answers climb and then stop moving. That settling value <em>is</em> <code>exp(−λ)</code> — it is simply where <code>(1 − λ/n)<sup>n</sup></code> ends up once the slices are small enough that splitting again changes nothing. Taking the exponential is just the compact way of saying "default is allowed at any instant, not only on scheduled dates".</p>
   <p>The practical gain is consistency. Because the model steps in half-years, it needs a survival figure that does not depend on how the time is chopped up, and only the exponential has that property: <code>exp(−λ/2)</code> applied twice gives back <code>exp(−λ)</code> exactly, whereas <code>(1 − λ/2)²</code> misses <code>1 − λ</code> by about 0.6bp. Over 48 half-years those small inconsistencies would accumulate.</p>
-  <h4>How each λ is actually found</h4>
+    </div>
+  </details>
+  <details>
+    <summary>How each λ is actually found</summary>
+    <div>
   <p>The credit-margin relation in the first box is a rule of thumb, and the model does not price off it. It recovers the λs from the bond prices themselves, one year at a time.</p>
   <p>The condition it imposes is simple: <b>every quoted bond, valued with the model's own λs, must come back to the price the market actually shows.</b> The quotes are par levels — each Z-spread is the spread that would make a bond of that maturity trade at par — so the target price is 100.</p>
   <p>Valuing a bond once default is allowed takes three ingredients, and survival drives two of them:</p>
@@ -625,13 +636,14 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <li>Carry on out the curve. Each new bond reaches one year further than the last, so each step adds exactly one new unknown and never more.</li>
   </ol>
   <p>This is the same peeling idea as section 03, where each bond's quote was stripped back to the cost of its own final year. What differs is how much each year counts towards the quote it is being stripped out of. Section 03 let every year count the same, which keeps the arithmetic simple enough to follow by hand. Here a year's contribution is discounted, and scaled by the chance the borrower is still alive to reach it, so distant years count for less — which is exactly why the peeled figures there came out below the ones the model actually uses.</p>
-  <p>First, a word on why λ can be treated as a single number for a whole year. The market supplies one quote per maturity — one figure per year — so there is only enough information to pin down one intensity per year. The model therefore takes λ to be flat within each year and to step at year boundaries. That is an assumption imposed by the data, not something the exponential requires: were λ allowed to drift within the year, there would be more unknowns than quotes to fix them. It is also the assumption behind the small residue noted in section 04, where a perfectly flat curve still leaves 0.002bp on the table.</p>
+  <p>First, a word on why λ can be treated as a single number for a whole year. The market supplies one quote per maturity — one figure per year — so there is only enough information to pin down one intensity per year. The model therefore takes λ to be flat within each year and to step at year boundaries. That is an assumption imposed by the data, not something the exponential requires. Count it through: after interpolation the curve supplies one value for each year, so holding λ flat per year leaves exactly one unknown per equation, and the chain has a single answer. Allow λ to move within a year — say a separate value for each half — and that year now carries two unknowns while still offering only one curve value. Twice as many unknowns as equations, and infinitely many λ paths would reprice every bond equally well. Some assumption has to break the tie, and flat-within-the-year is the mildest one available.</p>
   <p>With λ flat across the year, both halves of that year carry the same survival factor. Call it <b>u</b>: of the borrowers alive at the start of a half-year, the fraction still alive at its end. Note that u is <em>not</em> S(t), despite both being survival figures. S(t) is a cumulative level — the chance of lasting all the way from signing to t — while u is a single step. S(t) is just every u up to t multiplied together; within year b, S(b) = S(b−1) × u × u.</p>
   <p>That is what makes the algebra fall out so neatly. The bond pays twice in the year: once at the half-year, reached with probability u, and once at the year-end, reached with probability u × u. So the unknown never appears in any form more complicated than u and u², which makes the pricing equation an ordinary <b>quadratic</b> — the kind solved with the formula taught at school. Once u is known, λ follows immediately, since u is just exp(−λ/2) seen from the other side.</p>
   <p>That is what a <b>closed-form solution</b> means: the answer is produced by evaluating a formula once, rather than being hunted for. The usual alternative in a spreadsheet is <b>Goal Seek</b>, Excel's built-in search: it guesses a λ, reprices the bond, sees how far the price lands from 100, adjusts the guess, and repeats until the gap is small enough to accept. That is <em>iteration</em> — a loop of guess and correct.</p>
   <p>Avoiding it is worth more than speed. An iterative search stops at "close enough" rather than exact, can land on slightly different answers depending on where it started and how tight the tolerance was set, and can simply fail to converge on awkward inputs. Solving the quadratic removes all three risks at once: every λ is computed directly, the bonds reprice to their quotes to within about 10<sup>−12</sup> bp, and the workbook returns the identical answer every time it is opened — which is what makes the output safe to audit.</p>
   <p>Section 10 sets out this whole bootstrap in its exact form: the pricing equation, the quadratic, and its solution.</p>
-
+    </div>
+  </details>
   <figure>
     <div class="ft">Implied default intensity and survival</div>
     <div class="ctrls"><div class="seg" role="group" aria-label="Choose product"><button type="button" id="lm-f" aria-pressed="true">From Z-spreads (floating)</button><button type="button" id="lm-x" aria-pressed="false">From YTMs (fixed)</button></div></div>
