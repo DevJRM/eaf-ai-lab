@@ -860,12 +860,26 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <dt>f<sub>i</sub>·a</dt><dd>= DF(t<sub>i−1</sub>)/DF(t<sub>i</sub>) − 1: the simple forward rate for the half-year, so a riskless floater prices exactly at par.</dd></dl></div>
 
   <h3>Bootstrapping λ in closed form</h3>
-  <p>Within year b, λ<sub>b</sub> is constant. Let u = e<sup>−λ<sub>b</sub>/2</sup>, the half-year survival ratio. A par bullet maturing at b, with years 1…b−1 already solved, satisfies:</p>
-  <div class="fx"><div class="eq">1 = <span class="t c1">K</span> + D<sub>1</sub>·S<sub>p</sub>·[u·g<sub>1</sub> + R(1−u)] + D<sub>2</sub>·S<sub>p</sub>·[u²·g<sub>2</sub> + R(u − u²)]</div>
-    <div class="eq">u = (−a<sub>1</sub> + √(a<sub>1</sub>² − 4a<sub>2</sub>a<sub>0</sub>)) ÷ 2a<sub>2</sub>, &nbsp; a<sub>2</sub> = D<sub>2</sub>S<sub>p</sub>(g<sub>2</sub>−R), &nbsp; a<sub>1</sub> = S<sub>p</sub>(D<sub>1</sub>(g<sub>1</sub>−R) + D<sub>2</sub>R), &nbsp; a<sub>0</sub> = K + D<sub>1</sub>S<sub>p</sub>R − 1, &nbsp; λ<sub>b</sub> = −2 ln u</div>
-    <dl><dt><span class="t c1">K</span></dt><dd>Value of the bond's cash flows in years 1…b−1: Σ DF[S·(coupon) + R·ΔS]. Floating coupon f·a + q·a, fixed coupon q·a (q = Z-spread or semi-annual YTM).</dd>
-    <dt>S<sub>p</sub></dt><dd>Survival at the start of year b. D<sub>1</sub>, D<sub>2</sub>: discount factors at b−½ and b. g<sub>1</sub>, g<sub>2</sub>: coupon (plus principal on g<sub>2</sub>) paid at those dates.</dd>
-    <dt>check</dt><dd>Every quoted bond reprices to its input; the workbook shows the maximum error (about 10<sup>−12</sup> bp). Beyond the last quote, the last λ is extended, not the last spread.</dd></dl></div>
+  <p><b>Purpose.</b> Find the one number — λ<sub>b</sub>, the default intensity for year b — that makes the quoted bond maturing at b worth exactly its market price. Years 1…b−1 are already solved, so λ<sub>b</sub> is the only unknown. Within year b it is held constant (section 06), so both half-years share one survival factor: <b>u = e<sup>−λ<sub>b</sub>/2</sup></b>, the fraction surviving six months.</p>
+  <p><b>The equation.</b> Value the bond, set it equal to its price, and solve. Because the quotes are par levels, that price is 1 per unit of face — which is the left-hand side:</p>
+  <div class="fx"><div class="eq">1 = <span class="t c1">K</span> + <span class="t c2">D<sub>1</sub>·S<sub>p</sub>·[u·g<sub>1</sub> + R(1−u)]</span> + <span class="t c3">D<sub>2</sub>·S<sub>p</sub>·[u²·g<sub>2</sub> + R(u − u²)]</span></div>
+    <dl>
+      <dt>1</dt><dd>The bond's price. It is 1 because each quote is the level at which that maturity would trade at par; repricing to par is the condition being imposed.</dd>
+      <dt><span class="t c1">K</span></dt><dd>Everything the bond pays <em>before</em> year b, already valued because those λs are known: Σ DF[S·coupon + R·ΔS], where ΔS is the fall in survival across a period — the share of scenarios in which default happens and recovery is paid instead. Floating coupon f·a + q·a, fixed coupon q·a (q = Z-spread or semi-annual YTM).</dd>
+      <dt><span class="t c2">first bracket</span></dt><dd>The payment at b−½, discounted by D<sub>1</sub>. Two outcomes: survive that half-year, with probability u, and collect coupon g<sub>1</sub>; or default in it, with probability 1−u, and collect recovery R.</dd>
+      <dt><span class="t c3">second bracket</span></dt><dd>The payment at b, discounted by D<sub>2</sub>. Survive <em>both</em> halves, probability u², and collect g<sub>2</sub> — the final coupon plus the principal; or get through the first half and fail in the second, probability u − u², and collect R.</dd>
+      <dt>S<sub>p</sub></dt><dd>Survival to the start of year b. Both brackets sit behind it because none of it happens unless the borrower reaches year b at all.</dd>
+    </dl>
+    <p class="muted" style="margin-bottom:0">So the whole right-hand side reads: what the bond has already paid, plus what it pays in its final year under each of the three ways that year can go — survive both halves, fail in the first, fail in the second.</p></div>
+  <p><b>Solving it.</b> u appears only as u and u², so multiplying out the brackets and collecting terms leaves an ordinary quadratic, a<sub>2</sub>u² + a<sub>1</sub>u + a<sub>0</sub> = 0:</p>
+  <div class="fx"><div class="eq">u = (−a<sub>1</sub> + √(a<sub>1</sub>² − 4a<sub>2</sub>a<sub>0</sub>)) ÷ 2a<sub>2</sub>, &nbsp; λ<sub>b</sub> = −2 ln u</div>
+    <dl>
+      <dt>a<sub>2</sub></dt><dd>D<sub>2</sub>S<sub>p</sub>(g<sub>2</sub>−R) — the u² terms: the final payment, net of the recovery that would have been received instead.</dd>
+      <dt>a<sub>1</sub></dt><dd>S<sub>p</sub>(D<sub>1</sub>(g<sub>1</sub>−R) + D<sub>2</sub>R) — the u terms, one from each bracket.</dd>
+      <dt>a<sub>0</sub></dt><dd>K + D<sub>1</sub>S<sub>p</sub>R − 1 — everything with no u in it, including the price moved across from the left.</dd>
+      <dt>which root</dt><dd>The <b>+</b> root. a<sub>0</sub> is negative whenever the bond's earlier cash flows are worth less than par, so the two roots straddle zero and only the positive one can be a survival ratio.</dd>
+      <dt>check</dt><dd>Every quoted bond reprices to its input; the workbook shows the maximum error (about 10<sup>−12</sup> bp). Beyond the last quote, the last λ is extended, not the last spread.</dd>
+    </dl></div>
 
   <h3>Loan profile</h3>
   <div class="fx"><div class="eq">O<sub>i</sub> = <span class="t c1">min(i, D)/D</span> − <span class="t c4">max(0, min(i−1, n) − D)/(2y)</span>, &nbsp; D = 2x drawdowns, n = 2x + 2y, &nbsp; WAL = Σ O<sub>i</sub>·a</div>
