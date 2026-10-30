@@ -913,7 +913,10 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <dt>split</dt><dd>Summing over periods before and after the WAL date (the straddling period split pro rata in time) gives the loss and benefit phases, which add up exactly to the net.</dd>
     <dt>charged</dt><dd>The shortcut price: linear interpolation of the quoted curve at the exact WAL. For a fixed loan the quoted annual yield is first restated on the loan's semi-annual basis as 2((1 + Y/m)<sup>m/2</sup> − 1), where Y is that annual yield and m = 1 for EUR bonds.</dd></dl></div>
 
-  <h4>The same three formulas, on the EUR 5bn case</h4>
+  <details>
+    <summary>Worked through on the EUR 5bn case</summary>
+    <div>
+  <p class="muted">The three highlighted rows are the three formulas above: the weight, the fair price, and the present-value saving.</p>
   <p>Take two half-years from opposite ends of the floating loan and run them through, against the 53.5 bp the shortcut charges.</p>
   <div class="tbl"><table class="cmp">
     <thead><tr><th></th><th>Half-year ending year 3</th><th>Half-year ending year 20</th><th>All 48 periods</th></tr></thead>
@@ -921,15 +924,17 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <tr><td>Balance outstanding O<sub>i</sub></td><td>93.48%</td><td>19.57%</td><td>—</td></tr>
       <tr><td>Discount factor DF<sub>i</sub></td><td>0.9032</td><td>0.5059</td><td>—</td></tr>
       <tr><td>Survival S<sub>i</sub></td><td>1.0068</td><td>0.7396</td><td>—</td></tr>
-      <tr><td>Weight w<sub>i</sub> = DF·S·a·O</td><td>0.4250</td><td>0.0366</td><td>Σw = 9.0024</td></tr>
-      <tr><td>Cost of the period k<sub>i</sub></td><td>−11.9 bp</td><td>145.8 bp</td><td>fair = 62.32 bp</td></tr>
+      <tr class="hl"><td>Weight w<sub>i</sub> = DF·S·a·O</td><td>0.4250</td><td>0.0366</td><td>Σw = 9.0024</td></tr>
+      <tr class="hl"><td>Cost of the period k<sub>i</sub></td><td>−11.9 bp</td><td>145.8 bp</td><td>fair = 62.32 bp</td></tr>
       <tr><td>k<sub>i</sub> − charged</td><td>−65.4 bp</td><td>+92.3 bp</td><td>+8.82 bp</td></tr>
       <tr><td>w<sub>i</sub>(k<sub>i</sub> − charged)</td><td>−0.002779</td><td>+0.000338</td><td>0.007942</td></tr>
-      <tr class="tot"><td>× EUR 5bn</td><td>−€13.90m</td><td>+€1.69m</td><td>€39.7m</td></tr>
+      <tr class="tot hl"><td>× EUR 5bn &nbsp;= PV saving</td><td>−€13.90m</td><td>+€1.69m</td><td>€39.7m</td></tr>
     </tbody></table></div>
   <p>The two columns show the whole argument in miniature. Year 3 carries a weight of 0.4250 against year 20's 0.0366 — nearly twelve times larger, because almost all the money is still outstanding, it is barely discounted, and the borrower is almost certain to still be there. But the curve says that year is worth −11.9 bp while the loan is charged 53.5, so the borrower <em>overpays</em>, and at that weight the overpayment is substantial: −€13.90m from this one half-year. Year 20 is the mirror image, dear but almost weightless: +92.3 bp on a weight of 0.0366, worth only +€1.69m.</p>
   <p>Summed over all 48 periods the dear-but-light years win anyway: −€26.3m from everything before the WAL date, +€66.0m from everything after, a net <b>€39.7m</b>. Dividing that same sum by Σw instead of multiplying by the amount restates it as <b>8.82 bp a year</b> — the headline figure, and exactly fair − charged = 62.32 − 53.5.</p>
   <p class="muted">Survival above 1 in year 3 is not an error: this issuer's short bonds trade through swaps, so the implied λ is negative there. See the warning in section 06.</p>
+    </div>
+  </details>
 </section>
 
 <!-- ================================================================ 11 -->
