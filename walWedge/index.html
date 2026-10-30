@@ -855,7 +855,9 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 
   <h3>Risk-free discount factors</h3>
   <p><b>Purpose.</b> Everything in the model is discounted on the swap curve, which stands in for the risk-free rate. <b>DF(k)</b> is today's value of 1 paid at year k. The curve arrives as par swap rates, so the discount factors have to be built from them one year at a time.</p>
-  <div class="fx"><div class="eq">DF(k) = (1 − <span class="t c1">r<sub>k</sub></span>·α·Σ<sub>j&lt;k</sub>DF(j)) ÷ (1 + <span class="t c1">r<sub>k</sub></span>·α) &nbsp;&nbsp; DF(k−½) = √(DF(k−1)·DF(k)) &nbsp;&nbsp; DF(½) = 1 ÷ (1 + <span class="t c3">r<sub>6M</sub></span>·182.5/360)</div>
+  <div class="fx"><div class="eq">DF(k) = (1 − <span class="t c1">r<sub>k</sub></span>·α·Σ<sub>j&lt;k</sub>DF(j)) ÷ (1 + <span class="t c1">r<sub>k</sub></span>·α)</div>
+    <div class="eq">DF(k−½) = √(DF(k−1)·DF(k))</div>
+    <div class="eq">DF(½) = 1 ÷ (1 + <span class="t c3">r<sub>6M</sub></span>·182.5/360)</div>
     <dl><dt>where it comes from</dt><dd>A par swap is worth nothing at inception, so its fixed leg must equal its floating leg. The floating leg of a swap maturing at k is worth 1 − DF(k); the fixed leg is r<sub>k</sub>·α·(the annuity of all years to k). Setting the two equal and making DF(k) the subject gives the formula. Each year therefore uses only the discount factors already built, exactly as the λ bootstrap does.</dd>
     <dt><span class="t c1">r<sub>k</sub></span></dt><dd>Par swap rate for year k (annual fixed leg). α is the day-count factor: 1 for EUR vs 6M EURIBOR (30/360), 365.25/360 for €STR or USD SOFR (ACT/360).</dd>
     <dt>Σ<sub>j&lt;k</sub>DF(j)</dt><dd>The annuity of the years already solved — the value of 1 a year up to k−1. It is the only place earlier years enter.</dd>
@@ -866,21 +868,22 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <h3>Bootstrapping λ in closed form</h3>
   <p><b>Purpose.</b> Find the one number — λ<sub>b</sub>, the default intensity for year b — that makes the quoted bond maturing at b worth exactly its market price. Years 1…b−1 are already solved, so λ<sub>b</sub> is the only unknown. Within year b it is held constant (section 06), so both half-years share one survival factor: <b>u = e<sup>−λ<sub>b</sub>/2</sup></b>, the fraction surviving six months.</p>
   <p><b>The equation.</b> Value the bond, set it equal to its price, and solve. Because the quotes are par levels, that price is 1 per unit of face — which is the left-hand side:</p>
-  <div class="fx"><div class="eq">1 = <span class="t c1">K</span> + <span class="t c2">D<sub>1</sub>·S<sub>p</sub>·[u·g<sub>1</sub> + R(1−u)]</span> + <span class="t c3">D<sub>2</sub>·S<sub>p</sub>·[u²·g<sub>2</sub> + R(u − u²)]</span></div>
+  <div class="fx"><div class="eq">1 = <span class="t c1">K</span> + <span class="t c2">DF(b−½)·S<sub>p</sub>·[u·g<sub>1</sub> + R(1−u)]</span> + <span class="t c3">DF(b)·S<sub>p</sub>·[u²·g<sub>2</sub> + R(u − u²)]</span></div>
     <dl>
       <dt>1</dt><dd>The bond's price. It is 1 because each quote is the level at which that maturity would trade at par; repricing to par is the condition being imposed.</dd>
       <dt><span class="t c1">K</span></dt><dd>Everything the bond pays <em>before</em> year b, already valued because those λs are known: Σ DF[S·coupon + R·ΔS], where ΔS is the fall in survival across a period — the share of scenarios in which default happens and recovery is paid instead. Floating coupon f·a + q·a, fixed coupon q·a (q = Z-spread or semi-annual YTM).</dd>
-      <dt><span class="t c2">first bracket</span></dt><dd>The payment at b−½, discounted by D<sub>1</sub>. Two outcomes: survive that half-year, with probability u, and collect coupon g<sub>1</sub>; or default in it, with probability 1−u, and collect recovery R.</dd>
-      <dt><span class="t c3">second bracket</span></dt><dd>The payment at b, discounted by D<sub>2</sub>. Survive <em>both</em> halves, probability u², and collect g<sub>2</sub> — the final coupon plus the principal; or get through the first half and fail in the second, probability u − u², and collect R.</dd>
+      <dt><span class="t c2">first bracket</span></dt><dd>The payment at b−½, discounted by DF(b−½). Two outcomes: survive that half-year, with probability u, and collect coupon g<sub>1</sub>; or default in it, with probability 1−u, and collect recovery R.</dd>
+      <dt><span class="t c3">second bracket</span></dt><dd>The payment at b, discounted by DF(b). Survive <em>both</em> halves, probability u², and collect g<sub>2</sub> — the final coupon plus the principal; or get through the first half and fail in the second, probability u − u², and collect R.</dd>
       <dt>S<sub>p</sub></dt><dd>Survival to the start of year b. Both brackets sit behind it because none of it happens unless the borrower reaches year b at all.</dd>
+      <dt>DF(b−½), DF(b)</dt><dd>The ordinary discount factors from the block above, read at this year's two payment dates — the same quantity written DF<sub>i</sub> in the weights later on. For year 1 that means DF(0.5) = 0.984926 and DF(1) = 0.968335.</dd>
     </dl>
     <p class="muted" style="margin-bottom:0">So the whole right-hand side reads: what the bond has already paid, plus what it pays in its final year under each of the three ways that year can go — survive both halves, fail in the first, fail in the second.</p></div>
   <p><b>Solving it.</b> u appears only as u and u², so multiplying out the brackets and collecting terms leaves an ordinary quadratic, a<sub>2</sub>u² + a<sub>1</sub>u + a<sub>0</sub> = 0:</p>
   <div class="fx"><div class="eq">u = (−a<sub>1</sub> + √(a<sub>1</sub>² − 4a<sub>2</sub>a<sub>0</sub>)) ÷ 2a<sub>2</sub>, &nbsp; λ<sub>b</sub> = −2 ln u</div>
     <dl>
-      <dt>a<sub>2</sub></dt><dd>D<sub>2</sub>S<sub>p</sub>(g<sub>2</sub>−R) — the u² terms: the final payment, net of the recovery that would have been received instead.</dd>
-      <dt>a<sub>1</sub></dt><dd>S<sub>p</sub>(D<sub>1</sub>(g<sub>1</sub>−R) + D<sub>2</sub>R) — the u terms, one from each bracket.</dd>
-      <dt>a<sub>0</sub></dt><dd>K + D<sub>1</sub>S<sub>p</sub>R − 1 — everything with no u in it, including the price moved across from the left.</dd>
+      <dt>a<sub>2</sub></dt><dd>DF(b)S<sub>p</sub>(g<sub>2</sub>−R) — the u² terms: the final payment, net of the recovery that would have been received instead.</dd>
+      <dt>a<sub>1</sub></dt><dd>S<sub>p</sub>(DF(b−½)(g<sub>1</sub>−R) + DF(b)R) — the u terms, one from each bracket.</dd>
+      <dt>a<sub>0</sub></dt><dd>K + DF(b−½)S<sub>p</sub>R − 1 — everything with no u in it, including the price moved across from the left.</dd>
       <dt>which root</dt><dd>The <b>+</b> root. a<sub>0</sub> is negative whenever the bond's earlier cash flows are worth less than par, so the two roots straddle zero and only the positive one can be a survival ratio.</dd>
       <dt>check</dt><dd>Every quoted bond reprices to its input; the workbook shows the maximum error (about 10<sup>−12</sup> bp). Beyond the last quote, the last λ is extended, not the last spread.</dd>
     </dl></div>
@@ -899,21 +902,22 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <tr><td>Quote for that maturity</td><td>−19.0 bp</td><td>42.0 bp</td></tr>
       <tr><td>K, earlier cash flows</td><td>0 — none yet</td><td>0.310926</td></tr>
       <tr><td>S<sub>p</sub>, survival to the start</td><td>1 — certain</td><td>0.941313</td></tr>
-      <tr><td>D<sub>1</sub>, D<sub>2</sub></td><td>0.984926, 0.968335</td><td>0.723251, 0.710651</td></tr>
+      <tr><td>DF(b−½), DF(b)</td><td>0.984926, 0.968335</td><td>0.723251, 0.710651</td></tr>
       <tr><td>g<sub>1</sub>, g<sub>2</sub></td><td>0.014355, 1.016183</td><td>0.019830, 1.019830</td></tr>
       <tr><td>a<sub>2</sub>, a<sub>1</sub>, a<sub>0</sub></td><td>0.596672, 0.007502, −0.606030</td><td>0.414632, 0.008756, −0.416752</td></tr>
       <tr class="hl"><td>u, from the quadratic</td><td>1.001544</td><td>0.992050</td></tr>
       <tr class="hl"><td>λ<sub>b</sub> = −2 ln u</td><td>−30.9 bp</td><td>159.6 bp</td></tr>
       <tr class="tot"><td>Bond reprices to</td><td>1.000000000000</td><td>1.000000000000</td></tr>
     </tbody></table></div>
-  <p>Two things are worth noticing. In year 1, u comes out <em>above</em> 1, which makes λ negative — the issuer's 1-year bond trades through swaps, so no positive default intensity could price it that richly. And in both years a<sub>0</sub> is negative, which is what guarantees the two roots straddle zero and makes the <b>+</b> root the only admissible one.</p>
+  <p>Two things are worth noticing. In year 1, u comes out <em>above</em> 1, which makes λ negative. The reason is that this issuer's 1-year bond yields less than the swap rate — 3.032% against 3.270% — so investors are paying more for it than for risk-free cash. Default risk can only ever make a bond <em>cheaper</em>, so no positive intensity could produce a price that high; the only way to reprice the bond is to let λ go below zero. And a<sub>0</sub> is negative in both years, which settles which root to take. In any quadratic the two roots multiplied together come to a<sub>0</sub> ÷ a<sub>2</sub>; with a<sub>0</sub> negative and a<sub>2</sub> positive that product is negative, so one root must be positive and the other negative. In year 1 they are 1.001544 and −1.014117. A survival ratio cannot be negative, so the positive one — the <b>+</b> in the formula — is the only candidate.</p>
   <p>The final row is the test that matters: feed u back into the equation and the bond returns its own quoted price to twelve decimal places. Repeat for every maturity and the whole λ curve is fixed, with no guessing at any point.</p>
     </div>
   </details>
 
   <h3>Loan profile</h3>
   <p><b>Purpose.</b> Turn the drawdown and repayment schedule into one number per half-year: <b>O<sub>i</sub></b>, the balance outstanding in period i as a fraction of the full amount. This is the only place the shape of the loan enters the calculation. Write <b>x</b> for the length of the drawdown period in years and <b>y</b> for the length of the repayment period, so this case has x = 1 and y = 23.</p>
-  <div class="fx"><div class="eq">O<sub>i</sub> = <span class="t c1">min(i, D)/D</span> − <span class="t c4">max(0, min(i−1, n) − D)/(2y)</span>, &nbsp; D = 2x drawdowns, n = 2x + 2y, &nbsp; WAL = Σ O<sub>i</sub>·a</div>
+  <div class="fx"><div class="eq">O<sub>i</sub> = <span class="t c1">min(i, D)/D</span> − <span class="t c4">max(0, min(i−1, n) − D)/(2y)</span></div>
+    <div class="eq">D = 2x drawdowns, &nbsp; n = 2x + 2y, &nbsp; WAL = Σ O<sub>i</sub>·a</div>
     <dl><dt><span class="t c1">drawn</span></dt><dd>The fraction advanced by period i. Drawdowns of 1/D arrive at t = 0, 0.5, …, x − 0.5 (a single drawdown of 1 at t = 0 if x = 0). The <b>min</b> caps it at 1: once the facility is fully drawn it stays drawn.</dd>
     <dt><span class="t c4">repaid</span></dt><dd>The fraction paid back by then, in instalments of 1/(2y) at t = x + 0.5, …, x + y. The <b>max</b> floors it at 0, which stops repayment being counted before the drawdown period ends, and the inner <b>min</b> stops it running past final maturity.</dd>
     <dt>D, n</dt><dd>D is the number of half-years in the drawdown period, n the number to final maturity. Here D = 2 and n = 48.</dd>
