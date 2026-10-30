@@ -885,6 +885,32 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt>check</dt><dd>Every quoted bond reprices to its input; the workbook shows the maximum error (about 10<sup>−12</sup> bp). Beyond the last quote, the last λ is extended, not the last spread.</dd>
     </dl></div>
 
+  <details>
+    <summary>Worked through on the case curve</summary>
+    <div>
+  <p class="muted">The two highlighted rows are what the formula produces: the half-year survival ratio u, and the λ that follows from it.</p>
+  <p>Year 1 is the clean case to start with, because the chain has not begun: there are no earlier cash flows, so <b>K = 0</b>, and survival to the start of year 1 is certain, so <b>S<sub>p</sub> = 1</b>. The whole equation is then just the two brackets, with the 1-year quote of −19bp:</p>
+  <div class="fx"><div class="eq">1 = 0.984926·[u·0.014355 + 0.4(1−u)] + 0.968335·[u²·1.016183 + 0.4(u − u²)]</div>
+    <p class="muted" style="margin-bottom:0">Solving gives u = 1.001544, so the two brackets come to 0.013552 and 0.986448, which add to exactly 1. Note g<sub>2</sub> = 1.016183 is the final coupon <em>plus</em> the principal of 1, while g<sub>1</sub> = 0.014355 is a coupon alone.</p></div>
+  <p>Year 10 is a typical later step: K and S<sub>p</sub> now carry nine years of already-solved history, but the shape of the equation is identical and λ<sub>10</sub> is still the only unknown.</p>
+  <div class="tbl"><table class="cmp">
+    <thead><tr><th></th><th>Year 1</th><th>Year 10</th></tr></thead>
+    <tbody>
+      <tr><td>Quote for that maturity</td><td>−19.0 bp</td><td>42.0 bp</td></tr>
+      <tr><td>K, earlier cash flows</td><td>0 — none yet</td><td>0.310926</td></tr>
+      <tr><td>S<sub>p</sub>, survival to the start</td><td>1 — certain</td><td>0.941313</td></tr>
+      <tr><td>D<sub>1</sub>, D<sub>2</sub></td><td>0.984926, 0.968335</td><td>0.723251, 0.710651</td></tr>
+      <tr><td>g<sub>1</sub>, g<sub>2</sub></td><td>0.014355, 1.016183</td><td>0.019830, 1.019830</td></tr>
+      <tr><td>a<sub>2</sub>, a<sub>1</sub>, a<sub>0</sub></td><td>0.596672, 0.007502, −0.606030</td><td>0.414632, 0.008756, −0.416752</td></tr>
+      <tr class="hl"><td>u, from the quadratic</td><td>1.001544</td><td>0.992050</td></tr>
+      <tr class="hl"><td>λ<sub>b</sub> = −2 ln u</td><td>−30.9 bp</td><td>159.6 bp</td></tr>
+      <tr class="tot"><td>Bond reprices to</td><td>1.000000000000</td><td>1.000000000000</td></tr>
+    </tbody></table></div>
+  <p>Two things are worth noticing. In year 1, u comes out <em>above</em> 1, which makes λ negative — the issuer's 1-year bond trades through swaps, so no positive default intensity could price it that richly. And in both years a<sub>0</sub> is negative, which is what guarantees the two roots straddle zero and makes the <b>+</b> root the only admissible one.</p>
+  <p>The final row is the test that matters: feed u back into the equation and the bond returns its own quoted price to twelve decimal places. Repeat for every maturity and the whole λ curve is fixed, with no guessing at any point.</p>
+    </div>
+  </details>
+
   <h3>Loan profile</h3>
   <p><b>Purpose.</b> Turn the drawdown and repayment schedule into one number per half-year: <b>O<sub>i</sub></b>, the balance outstanding in period i as a fraction of the full amount. This is the only place the shape of the loan enters the calculation. Write <b>x</b> for the length of the drawdown period in years and <b>y</b> for the length of the repayment period, so this case has x = 1 and y = 23.</p>
   <div class="fx"><div class="eq">O<sub>i</sub> = <span class="t c1">min(i, D)/D</span> − <span class="t c4">max(0, min(i−1, n) − D)/(2y)</span>, &nbsp; D = 2x drawdowns, n = 2x + 2y, &nbsp; WAL = Σ O<sub>i</sub>·a</div>
