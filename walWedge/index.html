@@ -753,6 +753,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <div class="here"><h4>Fair price</h4><p>Weighted average of the costs; compare with the shortcut.</p><span class="ws">This section</span></div>
   </div>
 
+  <p><b>Floating and fixed, side by side.</b> Each step is worked for both loans, and the logic is identical. They differ in just two places. First, what a half-year's cost contains: for a floating loan it is the credit cost alone, because the base rate passes straight through to the borrower; for a fixed loan it is the forward (the base rate of that half-year, section 02) plus the credit cost, because one all-in rate has to cover both. Second, each loan takes its credit input from its own curve (Z-spread for floating, YTM for fixed), so their survival probabilities differ slightly.</p>
 
   <h3>Step 4 · The cost of a half-year</h3>
   <p><b>Where we are.</b> For each half-year, section 06 gives the chance of defaulting in it and the loss if that happens. A loan, though, is priced with a margin paid every year, not a lump sum. To compare the two, each half-year's expected loss has to be restated as a margin.</p>
@@ -762,18 +763,26 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <dt><span class="t c2">chance of surviving it</span></dt><dd>A margin is only paid while the borrower is alive, so it has to recover the whole expected loss out of the cases where the borrower survives.</dd>
     <dt><span class="t c3">0.5</span></dt><dd>A margin is quoted per year; the half-year amount is turned into a yearly rate.</dd></dl></div>
   <p><b>Intuition.</b> It is the least a lender could charge in that half-year and still break even on average. It contains no profit, capital charge or funding spread, only the credit risk the borrower's own bonds imply, which is why it can serve as the yardstick for a <em>fair</em> price.</p>
-  <p>What the cost contains depends on how the loan's interest is set. A <b>floating</b> loan pays the base rate (the swap-curve rate of that half-year, the forward of section 02) plus a margin. The base rate is passed straight through to the borrower, so the only thing the lender has to price is the credit risk, and the cost is the credit cost alone. A <b>fixed</b> loan quotes one all-in rate that must cover the base rate as well, so its cost is the forward for that half-year <em>plus</em> the credit cost.</p>
-  <p><b>Worked example, the half-year ending at year 20.</b></p>
+  <p>The credit cost above is the whole story for a floating loan. A fixed loan has one more ingredient:</p>
   <div class="tbl"><table class="cmp">
-    <thead><tr><th>Step</th><th>Value</th><th>How it is obtained</th></tr></thead>
+    <thead><tr><th></th><th>Floating loan</th><th>Fixed loan</th></tr></thead>
     <tbody>
-      <tr><td>Survival at the start and end of the half-year</td><td>0.7484 → 0.7396</td><td>From the default intensity λ (section 06)</td></tr>
-      <tr><td>Chance of defaulting in the half-year</td><td>1.17%</td><td>1 − 0.7396 ÷ 0.7484</td></tr>
-      <tr><td>Chance of surviving it</td><td>98.83%</td><td>The remainder</td></tr>
-      <tr><td>Loss if default happens</td><td>0.616</td><td>Principal 1, plus half a year's interest at the 3.23% forward (0.016), less the 0.40 recovered</td></tr>
-      <tr><td>Expected loss</td><td>0.720% of the balance</td><td>1.17% × 0.616</td></tr>
-      <tr class="hl"><td>Cost, floating</td><td>145.8 bp a year</td><td>0.720% ÷ (0.9883 × 0.5)</td></tr>
-      <tr class="hl"><td>Cost, fixed</td><td>4.794% a year</td><td>That credit cost (1.567% with the fixed loan's own calibration) plus the 3.227% forward</td></tr>
+      <tr><td>What the borrower pays</td><td>The base rate plus a margin</td><td>One all-in rate</td></tr>
+      <tr><td>What the lender has to price</td><td>Credit risk only: the base rate is passed straight through</td><td>Credit risk and the base rate, since the one rate must cover both</td></tr>
+      <tr class="hl"><td>Cost of a half-year</td><td>Credit cost</td><td>Forward for that half-year + credit cost</td></tr>
+    </tbody></table></div>
+  <p><b>Worked example, the half-year ending at year 20.</b> The loss if default happens is the principal (1), plus half a year's interest at the 3.23% forward (0.016), less the 0.40 recovered, so 0.616 for both loans. The rest differs only because each loan uses its own survival curve.</p>
+  <div class="tbl"><table class="cmp">
+    <thead><tr><th>Step</th><th>Floating loan</th><th>Fixed loan</th><th>How it is obtained</th></tr></thead>
+    <tbody>
+      <tr><td>Survival at the start and end of the half-year</td><td>0.7484 → 0.7396</td><td>0.7264 → 0.7173</td><td>From each loan's default intensity λ (section 06)</td></tr>
+      <tr><td>Chance of defaulting in it</td><td>1.17%</td><td>1.26%</td><td>1 − end ÷ start</td></tr>
+      <tr><td>Chance of surviving it</td><td>98.83%</td><td>98.74%</td><td>The remainder</td></tr>
+      <tr><td>Loss if default happens</td><td>0.616</td><td>0.616</td><td>1 + 0.016 − 0.40</td></tr>
+      <tr><td>Expected loss</td><td>0.720%</td><td>0.774%</td><td>Chance of default × loss</td></tr>
+      <tr><td>Credit cost</td><td>145.8 bp</td><td>156.7 bp</td><td>Expected loss ÷ (chance of surviving × 0.5)</td></tr>
+      <tr><td>Forward for the half-year</td><td>not needed</td><td>3.227%</td><td>Swap curve, section 02</td></tr>
+      <tr class="hl"><td>Cost of the half-year</td><td>145.8 bp</td><td>4.794%</td><td>Floating: credit cost. Fixed: 3.227% + 1.567%</td></tr>
     </tbody></table></div>
   <p class="muted">Section 10 gives the same cost as a formula, in "Per-period break-even cost".</p>
 
@@ -785,7 +794,15 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <dt><span class="t c3">discount factor</span></dt><dd>Margin received in year 20 is worth less today than margin received in year 1.</dd>
     <dt><span class="t c2">survival</span></dt><dd>Margin is only collected if the borrower has not defaulted.</dd></dl></div>
   <p><b>Intuition.</b> A half-year counts more when more is lent, when the money arrives sooner, and when the borrower is likelier to still be there. Those are exactly the three things that decide how much margin the lender actually collects in it. The weights of all 48 half-years add up to the <b>risky annuity</b>: today's value of 1bp a year on this loan, in years. Here it is <b class="num">9.002</b> (Results row 9).</p>
-  <p><b>Worked example.</b> The half-year ending at year 3 has weight 0.9348 × 0.5 × 0.9032 × 1.0068 = <b class="num">0.4250</b>. The half-year ending at year 20 has 0.1957 × 0.5 × 0.5059 × 0.7396 = <b class="num">0.0366</b>. So year 3 counts nearly twelve times as much as year 20, although its cost is −11.9bp against 145.8bp. (Survival slightly above 1 in the early years comes from the negative default intensities of section 06.)</p>
+  <p><b>Floating and fixed.</b> The formula is the same for both loans. The balance and the discount factor are identical; only survival differs, because each loan uses its own curve. Sums of all 48 weights: <b class="num">9.002</b> for the floating loan and <b class="num">8.943</b> for the fixed loan (Results row 9).</p>
+  <p><b>Worked example.</b></p>
+  <div class="tbl"><table>
+    <thead><tr><th>Half-year ending</th><th>Balance × 0.5</th><th>Discount factor</th><th>Survival, floating</th><th>Weight, floating</th><th>Survival, fixed</th><th>Weight, fixed</th></tr></thead>
+    <tbody>
+      <tr><td>Year 3</td><td>0.4674</td><td>0.9032</td><td>1.0068</td><td><b>0.4250</b></td><td>1.0047</td><td><b>0.4241</b></td></tr>
+      <tr><td>Year 20</td><td>0.0978</td><td>0.5059</td><td>0.7396</td><td><b>0.0366</b></td><td>0.7173</td><td><b>0.0355</b></td></tr>
+    </tbody></table></div>
+  <p>Year 3 counts nearly twelve times as much as year 20, on either loan, although its cost is far lower: −11.9bp against 145.8bp for the floating loan, 3.543% against 4.794% for the fixed one. (Survival slightly above 1 in the early years comes from the negative default intensities of section 06.)</p>
 
   <h3>Step 7 · The fair price</h3>
   <p><b>Where we are.</b> Each half-year has a cost (step 4) and a weight (step 6). The last step combines them into the one margin or rate the loan should carry.</p>
@@ -793,8 +810,18 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="fx"><div class="eq">fair price = <span class="t c2">Σ (weight × cost)</span> ÷ <span class="t c1">Σ weight</span></div>
     <dl><dt><span class="t c2">Σ (weight × cost)</span></dt><dd>Add up, over the 48 half-years, each half-year's weight times its cost.</dd>
     <dt><span class="t c1">Σ weight</span></dt><dd>The risky annuity, 9.002 here.</dd></dl></div>
-  <p><b>Intuition: why this is the right average.</b> A flat margin m on the loan is worth m × Σ weight today, because each weight is what a unit of margin in that half-year is worth. And weight × cost is the present value of that half-year's expected loss, which is section 06's loss formula valued today. A margin is fair when the two sides match, m × Σ weight = Σ (weight × cost), and solving for m is exactly the weighted average. Put in words, <b>fair price = present value of the expected loss ÷ risky annuity</b>. On this case the present value of the expected loss is 0.0561 per euro lent, about EUR 280m on EUR 5bn, and 0.0561 ÷ 9.002 = 62.3bp.</p>
-  <p><b>Worked on the case: four blocks.</b> To see the average at work, group the 48 half-years into four blocks of six years. The table shows, for each block, how much is lent (average balance and principal-years), how much it counts once discounting and default are allowed for (its weight and share of the total weight), and what its half-years cost on average.</p>
+  <p><b>Intuition: why this is the right average.</b> A flat margin m on the loan is worth m × Σ weight today, because each weight is what a unit of margin in that half-year is worth. And weight × cost is the present value of that half-year's expected loss, which is section 06's loss formula valued today. A margin is fair when the two sides match, m × Σ weight = Σ (weight × cost), and solving for m is exactly the weighted average. Put in words, <b>fair price = present value of the expected loss ÷ risky annuity</b>.</p>
+  <p><b>Floating and fixed.</b> The calculation is the same for both loans, with one extra term for the fixed loan: its costs include the forward, so its fair rate is the average forward plus the credit part, which is the present value of the expected loss divided by the risky annuity. Present values are per euro lent; EUR figures are on EUR 5bn.</p>
+  <div class="tbl"><table class="cmp">
+    <thead><tr><th></th><th>Floating loan</th><th>Fixed loan</th></tr></thead>
+    <tbody>
+      <tr><td>Present value of the expected loss</td><td>0.0561 (EUR 280.5m)</td><td>0.0615 (EUR 307.6m)</td></tr>
+      <tr><td>Risky annuity</td><td>9.002</td><td>8.943</td></tr>
+      <tr><td>Credit part: loss ÷ annuity</td><td>62.3 bp</td><td>0.688%</td></tr>
+      <tr><td>Average forward, weighted the same way</td><td>not needed</td><td>3.448%</td></tr>
+      <tr class="hl"><td>Fair price</td><td>62.32 bp (a margin)</td><td>4.1355% (an all-in rate)</td></tr>
+    </tbody></table></div>
+  <p><b>The average at work: four blocks.</b> Group the 48 half-years into four blocks of six years. The floating loan first. The table shows, for each block, how much is lent (average balance and principal-years), how much it counts once discounting and default are allowed for (its weight and share of the total weight), and what its half-years cost on average.</p>
   <div class="tbl"><table>
     <thead><tr><th>Years</th><th>Avg balance</th><th>Principal-years</th><th>Share before discounting</th><th>Weight</th><th>Share of weight</th><th>Cost of those years</th></tr></thead>
     <tbody>
@@ -807,13 +834,17 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <p>Two things to read from the table. First, compare the two share columns: discounting and survival move weight towards the early years, from 42.1% of principal-years to 52.5% of weight in the first block. Second, the average is built from the share of weight and the cost, not from the balance and the cost: balance alone would ignore how much of each block is discounted away or lost to default. So the fair price is the sum, over the four blocks, of each block's share of weight times its cost:</p>
   <div class="fx"><div class="eq" id="blk-sum"></div></div>
   <p>The early years are cheap (this issuer is safer than swaps at the short end) and carry over half the weight. The late years are far more expensive and pull the average up to 62.3 bp, well above the 53.5 bp shortcut. This is the two ideas of sections 03 and 04 at work: the cost of each year is steeper than the quote suggests (section 03), and the loan keeps money outstanding well beyond its early years, into the dear tail (section 04). The shortcut reads one point of the curve, 53.5 bp at 12.5 years; the fair price averages every block.</p>
-  <details>
-    <summary>The fixed loan: the same average, with the forward added to each cost</summary>
-    <div>
-  <p>The fixed case works identically, except each half-year's cost is the risk-free forward rate for that half-year <em>plus</em> its credit cost: 3.581%, 4.611%, 5.139% and 4.565% for the four blocks, giving a fair fixed rate of 4.1355%. The last block is cheaper than the third because the swap curve falls beyond 15 years (3.51% → 3.29% at 30Y), so risk-free forwards decline there.</p>
-
-    </div>
-  </details>
+  <p><b>The same four blocks for the fixed loan.</b> Weights barely change, since only survival differs. What changes is the cost: each block's cost is its average forward plus its credit cost.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Years</th><th>Share of weight</th><th>Forward</th><th>Credit cost</th><th>Cost of those years</th></tr></thead>
+    <tbody>
+      <tr><td>0–6</td><td>52.8%</td><td>3.429%</td><td>0.153%</td><td>3.581%</td></tr>
+      <tr><td>6–12</td><td>30.6%</td><td>3.505%</td><td>1.105%</td><td>4.611%</td></tr>
+      <tr><td>12–18</td><td>13.2%</td><td>3.486%</td><td>1.652%</td><td>5.139%</td></tr>
+      <tr><td>18–24</td><td>3.4%</td><td>3.078%</td><td>1.487%</td><td>4.565%</td></tr>
+      <tr class="tot"><td>Total</td><td>100%</td><td>3.448%</td><td>0.688%</td><td>4.1355% = row 13</td></tr>
+    </tbody></table></div>
+  <p>Fair rate: 52.8% × 3.581% + 30.6% × 4.611% + 13.2% × 5.139% + 3.4% × 4.565% = 4.1355% (shares rounded). The pattern matches the floating loan: cheap early years carry over half the weight and the dear tail pulls the average up. The last block is cheaper than the third because the swap curve falls beyond 15 years (3.51% → 3.29% at 30Y), so the forward drops to 3.08% there.</p>
 
   <p>The blocks are a summary. The chart shows every half-year on its own.</p>
   <figure>
