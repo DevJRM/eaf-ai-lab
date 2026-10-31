@@ -885,6 +885,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt>a<sub>1</sub></dt><dd>S<sub>p</sub>(DF(b−½)(g<sub>1</sub>−R) + DF(b)R) — the u terms, one from each bracket.</dd>
       <dt>a<sub>0</sub></dt><dd>K + DF(b−½)S<sub>p</sub>R − 1 — everything with no u in it, including the price moved across from the left.</dd>
       <dt>which root</dt><dd>The <b>+</b> root. a<sub>0</sub> is negative whenever the bond's earlier cash flows are worth less than par, so the two roots straddle zero and only the positive one can be a survival ratio.</dd>
+      <dt>λ<sub>b</sub> = −2 ln u</dt><dd>The definition of u read backwards. u = e<sup>−λ<sub>b</sub>/2</sup> is the half-year survival factor of section 06, so taking logs gives ln u = −λ<sub>b</sub>/2, and multiplying by −2 isolates λ<sub>b</sub>. The 2 appears because λ is quoted per year while u spans half a year. Solving in u rather than in λ directly is what keeps this closed form: survival enters the bond's price only as u and u², which is a quadratic, whereas the same equation written in λ would carry e<sup>−λ/2</sup> and e<sup>−λ</sup> and need iterating. The log at the end converts back. For year 10, u = 0.992050 gives λ = 159.6 bp, and u² = 0.984164 is that year's full-year survival, exp(−λ).</dd>
       <dt>check</dt><dd>Every quoted bond reprices to its input; the workbook shows the maximum error (about 10<sup>−12</sup> bp). Beyond the last quote, the last λ is extended, not the last spread.</dd>
     </dl></div>
 
