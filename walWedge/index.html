@@ -117,6 +117,9 @@ tr.hl td{background:var(--accent-soft)}
 .t.c2{background:var(--gain-soft);border-color:var(--gain)}
 .t.c3{background:var(--amber-soft);border-color:var(--amber)}
 .t.c4{background:var(--loss-soft);border-color:var(--loss)}
+.fx .eq.eq-r{display:flex;align-items:flex-start;flex-wrap:nowrap;column-gap:10px}
+.fx .eq-r .ec{display:flex;flex-direction:column;align-items:center;white-space:nowrap}
+.fx .eq-r .el{font-family:var(--f-display);font-size:11px;color:var(--muted);margin-top:6px;white-space:nowrap}
 .fx dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:12px 0 0;font-size:15px}
 .fx dt{font-family:var(--f-mono);font-size:13px;white-space:nowrap}
 .fx dt .t{padding:1px 6px;border-radius:4px;border-bottom:3px solid}
@@ -662,8 +665,14 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 
   <h3>How much is lost: recovery, and the balance it applies to</h3>
   <p>Standard practice assumes a lender recovers 40% of what it is owed when a senior unsecured borrower defaults. That fixes the recovery <em>rate</em>. It does not fix the <em>base</em> — the amount that 40% is a share of. There are two candidate bases: the loan's original face value, and whatever balance is still outstanding on the day of default. The model uses the second.</p>
-  <div class="fx"><div class="eq">loss in half-year i = <span class="t c4">(S<sub>i−1</sub> − S<sub>i</sub>)</span> × <span class="t c3">(1 + f·a − R)</span> × <span class="t c1">O<sub>i</sub></span></div>
-    <div class="eq" style="font-size:14px;opacity:.65">= <span class="t c4">prob. of default</span> × <span class="t c3">per-default loss</span> × <span class="t c1">base</span></div>
+  <div class="fx"><div class="eq eq-r">
+      <div class="ec">loss in half-year i =</div>
+      <div class="ec"><span class="t c4">(S<sub>i−1</sub> − S<sub>i</sub>)</span><span class="el">prob. of default</span></div>
+      <div class="ec">×</div>
+      <div class="ec"><span class="t c3">(1 + f·a − R)</span><span class="el">per-default loss</span></div>
+      <div class="ec">×</div>
+      <div class="ec"><span class="t c1">O<sub>i</sub></span><span class="el">base</span></div>
+    </div>
     <dl>
       <dt><span class="t c4">S<sub>i−1</sub> − S<sub>i</sub></span></dt><dd>The chance of defaulting in that half-year, having survived to its start. This is the λ half, above — it is where λ enters this formula.</dd>
       <dt><span class="t c3">1 + f·a − R</span></dt><dd>The <b>per-default loss</b>: what is lost <em>if</em> a default happens, taking that as given. The principal (1), plus that half-year's interest due (f·a — the floating coupon rate f times the half-year accrual a = 0.5; a fixed loan uses its fixed rate in place of f), less what is recovered (R). Both f and a are defined in full in the appendix (section 10). It says nothing about whether a default happens — that is the separate factor to its left — so it is not the same thing as "loss in half-year i": it is the middle of the three factors that are multiplied to get there.</dd>
@@ -676,7 +685,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <p>Changing the recovery <em>rate</em> moves the answer very little: 8.99 bp at 20% recovery, 8.82 at 40%, 8.49 at 60% (section 08). That looks surprising, because R sits inside two formulas on this page — the <code>λ ≈ margin ÷ (1 − R)</code> rule of thumb above, and the per-default loss, <code>1 + f·a − R</code>, just above that. Change R and both formulas move. Going in, it changes the λ you calibrate; coming out, it changes the loss that λ is used to price.</p>
   <div class="duo">
     <div><h4>Going in: R decides how large λ must be</h4><p>The quoted spread is fixed market data — it does not move just because you change your assumption about R. But λ ≈ margin ÷ (1 − R) does: raise R and (1 − R) shrinks, so matching that same fixed spread now calls for a larger λ. Credit a default with recovering more, in other words, and the model needs defaults to happen more often to still explain the spread actually observed in the market.</p></div>
-    <div><h4>Coming out: R decides how large that default's loss is</h4><p>The larger λ this produces is then used to price the loan — but it enters the loss formula above through S<sub>i−1</sub> − S<sub>i</sub>, the probability of default, not through the per-default loss. R reappears separately there, in <code>1 + f·a − R</code>, where it still shrinks what each default costs. So the same R that just made defaults more likely also makes each one cheaper.</p></div>
+    <div><h4>Coming out: R decides how large that default's loss is</h4><p>That larger λ is now used to price the loan, by way of the loss formula above. Follow it in: λ sets S<sub>i−1</sub> − S<sub>i</sub>, so a bigger λ means a bigger chance of default. R, meanwhile, is not finished — it appears again on its own, inside the per-default loss, <code>1 + f·a − R</code>, still shrinking what each default costs, exactly as it always did. One assumption about R, acting on the same formula twice: once at a distance, by way of λ, and once directly.</p></div>
   </div>
   <p>Those two effects sit on different factors of one product, probability of default times per-default loss, so pushing one up and the other down mostly offsets rather than compounding. The offset is not exact — the fair price still drifts from 8.99 bp down to 8.49 bp across the 20%–60% range — but it is close enough that the recovery rate, within reason, barely changes the answer.</p>
   <div class="take"><b>Takeaway</b><p>The recovery <em>rate</em> — the 40% figure — is a soft assumption: it enters the calculation twice, going in and coming out, in ways that offset, so the model absorbs most of whatever rate you choose. The recovery <em>base</em> — original face or outstanding balance, from the subsection above — is not soft at all; it enters only once, with no offsetting error to cancel it. A wrong base does not crash the model or produce an obviously broken number: it quietly makes the late years price as nearly free, by turning their loss given default negative. Sections 03–05 found the wedge precisely in those late years — so a base error would not just bias this section's output, it would erase the thing the whole page is about.</p></div>
