@@ -237,7 +237,6 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt><span class="t c3">shortcut</span></dt><dd>The curve read at the WAL, plus any agreed margin X above or below it. Results rows 11–12.</dd>
     </dl>
   </div>
-  <p class="muted">The wedge can also be understood from a second side: the shortcut is the fair price of a bullet with the same WAL as the loan, so the wedge is how the loan's weighting of the same half-year costs differs from that bullet's. This is only a reading of the same gap, used for intuition in sections 03, 04 and 07; the definition above is the one used throughout.</p>
   <div class="take"><b>Takeaway</b><p>The saving is a <em>net</em> figure. Before the WAL date the borrower overpays, because early exposure is genuinely cheaper than the 12.5-year point. After the WAL date it underpays, because late exposure is much dearer. On a rising curve the second effect wins. Sections 03 and 04 explain why it wins even when the curve is a straight line.</p></div>
 </section>
 
@@ -358,9 +357,9 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     </tbody></table></div>
   <div class="warn"><b>Trap: weighting the quoted curve flips the sign</b>
     <p>It is tempting to skip the peeling step above and weight the <em>quoted</em> curve itself by how much of the loan is outstanding each year. Don't: a quoted point is already an average cost to that maturity, so every long-dated quote has the cheap early years baked into it. Weighting the quotes directly counts those early years again and again, which drags the result down toward the short end.</p>
-    <p>Done on this case — weighting each quoted level by the loan's own risky-annuity weights — that gives <b>17.9 bp</b>, far below the 53.5bp actually charged, making it look as if the borrower <em>overpays</em> by 35.6bp. Peel the years first, as above, and the true fair cost is 62.3bp: the borrower is actually <em>underpaying</em>, by 8.82bp. Same inputs, opposite conclusion.</p>
+    <p>Done on this case — weighting each quoted level by the loan's own risky-annuity weights (the weights of section 07) — that gives <b>17.9 bp</b>, far below the 53.5bp actually charged, making it look as if the borrower <em>overpays</em> by 35.6bp. Peel the years first, as above, and the true fair cost is 62.3bp: the borrower is actually <em>underpaying</em>, by 8.82bp. Same inputs, opposite conclusion.</p>
     <p>The fixed case shows the same reversal: weighting the quotes directly gives 3.607%, against the 4.0554% charged — an apparent 44.9bp overpayment — while the correct, peeled calculation gives +8.02bp: an underpayment.</p></div>
-  <div class="take"><b>Takeaway</b><p>Never price exposure in year <i>t</i> at the curve's quote for maturity <i>t</i>. Convert the curve into the cost of each year first. In this case year 10 alone costs about 99.0 bp, more than twice the 42bp the 10-year quote shows. Section 07 makes “average” exact: a quote is the weighted average of these yearly costs, using the weights of a bond of that maturity that repays only at the end.</p></div>
+  <div class="take"><b>Takeaway</b><p>Never price exposure in year <i>t</i> at the curve's quote for maturity <i>t</i>. Convert the curve into the cost of each year first. In this case year 10 alone costs about 99.0 bp, more than twice the 42bp the 10-year quote shows.</p></div>
 </section>
 
 <!-- ================================================================ 04 -->
@@ -442,7 +441,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <div class="legend" id="lg-sb"></div>
     <div class="readout" id="ro-sb"></div>
   </figure>
-  <div class="take"><b>Takeaway</b><p>Equal WAL means equal quantity of lending, not equal timing. An amortiser always has its exposure later than the equal-WAL bullet. On any rising curve that alone makes it dearer. The early-year loss and the late-year gain do not cancel, even on a straight line. Section 07 shows the same thing as a weighting: the shortcut prices the loan like that equal-WAL bullet, so the wedge is the extra weight the amortiser puts on the dear late years.</p></div>
+  <div class="take"><b>Takeaway</b><p>Equal WAL means equal quantity of lending, not equal timing. An amortiser always has its exposure later than the equal-WAL bullet. On any rising curve that alone makes it dearer. The early-year loss and the late-year gain do not cancel, even on a straight line.</p></div>
 </section>
 
 <!-- ================================================================ 05 -->
@@ -742,8 +741,8 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 <section id="price" class="lvl">
   <div class="eyebrow">07 · From half-year costs to a loan price</div>
   <h2>The fair price: a weighted average of the half-year costs</h2>
-  <p>Section 06 ended with two things for every half-year of the loan's life: how likely the borrower is to still be there, and what is lost if it defaults. This section turns them into a price. The question is: <b>what single margin (floating) or rate (fixed) would make the lender whole on this exact loan, measured against the borrower's own bonds?</b> That is the <b>fair price</b> of section 01, and the wedge is its gap to the shortcut. Getting there takes three moves: put a cost on each half-year, decide how much each half-year counts, and average.</p>
-  <p>Seen as part of the whole calculation, which has seven steps, this section does steps 4, 6 and 7. The others were set up earlier.</p>
+  <p>Section 06 ended with two things for every half-year of the loan's life: how likely the borrower is to still be there, and what is lost if it defaults. This section turns them into a price. The question is: <b>what single margin (floating) or rate (fixed) would make the lender whole on this exact loan, measured against the borrower's own bonds?</b> That is the <b>fair price</b> of section 01, and the wedge is its gap to the shortcut.</p>
+  <p>The whole calculation has seven steps. This section does the last three that remain: steps 4, 6 and 7. The others were set up earlier.</p>
   <div class="pipe">
     <div class="done"><h4>Fill the gaps</h4><p>Interpolate missing years; convert YTMs to semi-annual terms.</p><span class="ws">Sections 02, 10</span></div>
     <div class="done"><h4>Risk-free curve</h4><p>Bootstrap discount factors from swap rates; pin 6M with the fixing.</p><span class="ws">Sections 02, 10</span></div>
@@ -754,25 +753,49 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <div class="here"><h4>Fair price</h4><p>Weighted average of the costs; compare with the shortcut.</p><span class="ws">This section</span></div>
   </div>
 
-  <h3>From expected loss to the cost of a half-year</h3>
-  <p>Section 06 gave the expected loss in each half-year: the chance of defaulting in it, times what is lost if that happens, on the balance outstanding. A loan is priced with a margin, not a lump sum, so that loss has to be restated as a margin. Two adjustments do it. A margin is quoted per year, so the half-year amount is divided by its length, 0.5. And a margin is only paid while the borrower is alive, so it has to recover the whole expected loss out of the share of the half-year in which the borrower survives, and the amount is divided by that survival chance as well.</p>
-  <p>The result is the <b>cost of the half-year</b>, c<sub>i</sub>: the margin that exactly covers the loss expected in that half-year. To the lender it is break-even compensation; to the borrower it is what that stretch of funding costs on its own bond curve.</p>
-  <p><b>Worked example, the half-year ending at year 20.</b> Survival falls from 0.7484 to 0.7396, so the chance of defaulting in this half-year is 1.17% and the chance of surviving it is 98.83%. If default happens the loss is the principal (1), plus that half-year's interest (a forward of 3.23% for half a year, 0.016), less the 40% recovered: 0.616. The cost is then 1.17% × 0.616 ÷ (0.9883 × 0.5) = 1.458% a year, or <b class="num">145.8 bp</b>. For a floating loan that is the whole cost, because the base rate passes straight through to the borrower. A fixed loan quotes one all-in rate, so its cost also includes the risk-free forward: 3.227% + 1.567% = <b class="num">4.794%</b>. Section 10 gives the formula in full.</p>
 
-  <h3>The weight of a half-year</h3>
+  <h3>Step 4 · The cost of a half-year</h3>
+  <p><b>Where we are.</b> For each half-year, section 06 gives the chance of defaulting in it and the loss if that happens. A loan, though, is priced with a margin paid every year, not a lump sum. To compare the two, each half-year's expected loss has to be restated as a margin.</p>
+  <p><b>Definition.</b> The <b>cost of a half-year</b> is the margin that exactly covers the loss expected in that half-year.</p>
+  <div class="fx"><div class="eq">cost of a half-year = <span class="t c4">chance of default in it × loss if default</span> ÷ (<span class="t c2">chance of surviving it</span> × <span class="t c3">0.5</span>)</div>
+    <dl><dt><span class="t c4">chance × loss</span></dt><dd>The expected loss in that half-year, per unit of balance. Both pieces come from section 06.</dd>
+    <dt><span class="t c2">chance of surviving it</span></dt><dd>A margin is only paid while the borrower is alive, so it has to recover the whole expected loss out of the cases where the borrower survives.</dd>
+    <dt><span class="t c3">0.5</span></dt><dd>A margin is quoted per year; the half-year amount is turned into a yearly rate.</dd></dl></div>
+  <p><b>Intuition.</b> It is the least a lender could charge in that half-year and still break even on average. To the borrower it is what that stretch of funding costs on its own bond curve. It contains no profit, capital charge or funding spread, only the credit risk the borrower's bonds imply, which is why it can serve as the yardstick for a <em>fair</em> price. Floating and fixed differ in one respect: a floating loan passes the base rate straight through to the borrower, so its cost is the credit cost alone; a fixed loan quotes one all-in rate, so its cost is the risk-free forward for that half-year <em>plus</em> the credit cost.</p>
+  <p><b>Worked example, the half-year ending at year 20.</b></p>
+  <div class="tbl"><table class="cmp">
+    <thead><tr><th>Step</th><th>Value</th><th>How it is obtained</th></tr></thead>
+    <tbody>
+      <tr><td>Survival at the start and end of the half-year</td><td>0.7484 → 0.7396</td><td>From the default intensity λ (section 06)</td></tr>
+      <tr><td>Chance of defaulting in the half-year</td><td>1.17%</td><td>1 − 0.7396 ÷ 0.7484</td></tr>
+      <tr><td>Chance of surviving it</td><td>98.83%</td><td>The remainder</td></tr>
+      <tr><td>Loss if default happens</td><td>0.616</td><td>Principal 1, plus half a year's interest at the 3.23% forward (0.016), less the 0.40 recovered</td></tr>
+      <tr><td>Expected loss</td><td>0.720% of the balance</td><td>1.17% × 0.616</td></tr>
+      <tr class="hl"><td>Cost, floating</td><td>145.8 bp a year</td><td>0.720% ÷ (0.9883 × 0.5)</td></tr>
+      <tr class="hl"><td>Cost, fixed</td><td>4.794% a year</td><td>That credit cost (1.567% with the fixed loan's own calibration) plus the 3.227% forward</td></tr>
+    </tbody></table></div>
+  <p class="muted">Section 10 gives the same cost as a formula, in "Per-period break-even cost".</p>
+
+  <h3>Step 6 · The weight of a half-year</h3>
+  <p><b>Where we are.</b> Every half-year now has a cost, from below zero early in the loan to well above 100bp late. The fair price will be an average of these costs, and an average has to say how much each one counts. That is its weight.</p>
+  <p><b>Definition.</b> The <b>weight</b> of a half-year is how much that half-year counts when the costs are averaged. Precisely, it is today's value of one unit of margin earned in that half-year. This page uses the word in exactly this sense from here on.</p>
   <div class="fx"><div class="eq">weight<sub>i</sub> = <span class="t c1">balance<sub>i</sub> × 0.5</span> × <span class="t c3">discount factor<sub>i</sub></span> × <span class="t c2">survival<sub>i</sub></span></div>
-    <dl><dt><span class="t c1">balance × 0.5</span></dt><dd>Principal-years in that half-year: how much is lent, for how long.</dd>
+    <dl><dt><span class="t c1">balance × 0.5</span></dt><dd>Principal-years in that half-year: how much is lent, for how long. The balance comes from the loan profile (section 02).</dd>
     <dt><span class="t c3">discount factor</span></dt><dd>Margin received in year 20 is worth less today than margin received in year 1.</dd>
     <dt><span class="t c2">survival</span></dt><dd>Margin is only collected if the borrower has not defaulted.</dd></dl></div>
-  <p>Worked example, the half-year ending at year 20: balance 19.57% × 0.5 × discount 0.5059 × survival 0.7396 = <b class="num">0.0366</b>. All 48 weights add up to <b class="num">9.002</b>, which is Results row 9, the <b>risky annuity</b>: today's value of 1bp a year on this loan, in years.</p>
-  <p><b>Why a weighted average is the right price.</b> Each weight is what 1bp of margin in that half-year is worth today, so a flat margin m is worth m × Σweights. Weight × cost is the other side: it equals the expected loss of that half-year, discounted, which is section 06's loss formula valued today. A fair margin is one where the two sides match, m × Σw = Σ (w<sub>i</sub> × c<sub>i</sub>), and solving for m gives exactly a weighted average of the costs:</p>
-  <div class="fx"><div class="eq">fair = <span class="t c2">Σ w<sub>i</sub> × c<sub>i</sub></span> ÷ <span class="t c1">Σ w<sub>i</sub></span> &nbsp;=&nbsp; <span class="t c2">PV of expected loss</span> ÷ <span class="t c1">risky annuity</span></div>
-    <dl><dt><span class="t c2">numerator</span></dt><dd>The present value of everything the lender expects to lose over the loan's life. Here 0.0561 per euro lent, about EUR 280m on EUR 5bn.</dd>
-    <dt><span class="t c1">denominator</span></dt><dd>The risky annuity, 9.002. Dividing the loss by it spreads it into one flat margin: 0.0561 ÷ 9.002 = 62.3 bp.</dd></dl></div>
+  <p><b>Intuition.</b> A half-year counts more when more is lent, when the money arrives sooner, and when the borrower is likelier to still be there. Those are exactly the three things that decide how much margin the lender actually collects in it. The weights of all 48 half-years add up to the <b>risky annuity</b>: today's value of 1bp a year on this loan, in years. Here it is <b class="num">9.002</b> (Results row 9).</p>
+  <p><b>Worked example.</b> The half-year ending at year 3 has weight 0.9348 × 0.5 × 0.9032 × 1.0068 = <b class="num">0.4250</b>. The half-year ending at year 20 has 0.1957 × 0.5 × 0.5059 × 0.7396 = <b class="num">0.0366</b>. So year 3 counts nearly twelve times as much as year 20, although its cost is −11.9bp against 145.8bp. (Survival slightly above 1 in the early years comes from the negative default intensities of section 06.)</p>
 
-  <h3>The case in four blocks (floating)</h3>
+  <h3>Step 7 · The fair price</h3>
+  <p><b>Where we are.</b> Each half-year has a cost (step 4) and a weight (step 6). The last step combines them into the one margin or rate the loan should carry.</p>
+  <p><b>Definition.</b> The <b>fair price</b> is the weighted average of the half-year costs.</p>
+  <div class="fx"><div class="eq">fair price = <span class="t c2">Σ (weight × cost)</span> ÷ <span class="t c1">Σ weight</span></div>
+    <dl><dt><span class="t c2">Σ (weight × cost)</span></dt><dd>Add up, over the 48 half-years, each half-year's weight times its cost.</dd>
+    <dt><span class="t c1">Σ weight</span></dt><dd>The risky annuity, 9.002 here.</dd></dl></div>
+  <p><b>Intuition: why this is the right average.</b> A flat margin m on the loan is worth m × Σ weight today, because each weight is what a unit of margin in that half-year is worth. And weight × cost is the present value of that half-year's expected loss, which is section 06's loss formula valued today. A margin is fair when the two sides match, m × Σ weight = Σ (weight × cost), and solving for m is exactly the weighted average. Put in words, <b>fair price = present value of the expected loss ÷ risky annuity</b>. On this case the present value of the expected loss is 0.0561 per euro lent, about EUR 280m on EUR 5bn, and 0.0561 ÷ 9.002 = 62.3bp.</p>
+  <p><b>Worked on the case: four blocks.</b> To see the average at work, group the 48 half-years into four blocks of six years. The table shows, for each block, how much is lent (average balance and principal-years), how much it counts once discounting and default are allowed for (its weight and share of the total weight), and what its half-years cost on average.</p>
   <div class="tbl"><table>
-    <thead><tr><th>Years</th><th>Avg balance</th><th>Principal-years</th><th>Share before discounting</th><th>Weight</th><th>Share of weighting</th><th>Cost of those years</th></tr></thead>
+    <thead><tr><th>Years</th><th>Avg balance</th><th>Principal-years</th><th>Share before discounting</th><th>Weight</th><th>Share of weight</th><th>Cost of those years</th></tr></thead>
     <tbody>
       <tr><td>0–6</td><td>88%</td><td>5.26</td><td>42.1%</td><td>4.724</td><td>52.5%</td><td>12.6 bp</td></tr>
       <tr><td>6–12</td><td>66%</td><td>3.98</td><td>31.8%</td><td>2.757</td><td>30.6%</td><td>99.9 bp</td></tr>
@@ -780,7 +803,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <tr><td>18–24</td><td>14%</td><td>0.85</td><td>6.8%</td><td>0.312</td><td>3.5%</td><td>153.5 bp</td></tr>
       <tr class="tot"><td>Total</td><td></td><td>12.50 = WAL</td><td>100%</td><td>9.002 = row 9</td><td>100%</td><td>62.3 bp = row 13</td></tr>
     </tbody></table></div>
-  <p>Read the columns separately; they are not multiplied together. The balance feeds the weight; the weight becomes a share; the cost comes from the curve (section 03) and has nothing to do with the loan's balance. The fair price is each block's share times its cost:</p>
+  <p>Two things to read from the table. First, compare the two share columns: discounting and survival move weight towards the early years, from 42.1% of principal-years to 52.5% of weight in the first block. Second, the cost column comes from the curve and has nothing to do with the balance, so the columns are not multiplied together. The fair price is each block's share of the weight times its cost:</p>
   <div class="fx"><div class="eq" id="blk-sum"></div></div>
   <p>The early years are cheap (this issuer is safer than swaps at the short end) and carry over half the weight. The late years are far more expensive and pull the average up to 62.3 bp, well above the 53.5 bp shortcut. This is the two ideas of sections 03 and 04 at work: the cost of each year is steeper than the quote suggests (section 03), and the loan keeps money outstanding well beyond its early years, into the dear tail (section 04). The shortcut reads one point of the curve, 53.5 bp at 12.5 years; the fair price averages every block.</p>
   <details>
@@ -791,6 +814,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     </div>
   </details>
 
+  <p>The blocks are a summary. The chart shows every half-year on its own.</p>
   <figure>
     <div class="ft">Every half-year: fair cost against the price charged</div>
     <div class="fs">Top: each half-year's cost against the flat price charged; green where the half-year is dearer, red where it is cheaper. Bottom: the running present-value total of what the borrower saves.</div>
@@ -801,39 +825,9 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <figcaption id="cap-cost"></figcaption>
   </figure>
 
-  <h3>The shortcut and the fair price, side by side</h3>
-  <div class="tbl"><table>
-    <thead><tr><th>Quantity (Results row)</th><th>Floating</th><th>Fixed</th><th>What it is</th></tr></thead>
-    <tbody>
-      <tr><td>Risky annuity (row 9)</td><td>9.002</td><td>8.943</td><td class="txt">Today's value of 1bp a year on this loan, in years. 1bp × 9.002 × EUR 5bn ≈ €4.5m. Below the WAL because of discounting and default risk.</td></tr>
-      <tr><td>Curve at WAL (row 11)</td><td>53.5 bp</td><td>4.0965%</td><td class="txt">The shortcut: your curve read at exactly 12.5 years.</td></tr>
-      <tr><td>Charged (row 12)</td><td>0.5350%</td><td>4.0554%</td><td class="txt">Row 11 + X, in the loan's own terms. Floating: same number as row 11, shown as a rate. Fixed: restated to half-yearly payments (below).</td></tr>
-      <tr><td>Fair (row 13)</td><td>0.6232%</td><td>4.1355%</td><td class="txt">The weighted average of every half-year's cost: what funding this exact profile with the borrower's own bonds would cost.</td></tr>
-      <tr class="hl"><td>Net saving (row 15)</td><td>+8.82 bp</td><td>+8.02 bp</td><td class="txt">Fair minus charged: the wedge.</td></tr>
-    </tbody></table></div>
-
-  <details>
-    <summary>A second reading of the wedge: one cost curve, two weightings</summary>
-    <div>
-  <p>The wedge is fair minus shortcut, as defined in section 01, and nothing here changes that. This fold looks at the same gap from a different side, because it shows <em>why</em> the gap exists in a single picture.</p>
-  <p><b>A quoted spread is itself a weighted average of the half-year costs.</b> Take a bond of maturity T that repays nothing until T. It is the simplest possible loan: its balance is 100% until T and then zero. The model calibrates λ so that every quoted bond prices at par, and pricing at par means the margin matches the expected loss, as above. So weighting the half-year costs with that bond's weights returns its quoted spread exactly. For the 12-year bond the result is 51.00 bp, and for the 13-year bond 56.00 bp, which are the Z-spreads on the chart; halfway between them is the 53.5 bp the shortcut reads at 12.5 years. In other words, <b>the shortcut is the fair price of a 12.5-year bullet</b>, the bond with the same WAL as the loan.</p>
-  <p><b>The loan has the same costs but different weights.</b> The half-year costs are the same for the loan and for that bullet, since the same issuer and the same curves price both. Only the weights differ, because the bullet stays fully outstanding until year 12.5 and then vanishes, while the loan is paid down gradually over 24 years:</p>
-  <div class="tbl"><table class="cmp">
-    <thead><tr><th>Years</th><th>Cost of those years</th><th>Weight, 12.5-year bullet</th><th>Weight, our loan</th></tr></thead>
-    <tbody>
-      <tr><td>0–6</td><td>12.6 bp</td><td>55.0%</td><td>52.5%</td></tr>
-      <tr><td>6–12</td><td>99.9 bp</td><td>42.0%</td><td>30.6%</td></tr>
-      <tr><td>12–18</td><td>147.5 bp</td><td>2.9%</td><td>13.4%</td></tr>
-      <tr><td>18–24</td><td>153.5 bp</td><td>0%</td><td>3.5%</td></tr>
-      <tr class="tot"><td>Weighted average</td><td></td><td>53.5 bp (shortcut)</td><td>62.3 bp (fair price)</td></tr>
-    </tbody></table></div>
-  <p class="muted">Costs are the loan's block costs from the table above; the bullet's blocks cost almost the same (13.0, 100.7 and 139.8 bp), so the products are close to, not exactly, the averages shown.</p>
-  <p>Beyond year 12 the bullet carries about 3% of its weight and the loan about 17%, and that extra weight sits in the dearest years. The same costs with more weight on the dear years give a higher average, and the gap between the two averages, 8.8 bp, is the wedge. This is the point of section 04, equal WAL but not equal timing, with the weights written out.</p>
-  <p class="muted" style="margin-bottom:0">This is a way to understand the wedge, not a second definition: the page defines and measures it throughout as fair minus shortcut. The match with the bullet is exact at quoted maturities and approximate at 12.5 years, which is interpolated.</p>
-    </div>
-  </details>
-
-  <h3>Why row 12 differs from row 11 in the fixed column</h3>
+  <h3>Comparing the fair price with the shortcut</h3>
+  <p>With the fair price in hand, the comparison is the wedge of section 01. For the floating loan, 62.32bp fair against 53.50bp charged gives <b class="num">+8.82 bp</b>. For the fixed loan, 4.1355% fair against 4.0554% charged gives <b class="num">+8.02 bp</b>. The headline rows of the Results tab, including these, are tabulated at the start of section 08. One detail of the fixed comparison needs explaining: the charged rate, 4.0554%, is not the 4.0965% read from the curve.</p>
+  <h3>Why the fixed shortcut is restated on a half-yearly basis</h3>
   <p>EUR bonds pay their coupon once a year; the loan pays twice a year. A half-yearly payment arrives six months earlier and can be reinvested, so a slightly lower half-yearly rate gives exactly the same yield.</p>
   <figure>
     <div class="ft">Annual to semi-annual converter</div>
@@ -842,7 +836,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <figcaption id="cap-conv"></figcaption>
   </figure>
   <div class="note"><b>If the term sheet copies the number literally</b><p>Setting a 4.0965% coupon <em>paid half-yearly</em> gives the lender a higher effective yield than the bond. Model it by entering X = +4.11 bp in the fixed-loan row of the Inputs tab. The fixed saving then falls from 8.02 to 3.90 bp.</p></div>
-  <div class="take"><b>Takeaway</b><p>Row 11 is one point on the curve. Row 13 uses the whole curve, weighted by where this loan's money actually is. The wedge is the gap between them. Equivalently, it is the difference in weighting between this loan and a bullet of the same WAL, applied to the same costs (second reading, above).</p></div>
+  <div class="take"><b>Takeaway</b><p>Each half-year has a cost, and a weight that says how much it counts. The fair price is their weighted average, and the shortcut is one point on the curve. The wedge is the gap between them.</p></div>
 </section>
 
 <!-- ================================================================ 08 -->
@@ -852,7 +846,11 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="tbl"><table>
     <thead><tr><th>Metric</th><th>Floating vs Z-spread</th><th>Fixed vs YTM</th><th>Results row</th></tr></thead>
     <tbody>
-      <tr class="hl"><td>Net saving, bp per year</td><td class="g">+8.82</td><td class="g">+8.02</td><td>15</td></tr>
+      <tr><td>Risky annuity, years (the sum of the weights, section 07)</td><td>9.002</td><td>8.943</td><td>9</td></tr>
+      <tr><td>Curve at the WAL (the shortcut, section 01)</td><td>53.5 bp</td><td>4.0965%</td><td>11</td></tr>
+      <tr><td>Charged: shortcut + X, on the loan's own basis</td><td>0.5350%</td><td>4.0554%</td><td>12</td></tr>
+      <tr><td>Fair price (section 07)</td><td>0.6232%</td><td>4.1355%</td><td>13</td></tr>
+      <tr class="hl"><td>Net saving, bp per year (the wedge: fair minus charged)</td><td class="g">+8.82</td><td class="g">+8.02</td><td>15</td></tr>
       <tr><td>As % of the bond-equivalent spread / rate</td><td>14.2%</td><td>1.9%</td><td>16</td></tr>
       <tr><td>Bond-equivalent all-in rate</td><td>4.0708%</td><td>4.1355%</td><td>17</td></tr>
       <tr><td>Loan all-in rate</td><td>3.9826%</td><td>4.0554%</td><td>18</td></tr>
@@ -1098,7 +1096,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <dt><span class="t c2">fair</span></dt><dd>The weighted average of those per-period costs — one flat spread or rate equivalent to paying each period its own cost. Equivalent to solving PV(loan) = PV(drawdowns) for that flat number, where PV(loan) = Σ DF<sub>i</sub>[S<sub>i</sub>(coupon<sub>i</sub>O<sub>i</sub> + P<sub>i</sub>) + R(S<sub>i−1</sub> − S<sub>i</sub>)O<sub>i</sub>], P<sub>i</sub> being the principal repaid in period i, and drawdowns are valued at DF·S on their dates. The two routes agree because the per-period par conditions telescope; the workbook checks it to about 10<sup>−7</sup> euros.</dd>
     <dt><span class="t c1">PV saving</span></dt><dd>Each half-year contributes the gap between what it costs and what is charged, weighted and discounted; N scales the per-unit answer to the size of the facility. Dividing the same sum by Σ w<sub>i</sub> instead gives the saving in basis points a year.</dd>
     <dt>split</dt><dd>Summing over periods before and after the WAL date (the straddling period split pro rata in time) gives the loss and benefit phases, which add up exactly to the net.</dd>
-    <dt>charged</dt><dd>The shortcut price: linear interpolation of the quoted curve at the exact WAL. For a fixed loan the quoted annual yield is first restated on the loan's semi-annual basis as 2((1 + Y/m)<sup>m/2</sup> − 1), where Y is that annual yield and m = 1 for EUR bonds. Read at a quoted maturity, this price is also the fair price of a bond of that maturity that repays only at the end, which is the second reading of the wedge in section 07.</dd></dl></div>
+    <dt>charged</dt><dd>The shortcut price: linear interpolation of the quoted curve at the exact WAL. For a fixed loan the quoted annual yield is first restated on the loan's semi-annual basis as 2((1 + Y/m)<sup>m/2</sup> − 1), where Y is that annual yield and m = 1 for EUR bonds.</dd></dl></div>
 
   <details>
     <summary>Worked through on the EUR 5bn case</summary>
@@ -1131,7 +1129,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <details><summary>What if the bond curve is flat? What if it is straight?</summary><div><p>Flat: every year costs the same, so it does not matter when the money is lent and the shortcut is right (saving ≈ 0; 0.002 bp in this case, a modelling residue). Straight and rising: there is a saving roughly equal to slope × WAL ÷ 3, because the amortiser's exposure sits later than the bullet's. Curvature then adds (steepening) or subtracts (flattening). See section 04.</p></div></details>
   <details><summary>Isn't the WAL already a centre of gravity? Why is it different?</summary><div><p>WAL is the centre of gravity of the <em>repayments</em>. The credit curve prices the <em>balance outstanding</em>, whose centre of gravity is WAL/2 for a bullet and about 2·WAL/3 for a straight amortiser (8.26 years for this loan vs 6.25 for the bullet). There is no standard name; "exposure-weighted average time" describes it. Macaulay duration is the textbook relative.</p></div></details>
   <details><summary>Does the model recompute a centre of gravity for every half-year?</summary><div><p>No. The centre of gravity is a teaching device and is exact only for straight curves. The model never computes it. It takes each half-year's balance (from the schedule, computed once), each half-year's cost (from the curve) and each half-year's weight, and averages. That works for any curve shape.</p></div></details>
-  <details><summary>Where do the "share of weighting" percentages come from?</summary><div><p>Each half-year's weight is balance × 0.5 × discount factor × survival. A block's share is its weights divided by the total, 9.002. The 18–24 year block holds 6.8% of the principal-years but only 3.5% of the weight, because those euros are far in the future and only collected if the borrower survives. The share is not multiplied by the balance again, and the block's cost (153.5 bp) comes from the curve, not from the loan.</p></div></details>
+  <details><summary>Where do the "share of weight" percentages come from?</summary><div><p>Each half-year's weight is balance × 0.5 × discount factor × survival. A block's share is its weights divided by the total, 9.002. The 18–24 year block holds 6.8% of the principal-years but only 3.5% of the weight, because those euros are far in the future and only collected if the borrower survives. The share is not multiplied by the balance again, and the block's cost (153.5 bp) comes from the curve, not from the loan.</p></div></details>
   <details><summary>Which "spread" drives λ: the Z-spread or the whole YTM?</summary><div><p>Floating: the Z-spread directly, since it is already a spread over swaps. Fixed: the YTM minus the swap rate of the same maturity. The model does not subtract explicitly; it values fixed bonds on the swap curve and attributes whatever yield the swap curve cannot explain to λ. At 1 year: YTM 3.032% minus swap 3.270%, both annual, gives about −24bp of credit. The rule of thumb λ ≈ margin ÷ (1 − R) turns that into about −40bp of λ, close to the −38bp the fixed calibration actually finds for year 1 (the floating calibration finds −31bp from its own Z-spread of −19bp).</p></div></details>
   <details><summary>Is λ a real probability of default?</summary><div><p>No, it is market-implied. It includes everything investors charge for, not only expected losses, so it is usually well above historical default rates, and here it is even negative at the short end. It is the right input for pricing consistently with the borrower's bonds, and the wrong input for a credit risk forecast.</p></div></details>
   <details><summary>Why does the workbook warn "Negative forward hazard"?</summary><div><p>Because the short bonds trade below swaps. A bond can only be richer than the risk-free curve if the implied default intensity is negative. The pricing remains internally consistent; the flag asks you to confirm the data (same swap curve as the Z-spreads, same date).</p></div></details>
@@ -1170,7 +1168,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <tr><td>Weight (of a half-year)</td><td class="txt">How much a half-year counts when the 48 half-year costs are averaged into the fair price: balance outstanding × 0.5 × discount factor × survival. The weights add up to the risky annuity. Section 07.</td></tr>
     <tr><td>Swap curve</td><td class="txt">Par swap rates for 1 to 30 years: the market's risk-free benchmark. Converted into discount factors (DF) and half-year forward rates (f), which are the only two things the model takes from it. Section 02.</td></tr>
     <tr><td>Shortcut</td><td class="txt">Pricing the loan at the bond curve read at its WAL.</td></tr>
-    <tr><td>Wedge / net saving</td><td class="txt">Fair price minus the price charged. Positive: the borrower saves. It can also be read as the gap between the weighting of this loan and of a bullet with the same WAL, applied to the same half-year costs (section 07).</td></tr>
+    <tr><td>Wedge / net saving</td><td class="txt">Fair price minus the price charged. Positive: the borrower saves.</td></tr>
   </tbody></table></div>
   <footer>Prepared from the WAL-wedge calculator workbook. Market data as entered for this example; replace with live data before use.</footer>
 </section>
