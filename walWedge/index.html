@@ -251,14 +251,46 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <figcaption>Z-spread: spread of the issuer's bonds over the EUR swap curve (vs 6M EURIBOR). YTM: the bonds' yield, annual compounding, as quoted for EUR bonds. Swap: par swap rates, the risk-free benchmark.</figcaption>
   </figure>
 
-  <h3>The swap curve, and what the model takes from it</h3>
-  <p>A <b>par swap rate</b> is the fixed rate at which a plain interest-rate swap, fixed payments against floating 6M EURIBOR, is worth nothing on the day it is struck. The <b>swap curve</b> is that rate for every maturity from 1 to 30 years: here 3.27% at 1 year, rising to 3.51% at 15 and easing to 3.29% at 30 (the third curve in the chart above). It prices time and nothing else. No borrower is involved, so it carries no credit risk, which is why it is the standard stand-in for the risk-free rate.</p>
+  <h3>The three curves: what each is and what the model takes from it</h3>
+  <p>Each curve says something different about the same borrower, and the model uses each in a different way. The table is the overview; open a fold for the full definition.</p>
+  <div class="tbl"><table class="cmp">
+    <thead><tr><th>Curve</th><th>What it tells you</th><th>Where the model uses it</th></tr></thead>
+    <tbody>
+      <tr><td>Z-spread</td><td>The extra yield the market asks of this issuer over swaps: credit only, averaged over the bond's life.</td><td>The credit input for the floating loan. Its value at 12.5 years, 53.5bp, is the shortcut price.</td></tr>
+      <tr><td>YTM</td><td>The bond's all-in annual yield: risk-free rate and credit premium together.</td><td>The credit input for the fixed loan, once the swap curve has been taken out. Its value at 12.5 years, 4.0965%, is the shortcut price.</td></tr>
+      <tr><td>Swap curve</td><td>The market's risk-free benchmark: no credit in it at all.</td><td>Discounting every cash flow; the floating coupon; and the ruler that separates rate from credit in the YTM (section 08).</td></tr>
+    </tbody></table></div>
+
+  <details>
+    <summary>Z-spread: the credit premium over swaps, already isolated</summary>
+    <div>
+  <p>A bond's <b>Z-spread</b> is the extra yield the market demands from this issuer over the swap curve, expressed as one spread added across the whole curve. Think of it as the swap curve plus a credit premium. On this case it is −19bp at 1 year, 42bp at 10 years and 92bp at 28. Because it is measured against the swap curve, the risk-free part has already been taken out: what is left is credit, plus whatever else the market charges for, such as liquidity.</p>
+  <p><b>How to read a quote.</b> The Z-spread at maturity T belongs to a bond maturing in T years, and it is an average over that bond's whole life, years 0 to T, not the cost of year T alone. That is why section 03 peels the curve apart. In this model each quote is a par level: the spread a floating-rate bond of that maturity would carry, base rate plus Z, to trade at exactly 100.</p>
+  <p><b>What the model does with it.</b> For the floating loan it is the credit input. The shortcut reads it at the WAL: 12.5 years is not a quoted maturity, so the curve is interpolated between the 11-year (46bp) and 14-year (61bp) quotes, giving 51bp at 12 years and 56bp at 13, and 53.5bp halfway between them. The bootstrap in section 06 calibrates a default intensity λ for each year so that every quoted bond reprices to par. A negative Z-spread means that bond trades richer than swaps, which is why λ comes out negative at the short end (see the warning in section 06). The one requirement is that the Z-spreads were measured against the same swap curve, on the same date, as the one you enter.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>YTM: one all-in yield that mixes rates and credit</summary>
+    <div>
+  <p>The <b>yield to maturity</b> is the single annual rate that, used to discount all of a bond's cash flows, gives back its market price. EUR bonds pay one coupon a year, so it is quoted with annual compounding. Unlike the Z-spread it is an <em>all-in</em> number: it contains the risk-free rate for that maturity and the credit premium together, and nothing in it says which is which. On this case the 10-year YTM is 3.942%; the 10-year swap rate is 3.470%, so the credit part is about 47bp. At 1 year the YTM is 3.032% against 3.270% for swaps, about −24bp.</p>
+  <p><b>What the model does with it.</b> The fixed loan's price is a rate, so it is compared against a yield. The shortcut reads the YTM at the WAL, interpolating in the same way between the 11-year (3.995%) and 14-year (4.198%) quotes: 4.0627% at 12 years and 4.1303% at 13, so 4.0965% at 12.5. It then restates that as a half-yearly rate, 2 × (1.040965<sup>½</sup> − 1) = 4.0554%, because the loan pays twice a year and the bond once; section 07 explains why and section 10 gives the conversion. For the calibration the model treats each YTM as the coupon of a bond priced at par, values that bond on the swap curve, and attributes whatever the swap curve cannot explain to default risk. That is the swap curve's second role, described in section 08.</p>
+  <p><b>Z-spread and YTM are not interchangeable.</b> They are two different market quotes of the same issuer, one per loan type, and each is used only for its own loan. The two calibrations are close but not identical (year-10 λ is 159.6bp from the Z-spreads and 155.7bp from the YTMs), which is part of why the floating and fixed savings differ slightly.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Swap curve: the risk-free benchmark, and the two numbers the model builds from it</summary>
+    <div>
+  <p>A <b>par swap rate</b> is the fixed rate at which a plain interest-rate swap, fixed payments against floating 6M EURIBOR, is worth nothing on the day it is struck. The <b>swap curve</b> is that rate for every maturity from 1 to 30 years: here 3.27% at 1 year, rising to 3.51% at 15 and easing to 3.29% at 30 (the swap line on the chart's second tab). It prices time and nothing else. No borrower is involved, so it carries no credit risk, which is why it is the standard stand-in for the risk-free rate.</p>
   <p>The model cannot use par rates as they come. A 10-year par rate is an average over ten years: it does not say what a euro paid in year 10 is worth today, nor what the base rate will be in one particular half-year. So the model converts the curve into two kinds of number, and every later use of the curve takes one or the other:</p>
   <ul>
     <li><b>Discount factors, DF(k).</b> What 1 euro paid in k years is worth today. On this curve a euro due in one year is worth 0.9683 (simply 1 ÷ 1.0327, from the 1-year rate of 3.27%) and a euro due in twenty years 0.5059. They are built one year at a time: a par swap is worth nothing when it is struck, so each new maturity's discount factor is whatever makes that true given the ones already found.</li>
     <li><b>Forward rates, f.</b> The base rate the curve implies for one specific half-year. It is just the growth between two neighbouring discount factors: a euro due at 19.5 years is worth 0.5141 and at 20 years 0.5059, so waiting those six months costs 1.6%, a forward rate of 3.23% a year for that half-year.</li>
   </ul>
   <p>The two are one piece of information read two ways, since a forward is only a ratio of discount factors. The one input that is not a swap rate is the <b>6M EURIBOR fixing</b>, today's actual rate for the first six months: the curve starts at 1 year, and the fixing fills in the front end. Section 10 gives the construction and works it through on this curve; section 08 shows where each number is used and what happens if the curve is wrong.</p>
+    </div>
+  </details>
 
   <h3>The loan profile and its WAL</h3>
   <p>The EUR 5bn is drawn in two equal halves, at signing and six months later. From year 1.5 to year 24 it is repaid in 46 equal half-yearly instalments of about EUR 108.7m.</p>
