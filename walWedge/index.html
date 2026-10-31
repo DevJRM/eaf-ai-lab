@@ -251,6 +251,15 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <figcaption>Z-spread: spread of the issuer's bonds over the EUR swap curve (vs 6M EURIBOR). YTM: the bonds' yield, annual compounding, as quoted for EUR bonds. Swap: par swap rates, the risk-free benchmark.</figcaption>
   </figure>
 
+  <h3>The swap curve, and what the model takes from it</h3>
+  <p>A <b>par swap rate</b> is the fixed rate at which a plain interest-rate swap, fixed payments against floating 6M EURIBOR, is worth nothing on the day it is struck. The <b>swap curve</b> is that rate for every maturity from 1 to 30 years: here 3.27% at 1 year, rising to 3.51% at 15 and easing to 3.29% at 30 (the third curve in the chart above). It prices time and nothing else. No borrower is involved, so it carries no credit risk, which is why it is the standard stand-in for the risk-free rate.</p>
+  <p>The model cannot use par rates as they come. A 10-year par rate is an average over ten years: it does not say what a euro paid in year 10 is worth today, nor what the base rate will be in one particular half-year. So the model converts the curve into two kinds of number, and every later use of the curve takes one or the other:</p>
+  <ul>
+    <li><b>Discount factors, DF(k).</b> What 1 euro paid in k years is worth today. On this curve a euro due in one year is worth 0.9683 (simply 1 ÷ 1.0327, from the 1-year rate of 3.27%) and a euro due in twenty years 0.5059. They are built one year at a time: a par swap is worth nothing when it is struck, so each new maturity's discount factor is whatever makes that true given the ones already found.</li>
+    <li><b>Forward rates, f.</b> The base rate the curve implies for one specific half-year. It is just the growth between two neighbouring discount factors: a euro due at 19.5 years is worth 0.5141 and at 20 years 0.5059, so waiting those six months costs 1.6%, a forward rate of 3.23% a year for that half-year.</li>
+  </ul>
+  <p>The two are one piece of information read two ways, since a forward is only a ratio of discount factors. The one input that is not a swap rate is the <b>6M EURIBOR fixing</b>, today's actual rate for the first six months: the curve starts at 1 year, and the fixing fills in the front end. Section 10 gives the construction and works it through on this curve; section 08 shows where each number is used and what happens if the curve is wrong.</p>
+
   <h3>The loan profile and its WAL</h3>
   <p>The EUR 5bn is drawn in two equal halves, at signing and six months later. From year 1.5 to year 24 it is repaid in 46 equal half-yearly instalments of about EUR 108.7m.</p>
   <figure>
@@ -630,7 +639,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <ul>
     <li><b>Coupons</b>, which arrive only if the borrower is still alive, so each one is scaled by the survival probability on its date.</li>
     <li><b>Recovery</b>, 40% of face, which arrives only if the borrower fails — and the chance of failing in a given half-year is the <em>drop</em> in survival across it.</li>
-    <li><b>Discounting</b> on the swap curve, applied to both.</li>
+    <li><b>Discounting</b> on the swap curve (section 02), applied to both.</li>
   </ul>
   <p>That is what makes the calculation unwind so neatly, one year at a time:</p>
   <ol>
@@ -675,7 +684,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     </div>
     <dl>
       <dt><span class="t c4">S<sub>i−1</sub> − S<sub>i</sub></span></dt><dd>The chance of defaulting in that half-year, having survived to its start. This is the λ half, above — it is where λ enters this formula.</dd>
-      <dt><span class="t c3">1 + f·a − R</span></dt><dd>The <b>per-default loss</b>: what is lost <em>if</em> a default happens, taking that as given. The principal (1), plus that half-year's interest due (f·a — f is the forward rate the swap curve implies for that half-year and a = 0.5 its length), less what is recovered (R). Both loan types use the forward here. The forward is explained in the swap-curve subsection below, and constructed in section 10.</dd>
+      <dt><span class="t c3">1 + f·a − R</span></dt><dd>The <b>per-default loss</b>: what is lost <em>if</em> a default happens, taking that as given. The principal (1), plus that half-year's interest due (f·a — f is the forward rate the swap curve implies for that half-year and a = 0.5 its length), less what is recovered (R). Both loan types use the forward here. The forward is introduced in section 02 and constructed in section 10.</dd>
       <dt><span class="t c1">O<sub>i</sub></span></dt><dd>The base: the balance still outstanding in that half-year, not the original EUR 5bn.</dd>
     </dl></div>
   <p>On a bullet bond the two candidate bases are the same number for the loan's entire life — the full face amount stays outstanding until the single repayment at maturity — so it makes no difference which one you pick. An amortising loan breaks that coincidence: every repayment shrinks the outstanding balance below face, so from then on the two bases disagree, and only the outstanding one, O<sub>i</sub>, is correct.</p>
@@ -690,54 +699,6 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <p>Those two effects sit on different factors of one product, probability of default times per-default loss, so pushing one up and the other down mostly offsets rather than compounding. The offset is not exact — the fair price still drifts from 8.99 bp down to 8.49 bp across the 20%–60% range — but it is close enough that the recovery rate, within reason, barely changes the answer.</p>
   <div class="take"><b>Takeaway</b><p>The recovery <em>rate</em> — the 40% figure — is a soft assumption: it enters the calculation twice, going in and coming out, in ways that offset, so the model absorbs most of whatever rate you choose. The recovery <em>base</em> — original face or outstanding balance, from the subsection above — is not soft at all; it enters only once, with no offsetting error to cancel it. A wrong base does not crash the model or produce an obviously broken number: it quietly makes the late years price as nearly free, by turning their loss given default negative. Sections 03–05 found the wedge precisely in those late years — so a base error would not just bias this section's output, it would erase the thing the whole page is about.</p></div>
 
-  <h3>The swap curve: what it is, and the three jobs it does</h3>
-  <p>A <b>par swap rate</b> is the fixed rate at which a plain interest-rate swap, fixed payments against floating 6M EURIBOR, is worth nothing on the day it is struck. The <b>swap curve</b> is that rate for every maturity from 1 to 30 years: here 3.27% at 1 year, rising to 3.51% at 15 and easing to 3.29% at 30 (plotted in section 02). It prices time and nothing else. No borrower is involved, so it carries no credit risk, which is why it is the standard stand-in for the risk-free rate.</p>
-  <p>The model cannot use par rates as they come. A 10-year par rate is an average over ten years: it does not say what a euro paid in year 10 is worth today, nor what the base rate will be in one particular half-year. So the model converts the curve into two kinds of number, and every later use of the curve takes one or the other:</p>
-  <ul>
-    <li><b>Discount factors, DF(k).</b> What 1 euro paid in k years is worth today. On this curve a euro due in one year is worth 0.9683 (simply 1 ÷ 1.0327, from the 1-year rate of 3.27%) and a euro due in twenty years 0.5059. They are built one year at a time: a par swap is worth nothing when it is struck, so each new maturity's discount factor is whatever makes that true given the ones already found.</li>
-    <li><b>Forward rates, f.</b> The base rate the curve implies for one specific half-year. It is just the growth between two neighbouring discount factors: a euro due at 19.5 years is worth 0.5141 and at 20 years 0.5059, so waiting those six months costs 1.6%, a forward rate of 3.23% a year for that half-year.</li>
-  </ul>
-  <p>The two are one piece of information read two ways, since a forward is only a ratio of discount factors. The one input that is not a swap rate is the <b>6M EURIBOR fixing</b>, today's actual rate for the first six months: the curve starts at 1 year, and the fixing fills in the front end. Section 10 gives the construction and works it through on this curve.</p>
-  <p>Step 2 of the seven-step path in section 07 is exactly this conversion. The curve's numbers then do three jobs, in steps 3, 4 and 6. Floating and fixed loans go through the same steps but lean on the curve very differently:</p>
-  <div class="tbl"><table class="cmp">
-    <thead><tr><th>Job</th><th>Floating loan</th><th>Fixed loan</th></tr></thead>
-    <tbody>
-      <tr><td>1 · Calibrating λ<br>(step 3)</td>
-        <td>Discounts the bond's cash flows with DF, and also supplies its coupon, because a floater pays <i>f + Z</i>. Coupon and discounting rise and fall together, so a bond with no credit risk is worth par on any curve. The curve cancels out of the price, and the Z-spread, already a spread over the same curve, is what pins λ down.</td>
-        <td>Discounts the bond's cash flows with DF, but the coupon is the fixed YTM, so nothing offsets it. Whatever part of the yield the curve cannot explain is read as credit: roughly λ ≈ (YTM − swap) ÷ (1 − R). The curve is the ruler that splits one all-in yield into a risk-free part and a credit part.</td></tr>
-      <tr><td>2 · Costing each half-year<br>(step 4)</td>
-        <td>The forward f enters the loss on default, 1 + f·a − R: the interest due as well as the principal. The half-year's cost is then the credit cost alone, <i>c</i>, because a floating loan passes the base rate straight through to the borrower.</td>
-        <td>The same loss on default. But a fixed rate is quoted all-in, so the half-year's cost is the forward <em>plus</em> the credit cost, <i>f + c</i>. Here the curve supplies the risk-free part of the rate itself.</td></tr>
-      <tr><td>3 · Weighting<br>(step 6)</td>
-        <td colspan="2">Both loans. DF is one of four factors in a half-year's <b>weight</b>, the number that decides how much that half-year counts when the 48 half-year costs are averaged into the fair price: balance outstanding × 0.5 × DF × survival (section 07 works an example). Heavier discounting means less weight on distant half-years.</td></tr>
-    </tbody></table></div>
-
-  <h3>What a wrong curve does, job by job</h3>
-  <p>Suppose every par swap rate is 30bp too high, with the 6M fixing moved by the same amount because it is the front end of the same curve. The bond quotes (Z-spreads and YTMs) are market prices; they do not move because the curve you entered is wrong. Switch the shifted curve on one job at a time, in the order of the table above, and record how far the saving moves at each step:</p>
-  <div class="tbl"><table>
-    <thead><tr><th>Net saving, bp per year</th><th>Floating</th><th>Fixed</th></tr></thead>
-    <tbody>
-      <tr class="hl"><td>Correct curve</td><td>8.822</td><td>8.015</td></tr>
-      <tr><td>1 · Calibrating λ</td><td>+0.55</td><td>−28.66</td></tr>
-      <tr><td>2 · Costing: loss on default</td><td>+0.15</td><td>+0.10</td></tr>
-      <tr><td>2 · Costing: forward added to the cost</td><td>not used</td><td>+29.44</td></tr>
-      <tr><td>3 · Weighting</td><td>−0.82</td><td>−0.83</td></tr>
-      <tr class="tot"><td>Curve 30bp too high</td><td>8.697</td><td>8.061</td></tr>
-    </tbody></table></div>
-  <p class="muted">Each step is measured with the earlier ones already switched on; the steps are rounded and add to the total change, −0.125 and +0.045. To reproduce it in the workbook, add 30bp to every swap rate and to the 6M fixing and leave the bond quotes alone.</p>
-  <div class="duo">
-    <div><h4>Floating: three small effects that nearly cancel</h4>
-      <p><b>Job 1 (+0.55).</b> Coupon and discounting move together, so the curve cancels from the bond's price and λ barely moves: about 1bp higher (year 10: 159.6 to 160.7bp), which lifts every half-year's cost a little.</p>
-      <p><b>Job 2 (+0.15).</b> A default now loses a little more interest, so each half-year costs a little more.</p>
-      <p><b>Job 3 (−0.82).</b> Heavier discounting cuts the weight of distant half-years. Those are the dear ones, about 150bp in the last six years against 13bp in the first six, so the weighted average falls.</p>
-      <p>Net: 8.82 to 8.70bp. The requirement that does remain is that the Z-spreads must be measured against the same swap curve you enter.</p></div>
-    <div><h4>Fixed: two large effects that cancel</h4>
-      <p><b>Job 1 (−28.66).</b> The YTM stays put, so the 30bp the curve now explains comes out of the credit part. At 10 years the credit margin falls from 47.2bp to 17.2bp, and every λ falls by roughly 50bp: with margin ≈ λ(1 − R), 30bp of margin is 50bp of λ at 40% recovery.</p>
-      <p><b>Job 2 (+29.44, +0.10).</b> The forward added to each half-year's cost has risen by about 29bp on average over the loan's life, a little less at the far end. That puts back almost exactly what job 1 took out.</p>
-      <p><b>Job 3 (−0.83).</b> The same weighting effect as for the floating loan.</p>
-      <p>Net: 8.02 to 8.06bp. A fixed rate is one all-in number split into a risk-free part and a credit part; a wrong curve moves the dividing line, not the total.</p></div>
-  </div>
-  <div class="take"><b>Takeaway</b><p>A curve error moves the pieces, not the answer, so free data with a short delay is adequate. Two consistency conditions do matter. The Z-spreads must be measured against the curve you enter. And the 6M fixing must sit on that curve: shift the swap rates but leave the fixing behind, and the first half-year's forward is not raised with the rest. That half-year carries 2.8% of the weight, so the fixed saving comes out at 8.89bp instead of 8.06, an error of 0.8bp (30bp × 2.8%) that is purely an inconsistency. The levels of λ are a different matter: on the fixed calibration they move by 50bp, so read them as pricing inputs and never as default estimates.</p></div>
   <div class="mile"><b>Milestone</b><p>You now have a cost for every half-year of the next 30 years, built from the borrower's own bonds. Next: apply those costs to the loan.</p></div>
 </section>
 
@@ -852,12 +813,59 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <thead><tr><th>Change</th><th>Floating saving</th><th>Fixed saving</th></tr></thead>
     <tbody>
       <tr class="hl"><td>Base case (R 40%)</td><td>8.82 bp</td><td>8.02 bp</td></tr>
-      <tr><td>Swap curve 30bp higher everywhere, 6M fixing included (section 06)</td><td>8.70 bp</td><td>8.06 bp</td></tr>
+      <tr><td>Swap curve 30bp higher everywhere, 6M fixing included (details below)</td><td>8.70 bp</td><td>8.06 bp</td></tr>
       <tr><td>Recovery 20%</td><td>8.99 bp</td><td>8.19 bp</td></tr>
       <tr><td>Recovery 60%</td><td>8.49 bp</td><td>7.68 bp</td></tr>
       <tr><td>Term sheet copies the annual YTM as a half-yearly coupon</td><td>n/a</td><td>3.90 bp</td></tr>
     </tbody></table></div>
   <p>The answer barely depends on the supporting inputs. It depends on the <b>shape of the bond curves</b>: their steepness over the loan's life, and where they bend. Spend data-gathering effort there.</p>
+  <h3>Where a swap-curve error goes</h3>
+  <p>The swap curve (section 02) is converted into discount factors and forwards at step 2 of the pipeline in section 07. Those numbers are then used for three jobs, at steps 3, 4 and 6. Floating and fixed loans go through the same steps but lean on them very differently:</p>
+  <div class="tbl"><table class="cmp">
+    <thead><tr><th>Job</th><th>Floating loan</th><th>Fixed loan</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Calibrating λ<br>(step 3)</td>
+        <td>Discounts the bond's cash flows with DF, and also supplies its coupon, because a floater pays <i>f + Z</i>. Coupon and discounting rise and fall together, so a bond with no credit risk is worth par on any curve. The curve cancels out of the price, and the Z-spread, already a spread over the same curve, is what pins λ down.</td>
+        <td>Discounts the bond's cash flows with DF, but the coupon is the fixed YTM, so nothing offsets it. Whatever part of the yield the curve cannot explain is read as credit: roughly λ ≈ (YTM − swap) ÷ (1 − R). The curve is the ruler that splits one all-in yield into a risk-free part and a credit part.</td></tr>
+      <tr><td>2 · Costing each half-year<br>(step 4)</td>
+        <td>The forward f enters the loss on default, 1 + f·a − R: the interest due as well as the principal. The half-year's cost is then the credit cost alone, <i>c</i>, because a floating loan passes the base rate straight through to the borrower.</td>
+        <td>The same loss on default. But a fixed rate is quoted all-in, so the half-year's cost is the forward <em>plus</em> the credit cost, <i>f + c</i>. Here the curve supplies the risk-free part of the rate itself.</td></tr>
+      <tr><td>3 · Weighting<br>(step 6)</td>
+        <td colspan="2">Both loans. DF is one of four factors in a half-year's <b>weight</b>, the number that decides how much that half-year counts when the 48 half-year costs are averaged into the fair price: balance outstanding × 0.5 × DF × survival (section 07 works an example). Heavier discounting means less weight on distant half-years.</td></tr>
+    </tbody></table></div>
+
+  <p>The consequence for robustness: a swap curve that is 30bp too high, with the 6M fixing moved along with it, changes the floating saving from 8.82 to 8.70bp and the fixed saving from 8.02 to 8.06bp. Large effects appear inside the calculation, especially for the fixed loan, but they cancel. Two consistency conditions do matter: the Z-spreads must be measured against the curve you enter, and the 6M fixing must come from the same date and sit on that curve. The fold shows the effect job by job.</p>
+  <details>
+    <summary>Stress test: a swap curve 30bp too high, traced through each job</summary>
+    <div>
+  <p>Suppose every par swap rate is 30bp too high, with the 6M fixing moved by the same amount because it is the front end of the same curve. The bond quotes (Z-spreads and YTMs) are market prices; they do not move because the curve you entered is wrong. Switch the shifted curve on one job at a time, in the order of the table above, and record how far the saving moves at each step:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Net saving, bp per year</th><th>Floating</th><th>Fixed</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td>Correct curve</td><td>8.822</td><td>8.015</td></tr>
+      <tr><td>1 · Calibrating λ</td><td>+0.55</td><td>−28.66</td></tr>
+      <tr><td>2 · Costing: loss on default</td><td>+0.15</td><td>+0.10</td></tr>
+      <tr><td>2 · Costing: forward added to the cost</td><td>not used</td><td>+29.44</td></tr>
+      <tr><td>3 · Weighting</td><td>−0.82</td><td>−0.83</td></tr>
+      <tr class="tot"><td>Curve 30bp too high</td><td>8.697</td><td>8.061</td></tr>
+    </tbody></table></div>
+  <p class="muted">Each step is measured with the earlier ones already switched on; the steps are rounded and add to the total change, −0.125 and +0.045. To reproduce it in the workbook, add 30bp to every swap rate and to the 6M fixing and leave the bond quotes alone.</p>
+  <div class="duo">
+    <div><h4>Floating: three small effects that nearly cancel</h4>
+      <p><b>Job 1 (+0.55).</b> Coupon and discounting move together, so the curve cancels from the bond's price and λ barely moves: about 1bp higher (year 10: 159.6 to 160.7bp), which lifts every half-year's cost a little.</p>
+      <p><b>Job 2 (+0.15).</b> A default now loses a little more interest, so each half-year costs a little more.</p>
+      <p><b>Job 3 (−0.82).</b> Heavier discounting cuts the weight of distant half-years. Those are the dear ones, about 150bp in the last six years against 13bp in the first six, so the weighted average falls.</p>
+      <p>Net: 8.82 to 8.70bp. The requirement that does remain is that the Z-spreads must be measured against the same swap curve you enter.</p></div>
+    <div><h4>Fixed: two large effects that cancel</h4>
+      <p><b>Job 1 (−28.66).</b> The YTM stays put, so the 30bp the curve now explains comes out of the credit part. At 10 years the credit margin falls from 47.2bp to 17.2bp, and every λ falls by roughly 50bp: with margin ≈ λ(1 − R), 30bp of margin is 50bp of λ at 40% recovery.</p>
+      <p><b>Job 2 (+29.44, +0.10).</b> The forward added to each half-year's cost has risen by about 29bp on average over the loan's life, a little less at the far end. That puts back almost exactly what job 1 took out.</p>
+      <p><b>Job 3 (−0.83).</b> The same weighting effect as for the floating loan.</p>
+      <p>Net: 8.02 to 8.06bp. A fixed rate is one all-in number split into a risk-free part and a credit part; a wrong curve moves the dividing line, not the total.</p></div>
+  </div>
+  <p><b>Why the fixing must sit on the curve.</b> Shift the swap rates but leave the 6M fixing behind, and the first half-year's forward is not raised with the rest. That half-year carries 2.8% of the weight, so the fixed saving comes out at 8.89bp instead of 8.06, an error of 0.8bp (30bp × 2.8%) that is purely an inconsistency. And the levels of λ are a different matter from the saving: on the fixed calibration they move by about 50bp, so read them as pricing inputs and never as default estimates.</p>
+    </div>
+  </details>
+
   <div class="take"><b>Takeaway</b><p>For this EUR 5bn, 24-year amortiser, WAL pricing undercharges by about 9bp a year whether the loan is floating or fixed. That is roughly EUR 36–40m of value in today's money, or 14% of the fair floating credit spread.</p></div>
 </section>
 
@@ -907,7 +915,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <p>Notation: half-year periods i = 1…60, t<sub>i</sub> = i/2, accrual a = 0.5, recovery R. All quantities per unit of notional.</p>
 
   <h3>Risk-free discount factors and forwards</h3>
-  <p><b>Purpose.</b> Turn the quoted par swap rates into the two things the rest of the model reads from the curve: a discount factor for every half-year date, and a forward rate for every half-year. Section 06 explains what each is used for; this block is how they are built. The curve arrives as par rates, so the discount factors have to be solved one year at a time.</p>
+  <p><b>Purpose.</b> Turn the quoted par swap rates into the two things the rest of the model reads from the curve: a discount factor for every half-year date, and a forward rate for every half-year. Section 02 introduces them and section 08 shows what each is used for; this block is how they are built. The curve arrives as par rates, so the discount factors have to be solved one year at a time.</p>
   <div class="fx"><div class="eq">DF(k) = (1 − <span class="t c1">r<sub>k</sub></span>·α·Σ<sub>j=1…k−1</sub>DF(j)) ÷ (1 + <span class="t c1">r<sub>k</sub></span>·α)</div>
     <div class="eq">DF(k−½) = √(DF(k−1)·DF(k))</div>
     <div class="eq">DF(½) = 1 ÷ (1 + <span class="t c3">r<sub>6M</sub></span>·182.5/360)</div>
@@ -1057,7 +1065,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <details><summary>Why is row 12 different from row 11 when the margin X is zero?</summary><div><p>Floating: it isn't; 53.5 bp and 0.5350% are the same number. Fixed: the annual-coupon bond yield (4.0965%) is restated as the half-yearly rate with the same effective yield (4.0554%), so it can be compared with the fair rate, which is computed on the loan's half-yearly payments.</p></div></details>
   <details><summary>What is the risky annuity in row 9?</summary><div><p>The sum of all half-year weights: the loan's principal-years after discounting and default risk. It converts basis points into today's money: 1bp a year on this loan is worth 1bp × 9.002 × EUR 5bn ≈ €4.5m. In CDS markets the same quantity is called the risky PV01 (RPV01).</p></div></details>
   <details><summary>What is the 6M fixing for?</summary><div><p>The swap curve starts at 1 year, but the model needs a discount factor every six months. The 6M EURIBOR fixing gives the actual rate for the first six months instead of interpolating between today and the 1-year point. For a floating loan it barely matters (0.0004bp here). For a fixed loan it does: it pins the first half-year's forward, which is part of the fixed rate, and leaving it out moves the fixed saving by about 0.5bp (8.02 to 7.51). Enter the real fixing, from the same date as the rest of the curve.</p></div></details>
-  <details><summary>How much does the swap curve matter? Can we use free data?</summary><div><p>Very little for the result: a 30bp error in the whole curve, 6M fixing included, moves the floating saving from 8.82 to 8.70bp and the fixed from 8.02 to 8.06bp. Section 06 shows why: the pieces move, the total hardly does. Free sources with a short delay are adequate, provided the 6M fixing and the Z-spreads are from the same date as the curve. The bond curves are what drive the answer.</p></div></details>
+  <details><summary>How much does the swap curve matter? Can we use free data?</summary><div><p>Very little for the result: a 30bp error in the whole curve, 6M fixing included, moves the floating saving from 8.82 to 8.70bp and the fixed from 8.02 to 8.06bp. Section 08 shows why: the pieces move, the total hardly does. Free sources with a short delay are adequate, provided the 6M fixing and the Z-spreads are from the same date as the curve. The bond curves are what drive the answer.</p></div></details>
   <details><summary>Why are the loss and the benefit not equal on a straight curve?</summary><div><p>Because the loan's exposure centre is later than the equal-WAL bullet's. The benefit side reaches further up the curve than the loss side reaches down it. See the rectangle-and-triangle figure in section 04.</p></div></details>
   <details><summary>Why is the fixed "risk-free effect" negative here?</summary><div><p>The swap curve rises to 3.51% at 15 years and then falls to 3.29% at 30. Risk-free forwards in the loan's late years are therefore below the 12.5-year par rate. Reading the fixed rate at 12.5 years slightly <em>overstates</em> the risk-free part for this profile (−1.23 bp), while the credit part is understated by 9.25 bp. Net, the borrower still saves 8.02 bp.</p></div></details>
   <details><summary>Does the lender lose money?</summary><div><p>Not in an accounting sense. The saving is margin the lender forgoes relative to pricing the loan consistently with the borrower's bond curve. Whether that is acceptable depends on relationship, ancillary business, funding and capital, none of which this calculator models. Use it to know the price of the convention, then decide.</p></div></details>
@@ -1087,7 +1095,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <tr><td>Survival S(t)</td><td class="txt">Market-implied probability of no default by t.</td></tr>
     <tr><td>Risky annuity</td><td class="txt">PV of 1 per year on the loan's balance, allowing for discounting and default. Converts bp into money.</td></tr>
     <tr><td>Weight (of a half-year)</td><td class="txt">How much a half-year counts when the 48 half-year costs are averaged into the fair price: balance outstanding × 0.5 × discount factor × survival. The weights add up to the risky annuity. Section 07.</td></tr>
-    <tr><td>Swap curve</td><td class="txt">Par swap rates for 1 to 30 years: the market's risk-free benchmark. Converted into discount factors (DF) and half-year forward rates (f), which are the only two things the model takes from it. Section 06.</td></tr>
+    <tr><td>Swap curve</td><td class="txt">Par swap rates for 1 to 30 years: the market's risk-free benchmark. Converted into discount factors (DF) and half-year forward rates (f), which are the only two things the model takes from it. Section 02.</td></tr>
     <tr><td>Shortcut</td><td class="txt">Pricing the loan at the bond curve read at its WAL.</td></tr>
     <tr><td>Wedge / net saving</td><td class="txt">Fair price minus the price charged. Positive: the borrower saves.</td></tr>
   </tbody></table></div>
