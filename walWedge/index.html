@@ -796,16 +796,23 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <p><b>Intuition.</b> A half-year counts more when more is lent, when the money arrives sooner, and when the borrower is likelier to still be there. Those are exactly the three things that decide how much margin the lender actually collects in it. The weights of all 48 half-years add up to the <b>risky annuity</b>: today's value of 1bp a year on this loan, in years. Here it is <b class="num">9.002</b> (Results row 9).</p>
   <p><b>Floating and fixed.</b> The formula is the same for both loans. The balance (same loan) and the discount factor (same swap curve) are identical, so only survival can differ, and it does, slightly. Sums of all 48 weights: <b class="num">9.002</b> for the floating loan and <b class="num">8.943</b> for the fixed loan (Results row 9).</p>
   <div class="warn"><b>Why the two loans have different survival</b>
-    <p>Survival comes from each loan's own credit input: the Z-spreads for floating, the YTMs (with the swap curve taken out) for fixed. Both quotes are for the same bond, so one might expect the same credit premium. They give slightly different ones: at 20 years the Z-spread is 78bp, while the 4.349% YTM sits 88bp above the 3.470% swap rate. The model reads the extra 10bp as more default risk, so survival to year 20 is lower on the fixed loan (0.7173 against 0.7396) and each of its half-years gets a slightly smaller weight. The gap has two sources.</p>
-    <p><b>1. A built-in difference between the two measures, about 3bp.</b> "YTM minus swap rate" is not the Z-spread, even for the same bond. Take the 20-year bond, whose Z-spread is 78bp, and express its credit risk in the two ways:</p>
-    <ul>
-      <li><b>Z-spread way: discount at swap rates plus 78bp.</b> A bond paying the swap par coupon of 3.470% is then worth less than 100. How much less? About 78bp × D, where D = 14.74 is the bond's duration (the average time its money arrives, weighted by present value). That is 0.0078 × 14.74 = 0.115, a shortfall of 11.5 on a price of 100.</li>
-      <li><b>YTM way: keep discounting at swap rates, and raise the coupon until the price is back to 100.</b> Each extra 1% of coupon adds A = 14.24 to the price, where A is the annuity: today's value of receiving 1 a year for 20 years.</li>
-      <li><b>Both close the same 11.5 gap, so they must agree:</b> coupon increase × A = Z-spread × D. That is <b>coupon increase = Z-spread × D ÷ A</b> = 78bp × 14.74 ÷ 14.24 = 81bp. The coupon, and so the YTM, ends up 81bp above the swap rate, a little more than the 78bp Z-spread.</li>
-      <li><b>The factor D ÷ A is not exactly 1.</b> At zero interest rates D and A would be the same number, the number of years, and the two spreads would be identical. Discounting at positive rates pulls them slightly apart: 1.036 at 20 years and 1.033 at 10.</li>
-    </ul>
-    <p>None of this is a data issue. It is why a YTM-based credit spread reads slightly wider than a Z-spread, and why the floating and fixed loans differ a little even on perfectly consistent data.</p>
-    <p><b>2. A data caveat, about 7bp.</b> The rest of the gap comes from the swap curve having been collected a few days after the bond quotes. It does not reflect the method.</p></div>
+    <p>Survival comes from each loan's own credit input: the Z-spreads for floating, the YTMs (with the swap curve taken out) for fixed. Both quotes are for the same bond, so one might expect the same credit premium. They give slightly different ones: at 20 years the Z-spread is 78bp, while the 4.349% YTM sits 88bp above the 3.470% swap rate. The model reads the extra 10bp as more default risk, so survival to year 20 is lower on the fixed loan (0.7173 against 0.7396) and each of its half-years gets a slightly smaller weight. The 10bp has two sources, about 2bp that is built into the way the two are quoted, and about 8bp that is a data matter.</p>
+    <p><b>1. The same premium in different units: compounding, about 2bp.</b></p>
+    <p><i>Intuition.</i> A Z-spread is a spread paid with the coupon, and a floating coupon is paid every six months. A YTM is an annually compounded yield. A premium of 78bp a year, paid as 39bp every six months, is worth slightly more than 78bp once the first instalment is reinvested for the rest of the year, in the same way that 2% every six months is 4.04% a year and not 4%. So the same credit premium, written as an annual yield, comes out a little above its Z-spread.</p>
+    <p><i>The maths.</i> Compare a risk-free bond yielding r, paid twice a year, with a risky one yielding r + z. Written as annual yields, the difference is</p>
+    <div class="fx"><div class="eq">(1 + (r + z)/2)² − (1 + r/2)² ≈ z × (1 + r/2)</div></div>
+    <p>With r about 3.4%, the factor is about 1.017, so 78bp becomes about 79.5bp. The exact calculation on the bond, which also reflects the shape of the swap curve, gives a little more:</p>
+    <p><i>On the 20-year bond.</i></p>
+    <div class="tbl"><table class="cmp">
+      <thead><tr><th>Step</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Half-yearly swap rate over the bond's life (average of the forwards)</td><td>3.443%</td></tr>
+        <tr><td>Add the 78bp Z-spread: the bond's half-yearly yield</td><td>4.223%</td></tr>
+        <tr><td>Restate as an annual yield: (1 + 0.04223 ÷ 2)² − 1</td><td>4.268%</td></tr>
+        <tr><td>Subtract the 3.470% annual swap rate</td><td>79.8bp</td></tr>
+      </tbody></table></div>
+    <p>So a 78bp Z-spread shows up as about 80bp when read from an annual YTM. The 2bp gap is not an error. It is the same premium counted on a different basis.</p>
+    <p><b>2. A data caveat, about 8bp.</b> The rest of the gap, 88bp in the data against about 80bp expected, comes from the swap curve having been collected a few days after the bond quotes. It does not reflect the method.</p></div>
   <p><b>Worked example.</b></p>
   <div class="tbl"><table>
     <thead><tr><th>Half-year ending</th><th>Balance × 0.5</th><th>Discount factor</th><th>Survival, floating</th><th>Weight, floating</th><th>Survival, fixed</th><th>Weight, fixed</th></tr></thead>
