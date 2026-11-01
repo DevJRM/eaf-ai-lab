@@ -121,7 +121,7 @@ details li,details p{font-size:15px}
     <label for="cl">Prepared for <input id="cl" type="text" value="" placeholder="Client name" autocomplete="off"></label>
     <label for="dt">Market data as of <input id="dt" type="text" value="27 October 2026" autocomplete="off"></label>
   </div>
-  <p class="sub">We propose to price your EUR 5bn amortising loan off your own <span data-v="curveName"></span>, at the point that matches the loan's average life of 12.5 years. Because a quarter of the loan's exposure sits beyond that point, out to year 24, this pricing is worth a measurable amount to you. On today's curve we estimate it at <b data-v="wedgeTxt"></b> a year, or <b data-v="pv"></b> in present-value terms.</p>
+  <p class="sub">We propose to price your EUR 1bn amortising loan off your own <span data-v="curveName"></span>, at the point that matches the loan's average life of 12.5 years. Because a quarter of the loan's exposure sits beyond that point, out to year 24, this pricing is worth a measurable amount to you. On today's curve we estimate it at <b data-v="wedgeTxt"></b> a year, or <b data-v="pv"></b> in present-value terms.</p>
   <div class="figs">
     <div><div class="k">Benefit per year</div><div class="v a" data-v="wedgeBig"></div><div class="d">Below the cost of funding the same profile at your own curve.</div></div>
     <div><div class="k">Value today</div><div class="v a" data-v="pv"></div><div class="d">Present value over the life of the loan.</div></div>
@@ -133,18 +133,18 @@ details li,details p{font-size:15px}
 <!-- ============ 1 ============ -->
 <section class="s" id="loan">
   <div class="lab"><span class="n">1</span>The proposed loan</div>
-  <h2>EUR 5bn, drawn over one year and repaid over 23</h2>
+  <h2>EUR 1bn, drawn over one year and repaid over 23</h2>
   <table class="terms"><tbody>
-    <tr><th>Amount</th><td>EUR 5,000,000,000</td></tr>
+    <tr><th>Amount</th><td>EUR 1,000,000,000</td></tr>
     <tr><th>Drawdown</th><td>Two equal tranches, at signing and at month 6</td></tr>
-    <tr><th>Repayment</th><td>46 equal semi-annual instalments of about EUR 108.7m, from month 18 to year 24</td></tr>
+    <tr><th>Repayment</th><td>46 equal semi-annual instalments of about EUR 21.7m, from month 18 to year 24</td></tr>
     <tr><th>Final maturity</th><td>24 years</td></tr>
     <tr><th>Average life</th><td>12.5 years</td></tr>
     <tr><th>Interest</th><td data-v="interest"></td></tr>
     <tr><th>Pricing reference</th><td data-v="pricingRef"></td></tr>
   </tbody></table>
   <p>The loan's average life is the average time each euro is outstanding: 12.75 years from signing to the average repayment date, less 0.25 years for the phased drawdown.</p>
-  <p>The repayment profile is what drives this analysis. A 12.5-year bond returns all of its principal in year 12.5. This loan returns principal gradually, and about EUR 1.0bn is still outstanding in year 20.</p>
+  <p>The repayment profile is what drives this analysis. A 12.5-year bond returns all of its principal in year 12.5. This loan returns principal gradually, and about EUR 0.2bn is still outstanding in year 20.</p>
   <div class="ex">
     <div class="et">Exhibit 1</div><div class="eh">Loan balance compared with a 12.5-year bond</div>
     <div class="cb" id="c-profile"></div>
@@ -210,7 +210,7 @@ details li,details p{font-size:15px}
       <tr class="hl"><td>Net benefit</td><td data-v="pv"></td><td data-v="wedgeTxt"></td></tr>
       <tr><td>Undiscounted over the life</td><td data-v="nom"></td><td></td></tr>
     </tbody></table></div>
-  <div class="callout" data-mode="fixed" hidden><p>For the fixed-rate loan, the benefit is entirely credit-driven: <b>+9.25bp</b> comes from your credit curve. The interest-rate component slightly reduces it, by 1.23bp, because swap rates decline beyond 15 years.</p></div>
+  <div class="callout" data-mode="fixed" hidden><p>For the fixed-rate loan, the benefit is entirely credit-driven: <b>+8.36bp</b> comes from your credit curve. The interest-rate component slightly reduces it, by 0.85bp, because swap rates decline beyond 15 years.</p></div>
 </section>
 
 <!-- ============ 5 ============ -->
@@ -234,12 +234,12 @@ details li,details p{font-size:15px}
   <div class="tbl"><table class="d">
     <thead><tr><th>Scenario</th><th>Floating</th><th>Fixed</th></tr></thead>
     <tbody>
-      <tr class="hl"><td>Base case</td><td>8.82bp</td><td>8.02bp</td></tr>
-      <tr><td>Swap curve 30bp higher across all tenors</td><td>8.70bp</td><td>8.06bp</td></tr>
-      <tr><td>Recovery assumption 20% instead of 40%</td><td>8.99bp</td><td>8.19bp</td></tr>
-      <tr><td>Recovery assumption 60% instead of 40%</td><td>8.49bp</td><td>7.68bp</td></tr>
-      <tr><td>Your curve half as steep around the 12.5-year point</td><td>4.49bp</td><td>4.35bp</td></tr>
-      <tr><td>Your curve twice as steep around the 12.5-year point</td><td>17.00bp</td><td>14.79bp</td></tr>
+      <tr class="hl"><td>Base case</td><td>7.12bp</td><td>7.51bp</td></tr>
+      <tr><td>Swap curve 30bp higher across all tenors</td><td>6.89bp</td><td>7.75bp</td></tr>
+      <tr><td>Recovery assumption 20% instead of 40%</td><td>7.53bp</td><td>7.91bp</td></tr>
+      <tr><td>Recovery assumption 60% instead of 40%</td><td>6.36bp</td><td>6.73bp</td></tr>
+      <tr><td>Your curve half as steep around the 12.5-year point</td><td>3.01bp</td><td>3.85bp</td></tr>
+      <tr><td>Your curve twice as steep around the 12.5-year point</td><td>14.88bp</td><td>14.26bp</td></tr>
     </tbody></table></div>
   <p>The benefit scales with the slope of your curve. If your curve steepens before signing, the benefit grows; if it flattens, the benefit shrinks. Because the price is set at signing, the benefit measured on the signing-date curve is the one you secure.</p>
 </section>
@@ -250,7 +250,7 @@ details li,details p{font-size:15px}
   <h2>How the figures are derived</h2>
   <p>The analysis uses a standard reduced-form credit valuation, the same approach used to value credit default swaps and to build issuer curves. Your bond curve is the only source of credit information.</p>
   <details><summary>Market inputs</summary><div><ul>
-    <li data-mode="float">Your bond Z-spread curve, 1 to 28 years, quoted against the EUR swap curve.</li>
+    <li data-mode="float">Your bond Z-spread curve (Bloomberg YAS), 1 to 28 years, quoted against the EUR swap curve, taken in the same snapshot as the swap curve.</li>
     <li data-mode="fixed" hidden>Your bond yield curve, 1 to 28 years, annual compounding.</li>
     <li>EUR swap curve against 6-month EURIBOR, 1 to 30 years, and the 6-month EURIBOR fixing of 3.019%.</li>
     <li>Recovery rate of 40%, the market convention for senior unsecured debt.</li>
@@ -301,19 +301,25 @@ const ENG = (() => {
     if (r6 !== null && r6 !== undefined) g[1] = 1 / (1 + r6 * 182.5 / 360);
     return g;
   }
-  function model(curve, kind, dfg, R, x, y, Xbp, ycomp) {
-    ycomp = ycomp || 1;
-    const F = fill(curve); let q = F.out.slice(); const last = F.last;
-    if (kind === 'fixed') q = q.map(v => 2 * (Math.pow(1 + v / ycomp, ycomp / 2) - 1));
+  // YAS bridge: par coupon of the T-year bond (coupon frequency m) whose YAS Z-spread is z.
+  function bridge(dfg, z, T, m) {
+    const dfz = t => Math.pow(Math.pow(dfg[Math.round(2 * t)], -1 / (m * t)) + z / m, -m * t);
+    let s = 0; for (let j = 1; j <= Math.round(m * T); j++) s += dfz(j / m);
+    return m * (1 - dfz(T)) / s;
+  }
+  // kind 'float': curve = YAS Z-spreads (decimal); 'fixed': curve = YAS YTMs. m = bond coupon frequency.
+  function model(curve, kind, dfg, R, x, y, Xbp, m) {
+    m = m || 1;
+    const F = fill(curve); const last = F.last;
+    const q = kind === 'float' ? F.out.map((v, i) => bridge(dfg, v, i + 1, m)) : F.out.slice();
     const a = 0.5; const fa = [null]; for (let i = 1; i <= 60; i++) fa.push(dfg[i - 1] / dfg[i] - 1);
     const S = [1]; const lam = []; let cumC = 0, cumAnn = 0;
     for (let b = 1; b <= 30; b++) {
       let l;
       if (b <= last) {
-        const sb = q[b - 1], i1 = 2 * b - 1, i2 = 2 * b, Sp = S[S.length - 1];
-        const K = cumC + sb * cumAnn;
-        const g1 = kind === 'float' ? fa[i1] + sb * a : sb * a;
-        const g2 = kind === 'float' ? fa[i2] + sb * a + 1 : sb * a + 1;
+        const c = q[b - 1], i1 = 2 * b - 1, i2 = 2 * b, Sp = S[S.length - 1];
+        const K = cumC + c * cumAnn;
+        const g1 = m === 2 ? c / 2 : 0, g2 = c / m + 1;
         const D1 = dfg[i1], D2 = dfg[i2];
         const a2 = D2 * Sp * (g2 - R), a1 = Sp * (D1 * (g1 - R) + D2 * R), a0 = K + D1 * Sp * R - 1;
         const u = (-a1 + Math.sqrt(a1 * a1 - 4 * a2 * a0)) / (2 * a2); l = -2 * Math.log(u);
@@ -321,8 +327,9 @@ const ENG = (() => {
       lam.push(l);
       for (const i of [2 * b - 1, 2 * b]) {
         const Sprev = S[S.length - 1], Si = Sprev * Math.exp(-l * a);
-        cumC += kind === 'float' ? dfg[i] * (Si * fa[i] + R * (Sprev - Si)) : dfg[i] * R * (Sprev - Si);
-        cumAnn += dfg[i] * Si * a; S.push(Si);
+        cumC += dfg[i] * R * (Sprev - Si);
+        if (m === 2 || i % 2 === 0) cumAnn += dfg[i] * Si / m;
+        S.push(Si);
       }
     }
     const D = Math.round(2 * x), Rn = Math.round(2 * y), n = D + Rn, DDc = Math.max(D, 1);
@@ -338,14 +345,18 @@ const ENG = (() => {
     const fair = sk / B, wf = sf / B;
     const qq = F.out; const fl = Math.min(Math.max(WAL, 1), 30); const lo = Math.max(1, Math.min(29, Math.floor(fl)));
     let sc = qq[lo - 1] + (qq[lo] - qq[lo - 1]) * (fl - lo); const scQuoted = sc;
-    if (kind === 'fixed') sc = 2 * (Math.pow(1 + sc / ycomp, ycomp / 2) - 1);
+    if (kind === 'fixed') sc = 2 * (Math.pow(1 + sc / m, m / 2) - 1);
     const charged = sc + Xbp / 1e4; const wedge = fair - charged;
     let after = 0, tot = 0;
     for (const e of per) { const s = e.w * (e.k - charged); tot += s; after += s * Math.max(0, Math.min(1, (e.t - WAL) / a)); }
+    // Fair price of a bullet maturing at the WAL (same λ): splits the saving into timing and quote convention.
+    const upto = nn => { let num = 0, den = 0; for (let i = 0; i < nn; i++) { num += per[i].DF * per[i].S * per[i].k; den += per[i].DF * per[i].S; } return num / den; };
+    const n0 = Math.max(1, Math.min(59, Math.floor(2 * WAL))); const bullet = upto(n0) + (2 * WAL - n0) * (upto(n0 + 1) - upto(n0));
     return { lam, S, per, WAL, B, fair, wf, scQuoted, shortcut: sc, charged, wedge_bp: wedge * 1e4,
-             pvUnit: tot, pvAfterUnit: after, pvBeforeUnit: tot - after, cg: cg / WAL, maturity: n / 2, qfill: qq, last };
+             pvUnit: tot, pvAfterUnit: after, pvBeforeUnit: tot - after, cg: cg / WAL, maturity: n / 2, qfill: qq, last,
+             coupon: q, bullet, timing_bp: (fair - bullet) * 1e4, convention_bp: (bullet - sc) * 1e4 };
   }
-  return { fill, swapDfs, model };
+  return { fill, swapDfs, bridge, model };
 })();
 
 
@@ -354,9 +365,9 @@ const ENG = (() => {
 (function(){
 const Zq={1:-19,2:-15,3:-14,4:-2,5:6,6:13,7:24,8:30,9:37,10:42,11:46,14:61,15:65,18:74,20:78,25:89,28:92};
 const Yq={1:3.032,2:3.242,3:3.349,4:3.431,5:3.522,6:3.597,7:3.726,8:3.804,9:3.888,10:3.942,11:3.995,14:4.198,15:4.256,18:4.320,20:4.349,25:4.349,28:4.376};
-const Sq={1:3.270,2:3.420,3:3.450,4:3.440,5:3.440,6:3.440,7:3.440,8:3.450,10:3.470,15:3.510,20:3.470,30:3.290};
+const Sq={1:3.2220,2:3.3919,3:3.4888,4:3.4510,5:3.4620,6:3.4671,7:3.4863,8:3.5045,9:3.5188,10:3.5229,11:3.5362,12:3.5545,13:3.5728,14:3.5913,15:3.6103,16:3.6011,17:3.5919,18:3.5826,19:3.5767,20:3.5707,21:3.5467,22:3.5225,23:3.4981,24:3.4735,25:3.4487,26:3.4477,27:3.4467,28:3.4456,29:3.4458,30:3.4460};
 const z=[],y=[],s=[];for(let k=1;k<=30;k++){z.push(k in Zq?Zq[k]/1e4:null);y.push(k in Yq?Yq[k]/100:null);s.push(k in Sq?Sq[k]/100:null);}
-const DFG=ENG.swapDfs(s,1,0.03019), N=5e9;
+const DFG=ENG.swapDfs(s,1,0.03019), N=1e9;
 const R={float:ENG.model(z,'float',DFG,0.4,1,23,0,1),fixed:ENG.model(y,'fixed',DFG,0.4,1,23,0,1)};
 const $=id=>document.getElementById(id);
 const money=v=>(v<0?'−EUR ':'EUR ')+(Math.abs(v)/1e6).toFixed(1)+'m';
@@ -364,18 +375,18 @@ const bp=v=>v.toFixed(2)+'bp';
 
 const T={
  float:{
-  curveName:'bond Z-spread curve',
+  curveName:'bond Z-spread curve (Bloomberg YAS)',
   interest:'6-month EURIBOR plus a fixed margin, paid semi-annually',
   pricingRef:'Margin equal to your Z-spread at 12.5 years: 53.5bp',
   ex2Title:'Your Z-spread curve and the 12.5-year reading',
   ex2Cap:'Your 12-year and 13-year spreads are interpolated at 51bp and 56bp, giving 53.5bp at 12.5 years. Hollow points are interpolated between quoted maturities.',
   priceSentence:'The proposed margin is <b>53.5bp</b> over 6-month EURIBOR, equal to your Z-spread at 12.5 years.',
-  p1:'Your 20-year Z-spread of 78bp is the average cost of lending to you over all of years 1 to 20. Because your curve rises, the later years carry more of that cost. Lending to you during year 20 alone costs about <b>146bp</b>, close to twice the 20-year quote.',
-  fairSentence:'Priced period by period at your own curve, this repayment profile costs <b>62.3bp</b>. At 53.5bp, you pay <b>8.82bp a year less</b>.',
+  p1:'Your 20-year Z-spread of 78bp is the average cost of lending to you over all of years 1 to 20. Because your curve rises, the later years carry more of that cost. Lending to you during year 20 alone costs about <b>140bp</b>, nearly twice the 20-year quote.',
+  fairSentence:'Priced period by period at your own curve, this repayment profile costs <b>60.6bp</b>. At 53.5bp, you pay <b>7.12bp a year less</b>.',
   ex3Cap:'Bars show the margin your Z-spread curve implies for each six-month period of the loan. For about the first six years you pay more than those periods imply; from year 6 onwards you pay less, and the gap widens as the loan reaches the long end of your curve.',
-  impl1:'Funding this exact drawdown and repayment profile at your own Z-spread curve would cost 62.3bp. The proposed margin is 53.5bp, a benefit of 8.82bp a year, worth EUR 39.7m today.',
+  impl1:'Funding this exact drawdown and repayment profile at your own Z-spread curve would cost 60.6bp. The proposed margin is 53.5bp, a benefit of 7.12bp a year, worth EUR 6.4m today.',
   impl2:'The margin is set at signing and does not change for 24 years. The benefit is measured on your curve at signing and is not affected by later moves in EURIBOR.',
-  pct:'14%',pctTxt:'of the bond-equivalent margin of 62.3bp.'
+  pct:'12%',pctTxt:'of the bond-equivalent margin of 60.6bp.'
  },
  fixed:{
   curveName:'bond yield curve',
@@ -384,12 +395,12 @@ const T={
   ex2Title:'Your yield curve and the 12.5-year reading',
   ex2Cap:'Your 12-year and 13-year yields are interpolated between the 11-year and 14-year quotes, giving 4.0965% at 12.5 years (annual compounding). Hollow points are interpolated. The swap curve is shown for reference.',
   priceSentence:'The proposed fixed rate is <b>4.0554%</b> paid semi-annually, which gives the same yield as your <b>4.0965%</b> annual bond yield at 12.5 years.',
-  p1:'Your 20-year bond yield of 4.349% is the average cost of lending to you over all of years 1 to 20. Because your curve rises, the later years carry more of that cost. Lending to you during year 20 alone costs about <b>4.79%</b> (semi-annual).',
-  fairSentence:'Priced period by period at your own curve, this repayment profile costs <b>4.1355%</b> semi-annual, equivalent to 4.1783% annual. At 4.0554%, you pay <b>8.02bp a year less</b>.',
+  p1:'Your 20-year bond yield of 4.349% is the average cost of lending to you over all of years 1 to 20. Because your curve rises, the later years carry more of that cost. Lending to you during year 20 alone costs about <b>4.78%</b> (semi-annual).',
+  fairSentence:'Priced period by period at your own curve, this repayment profile costs <b>4.1305%</b> semi-annual, equivalent to 4.1731% annual. At 4.0554%, you pay <b>7.51bp a year less</b>.',
   ex3Cap:'Bars show the fixed rate your yield curve implies for each six-month period of the loan, combining the risk-free forward rate and your credit cost. For about the first six years you pay more than those periods imply; from year 6 onwards you pay less.',
-  impl1:'Funding this exact drawdown and repayment profile at your own yield curve would cost 4.1355% semi-annual. The proposed rate is 4.0554%, a benefit of 8.02bp a year, worth EUR 35.8m today.',
+  impl1:'Funding this exact drawdown and repayment profile at your own yield curve would cost 4.1305% semi-annual. The proposed rate is 4.0554%, a benefit of 7.51bp a year, worth EUR 6.7m today.',
   impl2:'The rate is fixed at signing for 24 years. The benefit is measured on your curve at signing and is not affected by later moves in rates.',
-  pct:'1.9%',pctTxt:'of the bond-equivalent all-in rate of 4.1355%.'
+  pct:'1.8%',pctTxt:'of the bond-equivalent all-in rate of 4.1305%.'
  }
 };
 function nums(m){const r=R[m];return {

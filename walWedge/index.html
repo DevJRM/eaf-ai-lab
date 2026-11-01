@@ -98,6 +98,15 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .readout .v.g{color:var(--gain)}.readout .v.l{color:var(--loss)}
 /* tables */
 .tbl{overflow-x:auto;margin:18px 0;max-width:var(--measure)}
+.bridge{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;margin:8px 0 14px;max-width:var(--measure)}
+.bridge>div{flex:1 1 84px;min-width:0;background:var(--panel);border-radius:8px;border-top:3px solid var(--rule);padding:7px 9px}
+.bridge>span{align-self:center;font-family:var(--f-mono);font-size:15px;color:var(--muted)}
+.bridge .k{font-family:var(--f-display);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);line-height:1.25}
+.bridge .v{font-family:var(--f-mono);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.bridge .d{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.bridge .bz{border-top-color:var(--accent)}.bridge .bs{border-top-color:var(--gain)}.bridge .bd{border-top-color:var(--loss)}
+.bridge .bt{border-top-color:var(--ink)}.bridge .bd .v{color:var(--loss)}
+.bridge-cap{font-family:var(--f-display);font-size:12px;color:var(--muted);margin:14px 0 0}
 table{border-collapse:collapse;font-size:15px;min-width:100%;font-variant-numeric:tabular-nums}
 th,td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap}
 th{white-space:normal;font-family:var(--f-display);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;vertical-align:bottom}
@@ -203,32 +212,33 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 <section id="start" class="hero">
   <div class="eyebrow">Loan pricing · internal explainer</div>
   <h1>The WAL Wedge</h1>
-  <p class="sub">Pricing an amortising loan by reading the borrower's bond curve at the loan's weighted average life (WAL) looks neutral. It is not. On a rising credit curve it hands the borrower a discount. This page shows why, and measures it exactly for one real-sized case.</p>
+  <p class="sub">Pricing an amortising loan by reading the borrower's bond curve at the loan's weighted average life (WAL) looks neutral. It is not. On a rising credit curve it hands the borrower a discount. This page shows why, and measures it exactly on a realistic, simulated case.</p>
 
   <div class="case" role="group" aria-label="Case and headline results">
-    <div><div class="k">The case</div><div class="v">EUR 5bn</div><div class="d">1y linear drawdown + 23y linear repayment, semi-annual. Final maturity 24y.</div></div>
+    <div><div class="k">The case</div><div class="v">EUR 1bn</div><div class="d">1y linear drawdown + 23y linear repayment, semi-annual. Final maturity 24y.</div></div>
     <div><div class="k">Loan WAL</div><div class="v">12.50 y</div><div class="d">So the shortcut prices it like a 12.5-year bond.</div></div>
-    <div><div class="k">Floating loan vs Z-spread curve</div><div class="v big g">+8.82 bp</div><div class="d">per year saved by the borrower. Worth <b>€39.7m</b> today (€55.1m nominal over the life).</div></div>
-    <div><div class="k">Fixed loan vs YTM curve</div><div class="v big g">+8.02 bp</div><div class="d">per year saved. Worth <b>€35.8m</b> today (€50.1m nominal).</div></div>
+    <div><div class="k">Floating loan vs YAS Z-spread curve</div><div class="v big g">+7.12 bp</div><div class="d">per year saved by the borrower. Worth <b>€6.4m</b> today (€8.9m nominal over the life).</div></div>
+    <div><div class="k">Fixed loan vs YAS YTM curve</div><div class="v big g">+7.51 bp</div><div class="d">per year saved. Worth <b>€6.7m</b> today (€9.4m nominal).</div></div>
   </div>
 
   <div class="note"><b>How to use this page</b>
     <p>It is built as a route. Sections 01–04 carry the argument and need nothing beyond arithmetic: they give the two ideas behind the result. Section 05 is a deep dive on the two measures of timing that everything else rests on. Sections 06–08 show exactly how the workbook turns those ideas into numbers, with this case's figures at every step. Section 09 is a lab where you can change the loan and the curve and watch the answer move. Section 10 is the full formula set for specialists. Section 11 answers the questions people usually ask.</p>
-    <p>All numbers are produced by the same engine as the Excel workbook, with these inputs: EUR, swap curve vs 6M EURIBOR, 6M EURIBOR fixing 3.0190%, recovery 40%, loan margin exactly at the curve (X = 0). The page and the workbook agree to the cent.</p>
+    <p>All numbers are produced by the same engine as the Excel workbook, with these inputs: EUR, swap curve vs 6M EURIBOR, 6M EURIBOR fixing 3.0190%, recovery 40%, annual bond coupons, loan margin exactly at the curve (X = 0). The page and the workbook agree to the cent.</p>
+    <p><b>The case is simulated, not market data.</b> The issuer is shaped on Portugal: its Z-spreads and YTMs look like Bloomberg YAS quotes, including the negative spreads at the short end, and the swap curve was set to be consistent with them, as one real Bloomberg snapshot would be. In production all three come from one Bloomberg snapshot (the workbook's Data Sourcing tab).</p>
   </div>
 </section>
 
 <!-- ================================================================ 01 -->
 <section id="question" class="lvl">
   <div class="eyebrow">01 · The question in plain words</div>
-  <h2>Two ways to borrow EUR 5bn, one pricing habit</h2>
-  <p>A borrower can raise EUR 5bn by issuing bonds or by taking an amortising loan. Lenders usually price the loan off the borrower's own bond curve, because that curve is the market's live view of the borrower's credit. The question is <em>which point</em> on that curve to use.</p>
+  <h2>Two ways to borrow EUR 1bn, one pricing habit</h2>
+  <p>A borrower can raise EUR 1bn by issuing bonds or by taking an amortising loan. Lenders usually price the loan off the borrower's own bond curve, because that curve is the market's live view of the borrower's credit. The question is <em>which point</em> on that curve to use.</p>
   <p>A bond repays everything at maturity. Our loan repays a little every six months for 23 years, so a lot of the money comes back early. The usual habit is to summarise the loan by its <b>weighted average life (WAL)</b>, here 12.5 years, and read the bond curve at 12.5 years. We call this <b>the shortcut</b>.</p>
   <div class="duo">
     <div><h4>The shortcut says</h4><p>"This loan behaves like a 12.5-year bond, so charge the 12.5-year spread."</p><p class="num">Z-spread at 12.5y = 53.5 bp · YTM at 12.5y = 4.0965% annual = 4.0554% half-yearly</p></div>
-    <div><h4>The exact answer says</h4><p>"Price every half-year of the loan at what that half-year actually costs on the bond curve, then average."</p><p class="num">Fair spread = 62.3 bp · fair fixed rate = 4.1355% half-yearly</p></div>
+    <div><h4>The exact answer says</h4><p>"Price every half-year of the loan at what that half-year actually costs on the bond curve, then average."</p><p class="num">Fair spread = 60.6 bp · fair fixed rate = 4.1305% half-yearly</p></div>
   </div>
-  <p class="muted">Both fixed rates above are quoted on the loan's own half-yearly basis, so they can be compared directly: 4.1355 − 4.0554 = 8.0 bp. EUR bonds quote an annual yield, and 4.0965% annual is the same yield as 4.0554% paid half-yearly; section 07 shows the conversion and why it matters.</p>
+  <p class="muted">Both fixed rates above are quoted on the loan's own half-yearly basis, so they can be compared directly: 4.1305 − 4.0554 = 7.5 bp. EUR bonds quote an annual yield, and 4.0965% annual is the same yield as 4.0554% paid half-yearly; section 07 shows the conversion and why it matters.</p>
   <p>The difference between the two is <b>the wedge</b>. When it is positive, the shortcut charges less than the borrower's own bond market would, so the borrower saves and the lender gives up margin relative to bond-equivalent pricing. When it is negative, the borrower overpays.</p>
   <div class="fx" aria-label="Definition of the wedge">
     <div class="eq">wedge = <span class="t c2">fair spread or rate</span> − <span class="t c3">shortcut spread or rate (+ X)</span></div>
@@ -244,14 +254,14 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 <section id="case" class="lvl">
   <div class="eyebrow">02 · The inputs of this case</div>
   <h2>Three curves and a loan profile</h2>
-  <p>The calculator needs three curves, one value per year, with gaps allowed. Missing years are filled by straight-line interpolation between the nearest quotes. The issuer here trades <em>below</em> swaps out to about 4 years and above swaps after that, with the spread rising steeply to 92bp at 28 years.</p>
+  <p>The calculator needs three curves, one value per year, with gaps allowed. Missing years are filled by straight-line interpolation between the nearest quotes. The issuer here trades <em>below</em> swaps out to about 4 years and above swaps after that, with the spread rising steeply to 92bp at 28 years. The case is simulated (see the note at the top); the three curves are consistent with one another, as one Bloomberg snapshot would be.</p>
   <figure>
     <div class="ft">The borrower's curves</div>
     <div class="fs">Filled dots are quotes you entered; hollow dots are years the model filled by interpolation.</div>
-    <div class="ctrls"><div class="seg" role="group" aria-label="Choose curve view"><button type="button" id="cv-z" aria-pressed="true">Z-spread (bp)</button><button type="button" id="cv-y" aria-pressed="false">YTM and swap (%)</button></div></div>
+    <div class="ctrls"><div class="seg" role="group" aria-label="Choose curve view"><button type="button" id="cv-z" aria-pressed="true">YAS Z-spread (bp)</button><button type="button" id="cv-y" aria-pressed="false">YTM and swap (%)</button></div></div>
     <div class="chartbox" id="ch-curves"></div>
     <div class="legend" id="lg-curves"></div>
-    <figcaption>Z-spread: spread of the issuer's bonds over the EUR swap curve (vs 6M EURIBOR). YTM: the bonds' yield, annual compounding, as quoted for EUR bonds. Swap: par swap rates, the risk-free benchmark.</figcaption>
+    <figcaption>YAS Z-spread: Bloomberg's spread of the issuer's bonds over the EUR swap curve (vs 6M EURIBOR). YAS YTM: the bonds' yield, annual compounding, as this issuer's bonds pay annual coupons. Swap: par swap rates, the curve YAS measures the Z-spread against.</figcaption>
   </figure>
 
   <h3>The three curves: what each is and what the model takes from it</h3>
@@ -259,44 +269,54 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="tbl"><table class="cmp">
     <thead><tr><th>Curve</th><th>What it tells you</th><th>Where the model uses it</th></tr></thead>
     <tbody>
-      <tr><td>Z-spread</td><td>The extra yield the market asks of this issuer over swaps: credit only, averaged over the bond's life.</td><td>The credit input for the floating loan. Its value at 12.5 years, 53.5bp, is the shortcut price.</td></tr>
-      <tr><td>YTM</td><td>The bond's all-in annual yield: risk-free rate and credit premium together.</td><td>The credit input for the fixed loan, once the swap curve has been taken out. Its value at 12.5 years, 4.0965%, is the shortcut price.</td></tr>
-      <tr><td>Swap curve</td><td>The market's risk-free benchmark: no credit in it at all.</td><td>Discounting every cash flow; the floating coupon; and the ruler that separates rate from credit in the YTM (section 08).</td></tr>
+      <tr><td>YAS Z-spread</td><td>The extra discount rate the market applies to this issuer's bonds over swaps: credit only, averaged over the bond's life.</td><td>The credit input for the floating loan, read through the YAS bridge (below). Its value at 12.5 years, 53.5bp, is the shortcut price.</td></tr>
+      <tr><td>YAS YTM</td><td>The bond's all-in annual yield: risk-free rate and credit premium together.</td><td>The credit input for the fixed loan: the coupon of the par bond its calibration prices on the swap curve. Its value at 12.5 years, 4.0965%, is the shortcut price.</td></tr>
+      <tr><td>Swap curve</td><td>The market's risk-free benchmark: no credit in it at all.</td><td>Discounting every cash flow; the forward base rates; and the ruler that separates rate from credit, in the YTM and in the YAS bridge (section 08).</td></tr>
     </tbody></table></div>
 
   <details>
-    <summary>Z-spread: the credit premium over swaps, already isolated</summary>
+    <summary>Z-spread: Bloomberg's YAS measure, and the par floating spread the model needs</summary>
     <div>
-  <p>A bond's <b>Z-spread</b> is the extra yield the market demands from this issuer over the swap curve, expressed as one spread added across the whole curve. Think of it as the swap curve plus a credit premium. On this case it is −19bp at 1 year, 42bp at 10 years and 92bp at 28. Because it is measured against the swap curve, the risk-free part has already been taken out: what is left is credit, plus whatever else the market charges for, such as liquidity.</p>
-  <p><b>How to read a quote.</b> The Z-spread at maturity T belongs to a bond maturing in T years, and it is an average over that bond's whole life, years 0 to T, not the cost of year T alone. That is why section 03 peels the curve apart. In this model each quote is a par level: the spread a floating-rate bond of that maturity would carry, base rate plus Z, to trade at exactly 100.</p>
-  <p><b>What the model does with it.</b> For the floating loan it is the credit input. The shortcut reads it at the WAL: 12.5 years is not a quoted maturity, so the curve is interpolated between the 11-year (46bp) and 14-year (61bp) quotes, giving 51bp at 12 years and 56bp at 13, and 53.5bp halfway between them. The bootstrap in section 06 calibrates a default intensity λ for each year so that every quoted bond reprices to par. A negative Z-spread means that bond trades richer than swaps, which is why λ comes out negative at the short end (see the warning in section 06). The one requirement is that the Z-spreads were measured against the same swap curve, on the same date, as the one you enter.</p>
+  <p><b>In simple terms.</b> Bloomberg's <b>YAS Z-spread</b> answers one question: by how much must every swap discount rate be raised so that the real bond's payments are worth its market price? It is one extra discount rate, with no view on default: the spread itself carries all the credit risk. On this case it is −19bp at 1 year, 42bp at 10 years and 92bp at 28. Because it is measured against the swap curve, the risk-free part has already been taken out.</p>
+  <p>A floating loan's margin answers a different question: what margin over EURIBOR would a six-monthly floating bond of the same issuer have to pay to be worth exactly 100, given that it pays only while the issuer survives and recovers 40% if it defaults? That is the <b>par floating spread</b>, and it is the unit of every floating price on this page. Same credit, different units: at 20 years the YAS Z-spread is 78bp and the par floating spread 76.0bp; at 10 years 42bp and 41.0bp.</p>
+  <p><b>Why they differ.</b> The YAS spread is compounded once a year, like the bond's coupon, while the margin is paid every six months. The YAS spread applies to every euro the bond pays, the final repayment included, while a margin is paid only on coupon dates and only while the issuer survives. And on default the floating bond still recovers 40%. Together these are worth about 2bp at 20 years, and less at shorter maturities.</p>
+  <p><b>Technical summary.</b> For a bond paying an annual coupon C (coupon frequency m = 1; 2 for semi-annual bonds), YAS solves for Z in</p>
+  <div class="fx"><div class="eq">price = Σ<sub>t</sub> (C/m) ÷ (1 + (z<sub>t</sub> + Z)/m)<sup>m·t</sup> + 1 ÷ (1 + (z<sub>T</sub> + Z)/m)<sup>m·T</sup></div>
+    <dl><dt>z<sub>t</sub></dt><dd>The swap zero rate to coupon date t, compounded m times a year.</dd>
+    <dt>t, T</dt><dd>The bond's coupon dates, and its maturity.</dd></dl></div>
+  <p>The model needs the issuer's default risk, not a spread, so it runs this definition in reverse, through the <b>YAS bridge</b>: given the Z-spread and the swap curve, a bond priced at 100 must pay one particular coupon, c<sub>T</sub>. The model then solves the default intensities at which that bond is worth 100 (section 06), and from them prices any profile: the par floating spread of a bullet, or the fair margin of this loan. Section 10 has the full formulas.</p>
+  <p><b>Worked at 20 years.</b> YAS Z-spread 78bp → bridge coupon 4.349%, exactly the quoted 20-year YTM, as it should be for one consistent snapshot → default intensities → par floating spread 76.0bp.</p>
+  <p><b>Names.</b> The par floating spread is also called the par spread; close relatives are the par asset-swap spread, an FRN's discount margin at par and the CDS par spread. It is the quantity hazard-rate credit models are calibrated in. On this page "Z-spread" always means the YAS input, and "par floating spread" the quantity the model computes.</p>
+  <p><b>How to read a quote.</b> The Z-spread at maturity T belongs to a bond maturing in T years, and it is an average over that bond's whole life, years 0 to T, not the cost of year T alone. That is why section 03 peels the curve apart.</p>
+  <p><b>What the model does with it.</b> For the floating loan it is the credit input. The shortcut reads it at the WAL: 12.5 years is not a quoted maturity, so the curve is interpolated between the 11-year (46bp) and 14-year (61bp) quotes, giving 51bp at 12 years and 56bp at 13, and 53.5bp halfway between them. The bootstrap in section 06 turns each quote, through the bridge, into a default intensity λ for each year. A negative Z-spread means that bond trades richer than swaps, which is why λ comes out negative at the short end (see the warning in section 06). The one requirement is that the Z-spreads were measured against the same swap curve, in the same snapshot, as the one you enter; the workbook checks it (next fold).</p>
     </div>
   </details>
 
   <details>
     <summary>YTM: one all-in yield that mixes rates and credit</summary>
     <div>
-  <p>The <b>yield to maturity</b> is the single annual rate that, used to discount all of a bond's cash flows, gives back its market price. EUR bonds pay one coupon a year, so it is quoted with annual compounding. Unlike the Z-spread it is an <em>all-in</em> number: it contains the risk-free rate for that maturity and the credit premium together, and nothing in it says which is which. On this case the 10-year YTM is 3.942%; the 10-year swap rate is 3.470%, so the credit part is about 47bp. At 1 year the YTM is 3.032% against 3.270% for swaps, about −24bp.</p>
-  <p><b>What the model does with it.</b> The fixed loan's price is a rate, so it is compared against a yield. The shortcut reads the YTM at the WAL, interpolating in the same way between the 11-year (3.995%) and 14-year (4.198%) quotes: 4.0627% at 12 years and 4.1303% at 13, so 4.0965% at 12.5. It then restates that as a half-yearly rate, 2 × (1.040965<sup>½</sup> − 1) = 4.0554%, because the loan pays twice a year and the bond once; section 07 explains why and section 10 gives the conversion. For the calibration the model treats each YTM as the coupon of a bond priced at par, values that bond on the swap curve, and attributes whatever the swap curve cannot explain to default risk. That is the swap curve's second role, described in section 08.</p>
-  <p><b>Z-spread and YTM are not interchangeable.</b> They are two different market quotes of the same issuer, one per loan type, and each is used only for its own loan. The two calibrations are close but not identical (year-10 λ is 159.6bp from the Z-spreads and 155.7bp from the YTMs), which is part of why the floating and fixed savings differ slightly.</p>
+  <p>The <b>yield to maturity</b> is the single annual rate that, used to discount all of a bond's cash flows, gives back its market price. EUR bonds pay one coupon a year, so it is quoted with annual compounding. Unlike the Z-spread it is an <em>all-in</em> number: it contains the risk-free rate for that maturity and the credit premium together, and nothing in it says which is which. On this case the 10-year YTM is 3.942%; the 10-year swap rate is 3.523%, so the credit part is about 42bp, the same as the 10-year Z-spread. At 1 year the YTM is 3.032% against 3.222% for swaps, about −19bp.</p>
+  <p><b>What the model does with it.</b> The fixed loan's price is a rate, so it is compared against a yield. The shortcut reads the YTM at the WAL, interpolating in the same way between the 11-year (3.995%) and 14-year (4.198%) quotes: 4.0627% at 12 years and 4.1303% at 13, so 4.0965% at 12.5. It then restates that as a half-yearly rate, 2 × (1.040965<sup>½</sup> − 1) = 4.0554%, because the loan pays twice a year and the bond once; section 07 explains why and section 10 gives the conversion. For the calibration the model treats each YTM as the coupon of a bond priced at par, paying annual coupons as this issuer's bonds do, values that bond on the swap curve, and attributes whatever the swap curve cannot explain to default risk. No restatement is needed there, because the bond is valued on its own annual schedule. That is the swap curve's second role, described in section 08.</p>
+  <p><b>Z-spread and YTM: two quotes of one bond.</b> Each loan reads its own quote: the floating loan the Z-spread, through the bridge, and the fixed loan the YTM. Taken from one snapshot, both describe the same bond, so the bridge coupon equals the quoted YTM and both give the same default intensities (156.0bp in year 10) and one survival curve for both loans. Each loan still keeps its own quote, because that keeps each result robust to an error in the swap curve (section 08).</p>
+  <p><b>The consistency check.</b> The workbook compares the bridge coupon with the quoted YTM at every maturity quoted for both (Results rows 54–55) and flags any gap above 1bp. A gap points to a swap curve from another moment or another curve, a wrong coupon frequency (Inputs row 17), a bond of another format in the curve, or a typo. On this case the gap is 0.00bp.</p>
     </div>
   </details>
 
   <details>
     <summary>Swap curve: the risk-free benchmark, and the two numbers the model builds from it</summary>
     <div>
-  <p>A <b>par swap rate</b> is the fixed rate at which a plain interest-rate swap, fixed payments against floating 6M EURIBOR, is worth nothing on the day it is struck. The <b>swap curve</b> is that rate for every maturity from 1 to 30 years: here 3.27% at 1 year, rising to 3.51% at 15 and easing to 3.29% at 30 (the swap line on the chart's second tab). It prices time and nothing else. No borrower is involved, so it carries no credit risk, which is why it is the standard stand-in for the risk-free rate.</p>
+  <p>A <b>par swap rate</b> is the fixed rate at which a plain interest-rate swap, fixed payments against floating 6M EURIBOR, is worth nothing on the day it is struck. The <b>swap curve</b> is that rate for every maturity from 1 to 30 years: here 3.22% at 1 year, rising to 3.61% at 15 and easing to 3.45% at 30 (the swap line on the chart's second tab). It prices time and nothing else. No borrower is involved, so it carries no credit risk, which is why it is the standard stand-in for the risk-free rate.</p>
   <p>The model cannot use par rates as they come. A 10-year par rate is an average over ten years: it does not say what a euro paid in year 10 is worth today, nor what the base rate will be in one particular half-year. So the model converts the curve into two kinds of number, and every later use of the curve takes one or the other:</p>
   <ul>
-    <li><b>Discount factors, DF(k).</b> What 1 euro paid in k years is worth today. On this curve a euro due in one year is worth 0.9683 (simply 1 ÷ 1.0327, from the 1-year rate of 3.27%) and a euro due in twenty years 0.5059. They are built one year at a time: a par swap is worth nothing when it is struck, so each new maturity's discount factor is whatever makes that true given the ones already found.</li>
-    <li><b>Forward rates, f.</b> The base rate the curve implies for one specific half-year. It is just the growth between two neighbouring discount factors: a euro due at 19.5 years is worth 0.5141 and at 20 years 0.5059, so waiting those six months costs 1.6%, a forward rate of 3.23% a year for that half-year.</li>
+    <li><b>Discount factors, DF(k).</b> What 1 euro paid in k years is worth today. On this curve a euro due in one year is worth 0.9688 (simply 1 ÷ 1.03222, from the 1-year rate of 3.222%) and a euro due in twenty years 0.4952. They are built one year at a time: a par swap is worth nothing when it is struck, so each new maturity's discount factor is whatever makes that true given the ones already found.</li>
+    <li><b>Forward rates, f.</b> The base rate the curve implies for one specific half-year. It is just the growth between two neighbouring discount factors: a euro due at 19.5 years is worth 0.5036 and at 20 years 0.4952, so waiting those six months costs 1.7%, a forward rate of 3.38% a year for that half-year.</li>
   </ul>
   <p>The two are one piece of information read two ways, since a forward is only a ratio of discount factors. The one input that is not a swap rate is the <b>6M EURIBOR fixing</b>, today's actual rate for the first six months: the curve starts at 1 year, and the fixing fills in the front end. Section 10 gives the construction and works it through on this curve; section 08 shows where each number is used and what happens if the curve is wrong.</p>
     </div>
   </details>
 
   <h3>The loan profile and its WAL</h3>
-  <p>The EUR 5bn is drawn in two equal halves, at signing and six months later. From year 1.5 to year 24 it is repaid in 46 equal half-yearly instalments of about EUR 108.7m.</p>
+  <p>The EUR 1bn is drawn in two equal halves, at signing and six months later. From year 1.5 to year 24 it is repaid in 46 equal half-yearly instalments of about EUR 21.7m.</p>
   <figure>
     <div class="ft">Balance outstanding over time</div>
     <div class="fs">Toggle the overlay to compare with a bond of the same WAL.</div>
@@ -349,16 +369,16 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="tbl"><table>
     <thead><tr><th>Year</th><th>Quoted Z-spread</th><th>Simple-average approx.</th><th>Full bootstrap (exact)</th></tr></thead>
     <tbody>
-      <tr><td>1</td><td>−19 bp</td><td>−19 bp</td><td>−19.0 bp</td></tr>
-      <tr><td>4</td><td>−2 bp</td><td>4×(−2) − 3×(−14) = 34 bp</td><td>36.6 bp</td></tr>
-      <tr><td>10</td><td>42 bp</td><td>10×42 − 9×37 = 87 bp</td><td>99.0 bp</td></tr>
-      <tr><td>13</td><td>56 bp (interp.)</td><td>13×56 − 12×51 = 116 bp</td><td>139.8 bp</td></tr>
-      <tr><td>20</td><td>78 bp</td><td>20×78 − 19×76 = 116 bp</td><td>145.8 bp</td></tr>
+      <tr><td>1</td><td>−19 bp</td><td>−19 bp</td><td>−18.6 bp</td></tr>
+      <tr><td>4</td><td>−2 bp</td><td>4×(−2) − 3×(−14) = 34 bp</td><td>35.8 bp</td></tr>
+      <tr><td>10</td><td>42 bp</td><td>10×42 − 9×37 = 87 bp</td><td>96.7 bp</td></tr>
+      <tr><td>13</td><td>56 bp (interp.)</td><td>13×56 − 12×51 = 116 bp</td><td>138.0 bp</td></tr>
+      <tr><td>20</td><td>78 bp</td><td>20×78 − 19×76 = 116 bp</td><td>140.0 bp</td></tr>
     </tbody></table></div>
   <div class="warn"><b>Trap: weighting the quoted curve flips the sign</b>
     <p>It is tempting to skip the peeling step above and weight the <em>quoted</em> curve itself by how much of the loan is outstanding each year. Don't: a quoted point is already an average cost to that maturity, so every long-dated quote has the cheap early years baked into it. Weighting the quotes directly counts those early years again and again, which drags the result down toward the short end.</p>
-    <p>Done on this case — weighting each quoted level by the loan's own risky-annuity weights (the weights of section 07) — that gives <b>17.9 bp</b>, far below the 53.5bp actually charged, making it look as if the borrower <em>overpays</em> by 35.6bp. Peel the years first, as above, and the true fair cost is 62.3bp: the borrower is actually <em>underpaying</em>, by 8.82bp. Same inputs, opposite conclusion.</p>
-    <p>The fixed case shows the same reversal: weighting the quotes directly gives 3.607%, against the 4.0554% charged — an apparent 44.9bp overpayment — while the correct, peeled calculation gives +8.02bp: an underpayment.</p></div>
+    <p>Done on this case — weighting each quoted level by the loan's own risky-annuity weights (the weights of section 07) — that gives <b>17.9 bp</b>, far below the 53.5bp actually charged, making it look as if the borrower <em>overpays</em> by 35.6bp. Peel the years first, as above, and the true fair cost is 60.6bp: the borrower is actually <em>underpaying</em>, by 7.12bp. Same inputs, opposite conclusion.</p>
+    <p>The fixed case shows the same reversal: weighting the quotes directly gives 3.611%, against the 4.0554% charged — an apparent 44.4bp overpayment — while the correct, peeled calculation gives +7.51bp: an underpayment.</p></div>
   <div class="take"><b>Takeaway</b><p>Never price exposure in year <i>t</i> at the curve's quote for maturity <i>t</i>. Convert the curve into the cost of each year first. In this case year 10 alone costs about 99.0 bp, more than twice the 42bp the 10-year quote shows.</p></div>
 </section>
 
@@ -403,7 +423,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt><span class="t c1">g</span></dt><dd>How fast the quoted curve rises, in bp per year.</dd>
       <dt>÷ 3</dt><dd>Carries the dispersion of a straight amortiser's repayments. A bullet has no dispersion, so its wedge is exactly zero: the shortcut prices it correctly.</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">For a curve of 10bp rising 4bp a year and our loan: 4 × 12.5 ÷ 3 = <b>16.7 bp</b>, against the engine's exact <b>13.58 bp</b>. The rule of thumb counts every year equally; the engine discounts later years and allows for default, which gives the long tail less weight and brings the figure down.</p></div>
+    <p class="muted" style="margin-bottom:0">For a curve of 10bp rising 4bp a year and our loan: 4 × 12.5 ÷ 3 = <b>16.7 bp</b>, against the engine's exact timing effect of <b>12.75 bp</b>. The rule of thumb counts every year equally; the engine discounts later years and allows for default, which gives the long tail less weight and brings the figure down. (The engine's net saving on this curve is 11.61bp: the shortcut also charges a YAS Z-spread as if it were a margin, which costs the borrower another 1.14bp, the quote-convention effect of section 07.)</p></div>
   <details>
     <summary>How the two facts combine into the rule of thumb</summary>
     <div>
@@ -423,7 +443,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   </details>
   <p>From there the shape of the curve decides the size:</p>
   <ul>
-    <li><b>Flat curve:</b> every year costs the same, so timing cannot matter and the wedge should be exactly zero. The engine returns <b>0.002 bp</b> instead. That is not an economic effect but an artefact of how year 1 is built: the model gives both of its half-years the same credit intensity, yet prices the first six months off the actual 6M EURIBOR fixing while the second follows from the 1-year swap rate. The two halves are therefore not quite interchangeable, and a flat curve cannot cancel to the last decimal. Remove the fixing and the residue disappears: the wedge is then 0.000 bp.</li>
+    <li><b>Flat curve:</b> if every year cost the same, timing could not matter and the wedge would be zero. A flat <em>YAS</em> curve comes very close: at 50bp the engine finds a timing effect of <b>−0.07 bp</b>. It is not exactly zero because the gap between the YAS Z-spread and the par floating spread widens with maturity (section 02), so flat YAS quotes mean par floating spreads that drift slightly down. The net saving the sandbox shows is −1.18bp, because the shortcut also charges the 50bp YAS figure as a margin, about 1.1bp more than the par floating spread at 12.5 years (the quote-convention effect, section 07).</li>
     <li><b>Straight and rising:</b> wedge proportional to the slope.</li>
     <li><b>Curved:</b> a curve that flattens at the long end (the usual shape) shrinks the wedge, because the loan's tail lands where costs grow more slowly. A curve that steepens further out enlarges it.</li>
   </ul>
@@ -473,7 +493,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 
   <h4>Why the two agree</h4>
   <p>Put side by side, the two ways share one thing: both are totalling <b>euro-years</b> — one euro being outstanding for one year. Way 1 collects euro-years by date, Way 2 collects the same euro-years by euro. Neither can be larger than the other, because they are inventories of the same thing.</p>
-  <p>That also settles the units. The raw total is genuinely in euro-years: this loan consumes 5bn × 12.5 = <b>62.5bn euro-years</b>. WAL reports that total <em>per euro borrowed</em>, so the euros cancel and what is left is <b>years</b> — read it as "the average euro stayed out for 12.5 years". Both formulas above have that division already built in, which is why neither shows it explicitly.</p>
+  <p>That also settles the units. The raw total is genuinely in euro-years: this loan consumes 1bn × 12.5 = <b>12.5bn euro-years</b>. WAL reports that total <em>per euro borrowed</em>, so the euros cancel and what is left is <b>years</b> — read it as "the average euro stayed out for 12.5 years". Both formulas above have that division already built in, which is why neither shows it explicitly.</p>
   <p>To see it, picture the loan as a physical <b>stack of money</b>. Stack the principal up with the slice that will be repaid <em>first</em> on top. As each instalment is paid the stack is shaved off the top, so the outline of the stack over time is exactly the balance-outstanding curve. Shade the whole stack over its life: every square of that shape is one euro-year, and the total area is every euro-year the loan consumes. Sweeping that area vertically is Way 1; sweeping it horizontally is Way 2.</p>
   <figure>
     <div class="ft">The same area, swept two ways</div>
@@ -494,7 +514,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <line x1="200" y1="180" x2="200" y2="122" style="stroke:var(--accent);stroke-width:3.5"/>
       <line x1="60" y1="52" x2="320" y2="180" style="stroke:var(--accent);stroke-width:2.2"/>
       <line class="grid" x1="60" y1="180" x2="330" y2="180"/><line class="grid" x1="60" y1="44" x2="60" y2="180"/>
-      <text class="tk" x="56" y="50" text-anchor="end">€5bn</text><text class="tk" x="56" y="184" text-anchor="end">0</text>
+      <text class="tk" x="56" y="50" text-anchor="end">€1bn</text><text class="tk" x="56" y="184" text-anchor="end">0</text>
       <text class="tk" x="60" y="198">0y</text><text class="tk" x="320" y="198" text-anchor="middle">maturity</text>
       <text class="tk" x="200" y="214" text-anchor="middle">one column</text>
       <text class="al" x="195" y="232" text-anchor="middle">"how much is still out at this date?"</text>
@@ -512,7 +532,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <line x1="430" y1="122" x2="573" y2="122" style="stroke:var(--accent);stroke-width:3.5"/>
       <line x1="430" y1="52" x2="690" y2="180" style="stroke:var(--accent);stroke-width:2.2"/>
       <line class="grid" x1="430" y1="180" x2="700" y2="180"/><line class="grid" x1="430" y1="44" x2="430" y2="180"/>
-      <text class="tk" x="426" y="50" text-anchor="end">€5bn</text><text class="tk" x="426" y="184" text-anchor="end">0</text>
+      <text class="tk" x="426" y="50" text-anchor="end">€1bn</text><text class="tk" x="426" y="184" text-anchor="end">0</text>
       <text class="tk" x="430" y="198">0y</text><text class="tk" x="690" y="198" text-anchor="middle">maturity</text>
       <text class="tk" x="502" y="214" text-anchor="middle">one row</text>
       <text class="al" x="560" y="232" text-anchor="middle">"how long did this slice stay out?"</text>
@@ -623,13 +643,13 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="fx"><div class="eq"><span class="t c2">credit margin</span> ≈ <span class="t c1">λ</span> × <span class="t c4">(1 − R)</span> &nbsp;&nbsp;⇔&nbsp;&nbsp; <span class="t c1">λ</span> ≈ <span class="t c2">credit margin</span> ÷ <span class="t c4">(1 − R)</span></div>
     <dl><dt><span class="t c1">λ</span></dt><dd><b>How likely.</b> The default intensity, or hazard rate: the chance of defaulting in a given year.</dd>
     <dt><span class="t c4">1 − R</span></dt><dd><b>How much is lost.</b> The share not recovered: 60% with 40% recovery.</dd>
-    <dt><span class="t c2">margin</span></dt><dd>Floating: the Z-spread. Fixed: the YTM minus the swap rate of the same maturity (both in semi-annual terms).</dd></dl>
-    <p class="muted" style="margin-bottom:0">Year 10: the year's own cost is 99.0 bp, so λ ≈ 99 ÷ 0.6 ≈ 165bp; the exact model gives 159.6 bp. Dividing by 0.6 slightly overshoots: what is lost on default is the principal <em>plus</em> the half-year's interest, less recovery, so the exact break-even is c ≈ λ × (1 − R + f·a) ≈ λ × 0.620 here (section 10).</p></div>
+    <dt><span class="t c2">margin</span></dt><dd>Floating: the par floating spread (close to the YAS Z-spread, section 02). Fixed: the YTM minus the swap rate of the same maturity.</dd></dl>
+    <p class="muted" style="margin-bottom:0">Year 10: the year's own cost is 96.7 bp, so λ ≈ 96.7 ÷ 0.6 ≈ 161bp; the exact model gives 156.0 bp. Dividing by 0.6 slightly overshoots: what is lost on default is the principal <em>plus</em> the half-year's interest, less recovery, so the exact break-even is c ≈ λ × (1 − R + f·a) ≈ λ × 0.618 here (section 10).</p></div>
 
   <h3>How likely: the default intensity λ</h3>
   <p>The model expresses each year's credit cost as a <b>default intensity</b> λ, also called a hazard rate.</p>
   <div class="fx"><div class="eq">λ<sub>year b</sub> = probability of defaulting during year b, <span class="t c1">given no default so far</span></div>
-    <p class="muted" style="margin-bottom:0">λ = 1.596% in year 10 means: if the borrower reaches year 10 alive, there is about a 1.6% chance it defaults during that year. The conditional clause is the important part — every λ is quoted on the assumption that the borrower got that far.</p></div>
+    <p class="muted" style="margin-bottom:0">λ = 1.560% in year 10 means: if the borrower reaches year 10 alive, there is about a 1.6% chance it defaults during that year. The conditional clause is the important part — every λ is quoted on the assumption that the borrower got that far.</p></div>
 
   <p>Each λ covers a single year in isolation. Pricing needs two further things: the chance of <em>reaching</em> a date at all — the survival probability <b>S(t) = exp(−Σλ)</b>, which is what weights every later cash flow — and a way to recover the λs from the bond quotes in the first place. Both are set out below.</p>
 
@@ -640,26 +660,26 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <p>The chaining works precisely <em>because</em> each λ is conditional. Surviving to year 3 means surviving year 1, then surviving year 2 given you survived year 1, then year 3 given the first two. Conditional probabilities multiply, so survival is a running product of one-year survival terms — and a product of exponentials is the exponential of a sum, which is what collapses the chain into a single formula.</p>
   <div class="fx"><div class="eq"><span class="t c2">S(t)</span> = exp(−<span class="t c1">λ</span><sub>1</sub>) × exp(−<span class="t c1">λ</span><sub>2</sub>) × … = exp(−<span class="t c3">Σ λ up to t</span>)</div>
     <dl>
-      <dt><span class="t c2">S(t)</span></dt><dd>The chance of still being alive at t. Starts at 1 and falls as the λs accumulate. Here S(24) = 0.660, so the market implies a 34% chance of default over the loan's life.</dd>
-      <dt>exp(−<span class="t c1">λ</span>)</dt><dd>The chance of getting through one year at intensity λ: 98.417% in year 10. Why the exponential, rather than simply 1 − λ, is worked through below.</dd>
+      <dt><span class="t c2">S(t)</span></dt><dd>The chance of still being alive at t. Starts at 1 and falls as the λs accumulate. Here S(24) = 0.673, so the market implies a 33% chance of default over the loan's life.</dd>
+      <dt>exp(−<span class="t c1">λ</span>)</dt><dd>The chance of getting through one year at intensity λ: 98.452% in year 10. Why the exponential, rather than simply 1 − λ, is worked through below.</dd>
       <dt><span class="t c3">Σ λ</span></dt><dd>The sum of every yearly intensity up to t. The engine steps in half-years, multiplying by exp(−λ·0.5) each time.</dd>
     </dl>
-    <p class="muted" style="margin-bottom:0">Nothing stops a negative λ feeding through: it makes a term greater than 1 and lifts S above 1, which is why this issuer shows S(1) = 1.0031 (see the warning below).</p></div>
+    <p class="muted" style="margin-bottom:0">Nothing stops a negative λ feeding through: it makes a term greater than 1 and lifts S above 1, which is why this issuer shows S(1) = 1.0030 (see the warning below).</p></div>
     </div>
   </details>
   <details>
     <summary>Why exp, and not simply 1 − λ</summary>
     <div>
-  <p>Start with the simplest possible picture. If the borrower could only fail on <em>one</em> date — say the last day of the year — then λ would be that single date's probability, and surviving the year would just be <code>1 − λ</code>: 98.404% in year 10.</p>
-  <p>But a borrower can fail on any day. So split the year in two and let each half carry half the intensity. Surviving the year now means surviving both halves, <code>(1 − λ/2) × (1 − λ/2)</code>, which comes to 98.410% — close to the first answer, but not the same. Split it into months instead and the answer shifts again. Each extra split spreads the same total intensity over more, smaller chances to fail:</p>
+  <p>Start with the simplest possible picture. If the borrower could only fail on <em>one</em> date — say the last day of the year — then λ would be that single date's probability, and surviving the year would just be <code>1 − λ</code>: 98.440% in year 10.</p>
+  <p>But a borrower can fail on any day. So split the year in two and let each half carry half the intensity. Surviving the year now means surviving both halves, <code>(1 − λ/2) × (1 − λ/2)</code>, which comes to 98.446% — close to the first answer, but not the same. Split it into months instead and the answer shifts again. Each extra split spreads the same total intensity over more, smaller chances to fail:</p>
   <div class="tbl"><table class="cmp">
     <thead><tr><th>Year split into</th><th>Surviving one slice</th><th>Surviving the whole year</th></tr></thead>
     <tbody>
-      <tr><td>1 slice</td><td>1 − λ = 98.4037%</td><td>98.4037%</td></tr>
-      <tr><td>2 half-years</td><td>1 − λ/2 = 99.2018%</td><td>98.4101%</td></tr>
-      <tr><td>12 months</td><td>1 − λ/12 = 99.8670%</td><td>98.4153%</td></tr>
-      <tr><td>365 days</td><td>1 − λ/365 = 99.9956%</td><td>98.4163%</td></tr>
-      <tr class="tot"><td>every instant</td><td>—</td><td>98.4164% = exp(−λ)</td></tr>
+      <tr><td>1 slice</td><td>1 − λ = 98.4404%</td><td>98.4404%</td></tr>
+      <tr><td>2 half-years</td><td>1 − λ/2 = 99.2202%</td><td>98.4464%</td></tr>
+      <tr><td>12 months</td><td>1 − λ/12 = 99.8700%</td><td>98.4515%</td></tr>
+      <tr><td>365 days</td><td>1 − λ/365 = 99.9957%</td><td>98.4524%</td></tr>
+      <tr class="tot"><td>every instant</td><td>—</td><td>98.4525% = exp(−λ)</td></tr>
     </tbody></table></div>
   <p>The answers climb and then stop moving. That settling value <em>is</em> <code>exp(−λ)</code> — it is simply where <code>(1 − λ/n)<sup>n</sup></code> ends up once the slices are small enough that splitting again changes nothing. Taking the exponential is just the compact way of saying "default is allowed at any instant, not only on scheduled dates".</p>
   <p>The practical gain is consistency. Because the model steps in half-years, it needs a survival figure that does not depend on how the time is chopped up, and only the exponential has that property: <code>exp(−λ/2)</code> applied twice gives back <code>exp(−λ)</code> exactly, whereas <code>(1 − λ/2)²</code> misses <code>1 − λ</code> by about 0.6bp. Over 48 half-years those small inconsistencies would accumulate.</p>
@@ -669,7 +689,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <summary>How each λ is actually found</summary>
     <div>
   <p>The credit-margin relation in the first box is a rule of thumb, and the model does not price off it. It recovers the λs from the bond prices themselves, one year at a time.</p>
-  <p>The condition it imposes is simple: <b>every quoted bond, valued with the model's own λs, must come back to the price the market actually shows.</b> The quotes are par levels — each Z-spread is the spread that would make a bond of that maturity trade at par — so the target price is 100.</p>
+  <p>The condition it imposes is simple: <b>every quoted bond, valued with the model's own λs, must come back to the price the market actually shows.</b> Each maturity's quotes describe the issuer's par bond: the YTM is its coupon, and the YAS Z-spread gives the same coupon through the bridge (section 02). So the target price is 100.</p>
   <p>Valuing a bond once default is allowed takes three ingredients, and survival drives two of them:</p>
   <ul>
     <li><b>Coupons</b>, which arrive only if the borrower is still alive, so each one is scaled by the survival probability on its date.</li>
@@ -685,7 +705,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <p>This is the same peeling idea as section 03, where each bond's quote was stripped back to the cost of its own final year. What differs is how much each year counts towards the quote it is being stripped out of. Section 03 let every year count the same, which keeps the arithmetic simple enough to follow by hand. Here a year's contribution is discounted, and scaled by the chance the borrower is still alive to reach it, so distant years count for less — which is exactly why the peeled figures there came out below the ones the model actually uses.</p>
   <p>First, a word on why λ can be treated as a single number for a whole year. The market supplies one quote per maturity — one figure per year — so there is only enough information to pin down one intensity per year. The model therefore takes λ to be flat within each year and to step at year boundaries. That is an assumption imposed by the data, not something the exponential requires. Count it through: after interpolation the curve supplies one value for each year, so holding λ flat per year leaves exactly one unknown per equation, and the chain has a single answer. Allow λ to move within a year — say a separate value for each half — and that year now carries two unknowns while still offering only one curve value. Twice as many unknowns as equations, and infinitely many λ paths would reprice every bond equally well. Some assumption has to break the tie, and flat-within-the-year is the mildest one available.</p>
   <p>With λ flat across the year, both halves of that year carry the same survival factor. Call it <b>u</b>: of the borrowers alive at the start of a half-year, the fraction still alive at its end. Note that u is <em>not</em> S(t), despite both being survival figures. S(t) is a cumulative level — the chance of lasting all the way from signing to t — while u is a single step. S(t) is just every u up to t multiplied together; within year b, S(b) = S(b−1) × u × u.</p>
-  <p>That is what makes the algebra fall out so neatly. The bond pays twice in the year: once at the half-year, reached with probability u, and once at the year-end, reached with probability u × u. So the unknown never appears in any form more complicated than u and u², which makes the pricing equation an ordinary <b>quadratic</b> — the kind solved with the formula taught at school. Once u is known, λ follows immediately, since u is just exp(−λ/2) seen from the other side.</p>
+  <p>That is what makes the algebra fall out so neatly. Within the year the bond can default in either half, and it pays its coupon at the year-end (a semi-annual bond would also pay one at the half-year). The half-year is reached with probability u and the year-end with probability u × u. So the unknown never appears in any form more complicated than u and u², which makes the pricing equation an ordinary <b>quadratic</b> — the kind solved with the formula taught at school. Once u is known, λ follows immediately, since u is just exp(−λ/2) seen from the other side.</p>
   <p>That is what a <b>closed-form solution</b> means: the answer is produced by evaluating a formula once, rather than being hunted for. The usual alternative in a spreadsheet is <b>Goal Seek</b>, Excel's built-in search: it guesses a λ, reprices the bond, sees how far the price lands from 100, adjusts the guess, and repeats until the gap is small enough to accept. That is <em>iteration</em> — a loop of guess and correct.</p>
   <p>Avoiding it is worth more than speed. An iterative search stops at "close enough" rather than exact, can land on slightly different answers depending on where it started and how tight the tolerance was set, and can simply fail to converge on awkward inputs. Solving the quadratic removes all three risks at once: every λ is computed directly, the bonds reprice to their quotes to within about 10<sup>−12</sup> bp, and the workbook returns the identical answer every time it is opened — which is what makes the output safe to audit.</p>
   <p>Section 10 sets out this whole bootstrap in its exact form: the pricing equation, the quadratic, and its solution.</p>
@@ -697,12 +717,12 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <div class="chartbox" id="ch-lam"></div>
     <div class="chartbox" id="ch-surv"></div>
     <div class="legend" id="lg-lam"></div>
-    <figcaption>Survival starts above 100% because λ is negative in years 1–3 (see the warning below). By year 24 the market-implied survival is 0.660 (floating calibration), i.e. a 34% implied chance of default over the life.</figcaption>
+    <figcaption>Survival starts above 100% because λ is negative in years 1–3 (see the warning below). By year 24 the market-implied survival is 0.673, i.e. a 33% implied chance of default over the life. On consistent quotes the two calibrations give the same curve, so the toggle changes nothing visible.</figcaption>
   </figure>
 
   <div class="warn"><b>Why the workbook shows "Negative forward hazard: YES"</b>
-    <p>This issuer's 1–3 year bonds trade <em>below</em> swaps: Z-spreads of −19, −15 and −14bp, and YTMs below the swap rates (3.032% against 3.270% at 1 year). The only default intensity that prices a bond <em>richer</em> than the risk-free curve is a negative one, so λ comes out around −31, −18 and −19bp for years 1–3. A real probability cannot be negative, hence the flag.</p>
-    <p>The calculation stays valid: every bond reprices to its quote and the integrity checks read OK. It simply means the market treats this issuer as safer than the swap curve at the short end, which is common for very high-grade names whose short bonds are scarce or in demand. It also explains why S(1) = 1.0031, slightly above 1. Before relying on the result, confirm the Z-spreads were measured against the same swap curve you entered, on the same date.</p></div>
+    <p>This issuer's 1–3 year bonds trade <em>below</em> swaps: Z-spreads of −19, −15 and −14bp, and YTMs below the swap rates (3.032% against 3.222% at 1 year). The only default intensity that prices a bond <em>richer</em> than the risk-free curve is a negative one, so λ comes out around −30, −17 and −19bp for years 1–3. A real probability cannot be negative, hence the flag.</p>
+    <p>The calculation stays valid: every bond reprices to its quote and the integrity checks read OK. It simply means the market treats this issuer as safer than the swap curve at the short end, which is common for very high-grade names whose short bonds are scarce or in demand. It also explains why S(1) = 1.0030, slightly above 1. Before relying on the result, confirm the Z-spreads were measured against the same swap curve you entered, in the same snapshot; the workbook's consistency check (Results row 55) tests exactly that.</p></div>
 
   <div class="note"><b>These are market-implied, not real-world, probabilities</b>
     <p>λ is backed out of prices. Bond spreads also pay for uncertainty, liquidity and supply and demand, so implied default probabilities are usually well above historical default rates for the same rating. For this calculator that is exactly right: the goal is to price the loan consistently with where the borrower's bonds trade, whatever is driving those prices. λ is a pricing tool, not a default forecast.</p></div>
@@ -720,18 +740,18 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <dl>
       <dt><span class="t c4">S<sub>i−1</sub> − S<sub>i</sub></span></dt><dd>The chance of defaulting in that half-year, having survived to its start. This is the λ half, above — it is where λ enters this formula.</dd>
       <dt><span class="t c3">1 + f·a − R</span></dt><dd>The <b>per-default loss</b>: what is lost <em>if</em> a default happens, taking that as given. The principal (1), plus that half-year's interest due (f·a — f is the forward rate the swap curve implies for that half-year and a = 0.5 its length), less what is recovered (R). Both loan types use the forward here. The forward is introduced in section 02 and constructed in section 10.</dd>
-      <dt><span class="t c1">O<sub>i</sub></span></dt><dd>The base: the balance still outstanding in that half-year, not the original EUR 5bn.</dd>
+      <dt><span class="t c1">O<sub>i</sub></span></dt><dd>The base: the balance still outstanding in that half-year, not the original EUR 1bn.</dd>
     </dl></div>
   <p>On a bullet bond the two candidate bases are the same number for the loan's entire life — the full face amount stays outstanding until the single repayment at maturity — so it makes no difference which one you pick. An amortising loan breaks that coincidence: every repayment shrinks the outstanding balance below face, so from then on the two bases disagree, and only the outstanding one, O<sub>i</sub>, is correct.</p>
-  <p>Take a default in year 20. By then the loan has paid down to about 19.57% of its original EUR 5bn, so recovering 40% of the correct base returns roughly EUR 0.39bn. Recovering 40% of the original face instead would return EUR 2bn — on a position where under EUR 1bn is actually owed. That overstated recovery would make the loss given default <em>negative</em>: the model would record a late default as a profit rather than a cost, and the late years, exactly where the wedge lives, would price as almost free.</p>
+  <p>Take a default in year 20. By then the loan has paid down to about 19.57% of its original EUR 1bn, so recovering 40% of the correct base returns roughly EUR 78m. Recovering 40% of the original face instead would return EUR 400m — on a position where under EUR 200m is actually owed. That overstated recovery would make the loss given default <em>negative</em>: the model would record a late default as a profit rather than a cost, and the late years, exactly where the wedge lives, would price as almost free.</p>
 
   <h3>Why the recovery assumption itself barely matters</h3>
-  <p>Changing the recovery <em>rate</em> moves the answer very little: 8.99 bp at 20% recovery, 8.82 at 40%, 8.49 at 60% (section 08). That looks surprising, because R sits inside two formulas on this page — the <code>λ ≈ margin ÷ (1 − R)</code> rule of thumb above, and the per-default loss, <code>1 + f·a − R</code>, just above that. Change R and both formulas move. Going in, it changes the λ you calibrate; coming out, it changes the loss that λ is used to price.</p>
+  <p>Changing the recovery <em>rate</em> moves the answer only modestly: 7.53 bp at 20% recovery, 7.12 at 40%, 6.36 at 60% (floating loan; section 08). That looks surprising, because R sits inside two formulas on this page — the <code>λ ≈ margin ÷ (1 − R)</code> rule of thumb above, and the per-default loss, <code>1 + f·a − R</code>, just above that. Change R and both formulas move. Going in, it changes the λ you calibrate; coming out, it changes the loss that λ is used to price.</p>
   <div class="duo">
     <div><h4>Going in: R decides how large λ must be</h4><p>The quoted spread is fixed market data — it does not move just because you change your assumption about R. But λ ≈ margin ÷ (1 − R) does: raise R and (1 − R) shrinks, so matching that same fixed spread now calls for a larger λ. Credit a default with recovering more, in other words, and the model needs defaults to happen more often to still explain the spread actually observed in the market.</p></div>
     <div><h4>Coming out: R decides how large that default's loss is</h4><p>That larger λ is now used to price the loan, by way of the loss formula above: λ sets S<sub>i−1</sub> − S<sub>i</sub>, so a bigger λ means a bigger chance of default. R, meanwhile, is not finished — it appears again on its own, inside the per-default loss, <code>1 + f·a − R</code>, still shrinking what each default costs, exactly as it always did. One assumption about R, acting on the same formula twice: once at a distance, by way of λ, and once directly.</p></div>
   </div>
-  <p>Those two effects sit on different factors of one product, probability of default times per-default loss, so pushing one up and the other down mostly offsets rather than compounding. The offset is not exact — the fair price still drifts from 8.99 bp down to 8.49 bp across the 20%–60% range — but it is close enough that the recovery rate, within reason, barely changes the answer.</p>
+  <p>Those two effects sit on different factors of one product, probability of default times per-default loss, so pushing one up and the other down mostly offsets rather than compounding. The offset is not exact — the saving still drifts from 7.53 bp down to 6.36 bp across the 20%–60% range, because reading a YAS Z-spread as a margin also depends on what is recovered — but it is close enough that the recovery rate, within reason, changes the answer only modestly.</p>
   <div class="take"><b>Takeaway</b><p>The recovery <em>rate</em> — the 40% figure — is a soft assumption: it enters the calculation twice, going in and coming out, in ways that offset, so the model absorbs most of whatever rate you choose. The recovery <em>base</em> — original face or outstanding balance, from the subsection above — is not soft at all; it enters only once, with no offsetting error to cancel it. A wrong base does not crash the model or produce an obviously broken number: it quietly makes the late years price as nearly free, by turning their loss given default negative. Sections 03–05 found the wedge precisely in those late years — so a base error would not just bias this section's output, it would erase the thing the whole page is about.</p></div>
 
   <div class="mile"><b>Milestone</b><p>You now know, for every half-year of the next 30 years, how likely the borrower is to be there and what is lost if it defaults, all calibrated on the borrower's own bonds. Next: turn that into a cost for each half-year and apply it to the loan.</p></div>
@@ -744,7 +764,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <p>Section 06 ended with two things for every half-year of the loan's life: how likely the borrower is to still be there, and what is lost if it defaults. This section turns them into a price. The question is: <b>what single margin (floating) or rate (fixed) would make the lender whole on this exact loan, measured against the borrower's own bonds?</b> That is the <b>fair price</b> of section 01, and the wedge is its gap to the shortcut.</p>
   <p>The whole calculation has seven steps. This section does the last three that remain: steps 4, 6 and 7. The others were set up earlier.</p>
   <div class="pipe">
-    <div class="done"><h4>Fill the gaps</h4><p>Interpolate missing years; convert YTMs to semi-annual terms.</p><span class="ws">Sections 02, 10</span></div>
+    <div class="done"><h4>Fill the gaps</h4><p>Interpolate missing years; turn each YAS Z-spread into its bond's coupon (the bridge).</p><span class="ws">Sections 02, 10</span></div>
     <div class="done"><h4>Risk-free curve</h4><p>Bootstrap discount factors from swap rates; pin 6M with the fixing.</p><span class="ws">Sections 02, 10</span></div>
     <div class="done"><h4>Bootstrap λ</h4><p>One default intensity per year so each bond reprices to 100.</p><span class="ws">Sections 06, 10</span></div>
     <div class="here"><h4>Half-year costs</h4><p>Turn each λ into a break-even margin c<sub>i</sub>.</p><span class="ws">This section</span></div>
@@ -753,7 +773,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <div class="here"><h4>Fair price</h4><p>Weighted average of the costs; compare with the shortcut.</p><span class="ws">This section</span></div>
   </div>
 
-  <p><b>Floating and fixed, side by side.</b> Each step is worked for both loans, and the logic is identical. They differ in just two places. First, what a half-year's cost contains: for a floating loan it is the credit cost alone, because the base rate passes straight through to the borrower; for a fixed loan it is the forward (the base rate of that half-year, section 02) plus the credit cost, because one all-in rate has to cover both. Second, each loan takes its credit input from its own curve (Z-spread for floating, YTM for fixed), so their survival probabilities differ slightly.</p>
+  <p><b>Floating and fixed, side by side.</b> Each step is worked for both loans, and the logic is identical. They differ in just one place: what a half-year's cost contains. for a floating loan it is the credit cost alone, because the base rate passes straight through to the borrower; for a fixed loan it is the forward (the base rate of that half-year, section 02) plus the credit cost, because one all-in rate has to cover both. Each loan takes its credit input from its own quote (YAS Z-spread for floating, YTM for fixed), but on one consistent snapshot both give the same survival; the box at the end of this section shows what happens when they do not.</p>
 
   <h3>Step 4 · The cost of a half-year</h3>
   <p><b>Where we are.</b> For each half-year, section 06 gives the chance of defaulting in it and the loss if that happens. A loan, though, is priced with a margin paid every year, not a lump sum. To compare the two, each half-year's expected loss has to be restated as a margin.</p>
@@ -771,18 +791,18 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <tr><td>What the lender has to price</td><td>Credit risk only: the base rate is passed straight through</td><td>Credit risk and the base rate, since the one rate must cover both</td></tr>
       <tr class="hl"><td>Cost of a half-year</td><td>Credit cost</td><td>Forward for that half-year + credit cost</td></tr>
     </tbody></table></div>
-  <p><b>Worked example, the half-year ending at year 20.</b> The loss if default happens is the principal (1), plus half a year's interest at the 3.23% forward (0.016), less the 0.40 recovered, so 0.616 for both loans. The rest differs only because each loan uses its own survival curve.</p>
+  <p><b>Worked example, the half-year ending at year 20.</b> The loss if default happens is the principal (1), plus half a year's interest at the 3.38% forward (0.017), less the 0.40 recovered, so 0.617 for both loans. Both loans also share one survival curve (section 06), so the credit cost is the same; the fixed loan adds the forward.</p>
   <div class="tbl"><table class="cmp">
     <thead><tr><th>Step</th><th>Floating loan</th><th>Fixed loan</th><th>How it is obtained</th></tr></thead>
     <tbody>
-      <tr><td>Survival at the start and end of the half-year</td><td>0.7484 → 0.7396</td><td>0.7264 → 0.7173</td><td>From each loan's default intensity λ (section 06)</td></tr>
-      <tr><td>Chance of defaulting in it</td><td>1.17%</td><td>1.26%</td><td>1 − end ÷ start</td></tr>
-      <tr><td>Chance of surviving it</td><td>98.83%</td><td>98.74%</td><td>The remainder</td></tr>
-      <tr><td>Loss if default happens</td><td>0.616</td><td>0.616</td><td>1 + 0.016 − 0.40</td></tr>
-      <tr><td>Expected loss</td><td>0.720%</td><td>0.774%</td><td>Chance of default × loss</td></tr>
-      <tr><td>Credit cost</td><td>145.8 bp</td><td>156.7 bp</td><td>Expected loss ÷ (chance of surviving × 0.5)</td></tr>
-      <tr><td>Forward for the half-year</td><td>not needed</td><td>3.227%</td><td>Swap curve, section 02</td></tr>
-      <tr class="hl"><td>Cost of the half-year</td><td>145.8 bp</td><td>4.794%</td><td>Floating: credit cost. Fixed: 3.227% + 1.567%</td></tr>
+      <tr><td>Survival at the start and end of the half-year</td><td>0.7538 → 0.7454</td><td>0.7538 → 0.7454</td><td>From the default intensity λ (section 06)</td></tr>
+      <tr><td>Chance of defaulting in it</td><td>1.12%</td><td>1.12%</td><td>1 − end ÷ start</td></tr>
+      <tr><td>Chance of surviving it</td><td>98.88%</td><td>98.88%</td><td>The remainder</td></tr>
+      <tr><td>Loss if default happens</td><td>0.617</td><td>0.617</td><td>1 + 0.017 − 0.40</td></tr>
+      <tr><td>Expected loss</td><td>0.692%</td><td>0.692%</td><td>Chance of default × loss</td></tr>
+      <tr><td>Credit cost</td><td>140.0 bp</td><td>140.0 bp</td><td>Expected loss ÷ (chance of surviving × 0.5)</td></tr>
+      <tr><td>Forward for the half-year</td><td>not needed</td><td>3.377%</td><td>Swap curve, section 02</td></tr>
+      <tr class="hl"><td>Cost of the half-year</td><td>140.0 bp</td><td>4.778%</td><td>Floating: credit cost. Fixed: 3.377% + 1.400%</td></tr>
     </tbody></table></div>
   <p class="muted">Section 10 gives the same cost as a formula, in "Per-period break-even cost".</p>
 
@@ -793,76 +813,58 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <dl><dt><span class="t c1">balance × 0.5</span></dt><dd>Principal-years in that half-year: how much is lent, for how long. The balance comes from the loan profile (section 02).</dd>
     <dt><span class="t c3">discount factor</span></dt><dd>Margin received in year 20 is worth less today than margin received in year 1.</dd>
     <dt><span class="t c2">survival</span></dt><dd>Margin is only collected if the borrower has not defaulted.</dd></dl></div>
-  <p><b>Intuition.</b> A half-year counts more when more is lent, when the money arrives sooner, and when the borrower is likelier to still be there. Those are exactly the three things that decide how much margin the lender actually collects in it. The weights of all 48 half-years add up to the <b>risky annuity</b>: today's value of 1bp a year on this loan, in years. Here it is <b class="num">9.002</b> (Results row 9).</p>
-  <p><b>Floating and fixed.</b> The formula is the same for both loans. The balance (same loan) and the discount factor (same swap curve) are identical, so only survival can differ, and it does, slightly. Sums of all 48 weights: <b class="num">9.002</b> for the floating loan and <b class="num">8.943</b> for the fixed loan (Results row 9).</p>
-  <div class="warn"><b>Why the two loans have different survival</b>
-    <p>Survival comes from each loan's own credit input: the Z-spreads for floating, the YTMs (with the swap curve taken out) for fixed. Both quotes are for the same bond, so one might expect the same credit premium. They give slightly different ones: at 20 years the Z-spread is 78bp, while the 4.349% YTM sits 88bp above the 3.470% swap rate. The model reads the extra 10bp as more default risk, so survival to year 20 is lower on the fixed loan (0.7173 against 0.7396) and each of its half-years gets a slightly smaller weight. The 10bp has two sources, about 2bp that is built into the way the two are quoted, and about 8bp that is a data matter.</p>
-    <p><b>1. The same premium in different units: compounding, about 2bp.</b></p>
-    <p><i>Intuition.</i> A Z-spread is a spread paid with the coupon, and a floating coupon is paid every six months. A YTM is an annually compounded yield. A premium of 78bp a year, paid as 39bp every six months, is worth slightly more than 78bp once the first instalment is reinvested for the rest of the year, in the same way that 2% every six months is 4.04% a year and not 4%. So the same credit premium, written as an annual yield, comes out a little above its Z-spread.</p>
-    <p><i>The maths.</i> Compare a risk-free bond yielding r, paid twice a year, with a risky one yielding r + z. Written as annual yields, the difference is</p>
-    <div class="fx"><div class="eq">(1 + (r + z)/2)² − (1 + r/2)² ≈ z × (1 + r/2)</div></div>
-    <p>With r about 3.4%, the factor is about 1.017, so 78bp becomes about 79.5bp. The exact calculation on the bond, which also reflects the shape of the swap curve, gives a little more:</p>
-    <p><i>On the 20-year bond.</i></p>
-    <div class="tbl"><table class="cmp">
-      <thead><tr><th>Step</th><th>Value</th></tr></thead>
-      <tbody>
-        <tr><td>Half-yearly swap rate over the bond's life (average of the forwards)</td><td>3.443%</td></tr>
-        <tr><td>Add the 78bp Z-spread: the bond's half-yearly yield</td><td>4.223%</td></tr>
-        <tr><td>Restate as an annual yield: (1 + 0.04223 ÷ 2)² − 1</td><td>4.268%</td></tr>
-        <tr><td>Subtract the 3.470% annual swap rate</td><td>79.8bp</td></tr>
-      </tbody></table></div>
-    <p>So a 78bp Z-spread shows up as about 80bp when read from an annual YTM. The 2bp gap is not an error. It is the same premium counted on a different basis.</p>
-    <p><b>2. A data caveat, about 8bp.</b> The rest of the gap, 88bp in the data against about 80bp expected, comes from the swap curve having been collected a few days after the bond quotes. It does not reflect the method.</p></div>
+  <p><b>Intuition.</b> A half-year counts more when more is lent, when the money arrives sooner, and when the borrower is likelier to still be there. Those are exactly the three things that decide how much margin the lender actually collects in it. The weights of all 48 half-years add up to the <b>risky annuity</b>: today's value of 1bp a year on this loan, in years. Here it is <b class="num">8.973</b> (Results row 9).</p>
+  <p><b>Floating and fixed.</b> The formula is the same for both loans, and so are its three inputs: the balance (same loan), the discount factor (same swap curve) and survival (one survival curve on consistent quotes; the box at the end of this section shows what happens when the quotes disagree). So both loans have the same weights, and the same sum of all 48 weights: <b class="num">8.973</b> (Results row 9).</p>
   <p><b>Worked example.</b></p>
   <div class="tbl"><table>
     <thead><tr><th>Half-year ending</th><th>Balance × 0.5</th><th>Discount factor</th><th>Survival, floating</th><th>Weight, floating</th><th>Survival, fixed</th><th>Weight, fixed</th></tr></thead>
     <tbody>
-      <tr><td>Year 3</td><td>0.4674</td><td>0.9032</td><td>1.0068</td><td><b>0.4250</b></td><td>1.0047</td><td><b>0.4241</b></td></tr>
-      <tr><td>Year 20</td><td>0.0978</td><td>0.5059</td><td>0.7396</td><td><b>0.0366</b></td><td>0.7173</td><td><b>0.0355</b></td></tr>
+      <tr><td>Year 3</td><td>0.4674</td><td>0.9021</td><td>1.0067</td><td><b>0.4244</b></td><td>1.0067</td><td><b>0.4244</b></td></tr>
+      <tr><td>Year 20</td><td>0.0978</td><td>0.4952</td><td>0.7454</td><td><b>0.0361</b></td><td>0.7454</td><td><b>0.0361</b></td></tr>
     </tbody></table></div>
-  <p>Year 3 counts nearly twelve times as much as year 20, on either loan, although its cost is far lower: −11.9bp against 145.8bp for the floating loan, 3.543% against 4.794% for the fixed one. (Survival slightly above 1 in the early years comes from the negative default intensities of section 06.)</p>
+  <p>Year 3 counts nearly twelve times as much as year 20, on either loan, although its cost is far lower: −11.6bp against 140.0bp for the floating loan, 3.544% against 4.778% for the fixed one. (Survival slightly above 1 in the early years comes from the negative default intensities of section 06.)</p>
 
   <h3>Step 7 · The fair price</h3>
   <p><b>Where we are.</b> Each half-year has a cost (step 4) and a weight (step 6). The last step combines them into the one margin or rate the loan should carry.</p>
   <p><b>Definition.</b> The <b>fair price</b> is the weighted average of the half-year costs.</p>
   <div class="fx"><div class="eq">fair price = <span class="t c2">Σ (weight × cost)</span> ÷ <span class="t c1">Σ weight</span></div>
     <dl><dt><span class="t c2">Σ (weight × cost)</span></dt><dd>Add up, over the 48 half-years, each half-year's weight times its cost.</dd>
-    <dt><span class="t c1">Σ weight</span></dt><dd>The risky annuity, 9.002 here.</dd></dl></div>
+    <dt><span class="t c1">Σ weight</span></dt><dd>The risky annuity, 8.973 here.</dd></dl></div>
   <p><b>Intuition: why this is the right average.</b> A flat margin m on the loan is worth m × Σ weight today, because each weight is what a unit of margin in that half-year is worth. And weight × cost is the present value of that half-year's expected loss, which is section 06's loss formula valued today. A margin is fair when the two sides match, m × Σ weight = Σ (weight × cost), and solving for m is exactly the weighted average. Put in words, <b>fair price = present value of the expected loss ÷ risky annuity</b>.</p>
-  <p><b>Floating and fixed.</b> The calculation is the same for both loans, with one extra term for the fixed loan: its costs include the forward, so its fair rate is the average forward plus the credit part, which is the present value of the expected loss divided by the risky annuity. Present values are per euro lent; EUR figures are on EUR 5bn.</p>
+  <p><b>Floating and fixed.</b> The calculation is the same for both loans, with one extra term for the fixed loan: its costs include the forward, so its fair rate is the average forward plus the credit part, which is the present value of the expected loss divided by the risky annuity. Present values are per euro lent; EUR figures are on EUR 1bn.</p>
   <div class="tbl"><table class="cmp">
     <thead><tr><th></th><th>Floating loan</th><th>Fixed loan</th></tr></thead>
     <tbody>
-      <tr><td>Present value of the expected loss</td><td>0.0561 (EUR 280.5m)</td><td>0.0615 (EUR 307.6m)</td></tr>
-      <tr><td>Risky annuity</td><td>9.002</td><td>8.943</td></tr>
-      <tr><td>Credit part: loss ÷ annuity</td><td>62.3 bp</td><td>0.688%</td></tr>
-      <tr><td>Average forward, weighted the same way</td><td>not needed</td><td>3.448%</td></tr>
-      <tr class="hl"><td>Fair price</td><td>62.32 bp (a margin)</td><td>4.1355% (an all-in rate)</td></tr>
+      <tr><td>Present value of the expected loss</td><td>0.0544 (EUR 54.4m)</td><td>0.0544 (EUR 54.4m)</td></tr>
+      <tr><td>Risky annuity</td><td>8.973</td><td>8.973</td></tr>
+      <tr><td>Credit part: loss ÷ annuity</td><td>60.6 bp</td><td>0.606%</td></tr>
+      <tr><td>Average forward, weighted the same way</td><td>not needed</td><td>3.524%</td></tr>
+      <tr class="hl"><td>Fair price</td><td>60.62 bp (a margin)</td><td>4.1305% (an all-in rate)</td></tr>
     </tbody></table></div>
   <p><b>The average at work: four blocks.</b> Group the 48 half-years into four blocks of six years. The floating loan first. The table shows, for each block, how much is lent (average balance and principal-years), how much it counts once discounting and default are allowed for (its weight and share of the total weight), and what its half-years cost on average.</p>
   <div class="tbl"><table>
     <thead><tr><th>Years</th><th>Avg balance</th><th>Principal-years</th><th>Share before discounting</th><th>Weight</th><th>Share of weight</th><th>Cost of those years</th></tr></thead>
     <tbody>
-      <tr><td>0–6</td><td>88%</td><td>5.26</td><td>42.1%</td><td>4.724</td><td>52.5%</td><td>12.6 bp</td></tr>
-      <tr><td>6–12</td><td>66%</td><td>3.98</td><td>31.8%</td><td>2.757</td><td>30.6%</td><td>99.9 bp</td></tr>
-      <tr><td>12–18</td><td>40%</td><td>2.41</td><td>19.3%</td><td>1.209</td><td>13.4%</td><td>147.5 bp</td></tr>
-      <tr><td>18–24</td><td>14%</td><td>0.85</td><td>6.8%</td><td>0.312</td><td>3.5%</td><td>153.5 bp</td></tr>
-      <tr class="tot"><td>Total</td><td></td><td>12.50 = WAL</td><td>100%</td><td>9.002 = row 9</td><td>100%</td><td>62.3 bp = row 13</td></tr>
+      <tr><td>0–6</td><td>88%</td><td>5.26</td><td>42.1%</td><td>4.722</td><td>52.6%</td><td>12.3 bp</td></tr>
+      <tr><td>6–12</td><td>66%</td><td>3.98</td><td>31.8%</td><td>2.746</td><td>30.6%</td><td>97.9 bp</td></tr>
+      <tr><td>12–18</td><td>40%</td><td>2.41</td><td>19.3%</td><td>1.196</td><td>13.3%</td><td>144.5 bp</td></tr>
+      <tr><td>18–24</td><td>14%</td><td>0.85</td><td>6.8%</td><td>0.309</td><td>3.4%</td><td>143.6 bp</td></tr>
+      <tr class="tot"><td>Total</td><td></td><td>12.50 = WAL</td><td>100%</td><td>8.973 = row 9</td><td>100%</td><td>60.6 bp = row 13</td></tr>
     </tbody></table></div>
-  <p>Two things to read from the table. First, compare the two share columns: discounting and survival move weight towards the early years, from 42.1% of principal-years to 52.5% of weight in the first block. Second, the average is built from the share of weight and the cost, not from the balance and the cost: balance alone would ignore how much of each block is discounted away or lost to default. So the fair price is the sum, over the four blocks, of each block's share of weight times its cost:</p>
+  <p>Two things to read from the table. First, compare the two share columns: discounting and survival move weight towards the early years, from 42.1% of principal-years to 52.6% of weight in the first block. Second, the average is built from the share of weight and the cost, not from the balance and the cost: balance alone would ignore how much of each block is discounted away or lost to default. So the fair price is the sum, over the four blocks, of each block's share of weight times its cost:</p>
   <div class="fx"><div class="eq" id="blk-sum"></div></div>
-  <p>The early years are cheap (this issuer is safer than swaps at the short end) and carry over half the weight. The late years are far more expensive and pull the average up to 62.3 bp, well above the 53.5 bp shortcut. This is the two ideas of sections 03 and 04 at work: the cost of each year is steeper than the quote suggests (section 03), and the loan keeps money outstanding well beyond its early years, into the dear tail (section 04). The shortcut reads one point of the curve, 53.5 bp at 12.5 years; the fair price averages every block.</p>
-  <p><b>The same four blocks for the fixed loan.</b> The weights are almost the same as for the floating loan: balance and discounting are identical and only survival differs, slightly, because of the wider credit spread implied by the YTM quotes (step 6). What changes is the cost: each block's cost is its average forward plus its credit cost.</p>
+  <p>The early years are cheap (this issuer is safer than swaps at the short end) and carry over half the weight. The late years are far more expensive and pull the average up to 60.6 bp, well above the 53.5 bp shortcut. This is the two ideas of sections 03 and 04 at work: the cost of each year is steeper than the quote suggests (section 03), and the loan keeps money outstanding well beyond its early years, into the dear tail (section 04). The shortcut reads one point of the curve, 53.5 bp at 12.5 years; the fair price averages every block.</p>
+  <p><b>The same four blocks for the fixed loan.</b> The weights are the same as for the floating loan, since balance, discounting and survival are all shared, and so are the credit costs. What changes is the cost: each block's cost is its average forward plus its credit cost.</p>
   <div class="tbl"><table>
     <thead><tr><th>Years</th><th>Share of weight</th><th>Forward</th><th>Credit cost</th><th>Cost of those years</th></tr></thead>
     <tbody>
-      <tr><td>0–6</td><td>52.8%</td><td>3.429%</td><td>0.153%</td><td>3.581%</td></tr>
-      <tr><td>6–12</td><td>30.6%</td><td>3.505%</td><td>1.105%</td><td>4.611%</td></tr>
-      <tr><td>12–18</td><td>13.2%</td><td>3.486%</td><td>1.652%</td><td>5.139%</td></tr>
-      <tr><td>18–24</td><td>3.4%</td><td>3.078%</td><td>1.487%</td><td>4.565%</td></tr>
-      <tr class="tot"><td>Total</td><td>100%</td><td>3.448%</td><td>0.688%</td><td>4.1355% = row 13</td></tr>
+      <tr><td>0–6</td><td>52.6%</td><td>3.455%</td><td>0.123%</td><td>3.578%</td></tr>
+      <tr><td>6–12</td><td>30.6%</td><td>3.623%</td><td>0.979%</td><td>4.602%</td></tr>
+      <tr><td>12–18</td><td>13.3%</td><td>3.675%</td><td>1.445%</td><td>5.120%</td></tr>
+      <tr><td>18–24</td><td>3.4%</td><td>3.117%</td><td>1.436%</td><td>4.552%</td></tr>
+      <tr class="tot"><td>Total</td><td>100%</td><td>3.524%</td><td>0.606%</td><td>4.1305% = row 13</td></tr>
     </tbody></table></div>
-  <p>Fair rate: 52.8% × 3.581% + 30.6% × 4.611% + 13.2% × 5.139% + 3.4% × 4.565% = 4.1355% (shares rounded). The pattern matches the floating loan: cheap early years carry over half the weight and the dear tail pulls the average up. The last block is cheaper than the third because the swap curve falls beyond 15 years (3.51% → 3.29% at 30Y), so the forward drops to 3.08% there.</p>
+  <p>Fair rate: 52.6% × 3.578% + 30.6% × 4.602% + 13.3% × 5.120% + 3.4% × 4.552% = 4.1305% (shares rounded). The pattern matches the floating loan: cheap early years carry over half the weight and the dear tail pulls the average up. The last block is cheaper than the third because the swap curve falls beyond 15 years (3.61% → 3.45% at 30Y), so the forward drops to 3.12% there.</p>
 
   <p>The blocks are a summary. The chart shows every half-year on its own.</p>
   <figure>
@@ -875,69 +877,92 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <figcaption id="cap-cost"></figcaption>
   </figure>
 
-  <h3>Comparing the fair price with the shortcut</h3>
-  <p>With the fair price in hand, the comparison is the wedge of section 01. For the floating loan, 62.32bp fair against 53.50bp charged gives <b class="num">+8.82 bp</b>. For the fixed loan, 4.1355% fair against 4.0554% charged gives <b class="num">+8.02 bp</b>. The headline rows of the Results tab, including these, are tabulated at the start of section 08. One detail of the fixed comparison needs explaining: the charged rate, 4.0554%, is not the 4.0965% read from the curve.</p>
   <h3>Why the fixed shortcut is restated on a half-yearly basis</h3>
-  <p>EUR bonds pay their coupon once a year; the loan pays twice a year. A half-yearly payment arrives six months earlier and can be reinvested, so a slightly lower half-yearly rate gives exactly the same yield.</p>
+  <p>The fixed loan's fair rate, 4.1305%, is compared with a shortcut of 4.0554%, not with the 4.0965% read from the YTM curve at 12.5 years. EUR bonds pay their coupon once a year; the loan pays twice a year. A half-yearly payment arrives six months earlier and can be reinvested, so a slightly lower half-yearly rate gives exactly the same yield.</p>
+  <p><b>Where the model does it.</b> In one place only: the shortcut. The formula is 2 × ((1 + Y/m)<sup>m/2</sup> − 1), where Y is the YTM read at the WAL and m the bonds' coupon frequency (Inputs row 17; m = 1 here, so it is 2 × ((1 + Y)<sup>½</sup> − 1)). Results row 11 holds the 4.0965% read from the curve, and row 12 the 4.0554% actually charged; in the workbook the conversion sits in Calc_Fixed E7 (section 10, "Fair price and saving", entry <i>charged</i>). The calibration needs no conversion: it values each bond on its own annual coupon schedule (section 06).</p>
   <figure>
     <div class="ft">Annual to semi-annual converter</div>
     <div class="ctrls"><label for="cv-in">Annual YTM (%) <input type="number" id="cv-in" value="4.0965" step="0.0005" min="0" max="20" style="width:110px"></label></div>
     <div class="readout" id="ro-conv"></div>
     <figcaption id="cap-conv"></figcaption>
   </figure>
-  <div class="note"><b>If the term sheet copies the number literally</b><p>Setting a 4.0965% coupon <em>paid half-yearly</em> gives the lender a higher effective yield than the bond. Model it by entering X = +4.11 bp in the fixed-loan row of the Inputs tab. The fixed saving then falls from 8.02 to 3.90 bp.</p></div>
-  <div class="take"><b>Takeaway</b><p>Each half-year has a cost, and a weight that says how much it counts. The fair price is their weighted average, and the shortcut is one point on the curve. The wedge is the gap between them.</p></div>
+  <p><b>Why it matters in practice.</b> The restatement is easy to skip. Suppose a term sheet takes the bond's 4.0965% and pays it as a half-yearly coupon, 2.048% every six months. It then charges 4.0965% half-yearly where 4.0554% would match the bond: 4.11bp a year too much. That takes more than half the fixed saving, from 7.51 to 3.40bp (Results tab, or enter X = +4.11bp in the fixed-loan row of the Inputs tab).</p>
+  <h3>Two parts of the saving</h3>
+  <p>The saving compares the fair price with what the shortcut charges, and the two differ for two separate reasons. The <b>WAL timing effect</b> is the wedge this page is about: the loan's fair price against the fair price of a bullet with the same WAL, both priced on the same default intensities. The <b>quote-convention effect</b> is that bullet's fair price against the shortcut. For the floating loan it is not zero, because the shortcut charges a YAS Z-spread, a discount-rate spread, as if it were a margin (section 02): at 12.5 years that charges about 1bp more than the par floating spread. For the fixed loan it is small, because the restated YTM is almost, but not quite, the fair half-yearly rate of a bullet that may default.</p>
+  <div class="tbl"><table class="cmp">
+    <thead><tr><th></th><th>Floating loan</th><th>Fixed loan</th><th>Results row</th></tr></thead>
+    <tbody>
+      <tr><td>WAL timing effect</td><td>+8.15 bp</td><td>+7.71 bp</td><td>56</td></tr>
+      <tr><td>Quote-convention effect</td><td>−1.02 bp</td><td>−0.20 bp</td><td>57</td></tr>
+      <tr class="hl"><td>Net saving</td><td>+7.12 bp</td><td>+7.51 bp</td><td>15</td></tr>
+    </tbody></table></div>
+  <p>Both parts are real money for the borrower, and the net is what it actually saves. The split only shows where the saving comes from: the timing effect is the loan's profile at work, while the convention effect would arise even for a bullet priced off the same quote.</p>
+  <div class="warn"><b>One issuer, one survival curve, and what happens when the inputs disagree</b>
+    <p>Each loan reads its own quote: the floating loan the YAS Z-spread, through the bridge, and the fixed loan the YTM. Taken from one Bloomberg snapshot, both describe the same bonds, so they give the same default intensities, the same survival (0.7454 at year 20 on both loans) and therefore the same weights in step 6.</p>
+    <p><b>Why keep two quotes rather than one.</b> Robustness. The YAS Z-spread is measured against the same swap curve the model uses, so an error in that curve moves the bridge coupon with it and largely cancels: with a curve 30bp off, the floating saving moves from 7.12 to 6.89bp. Had the floating loan taken its credit from the YTM instead, the same error would have swung it to −22.15bp. The fixed loan is robust on its YTM because its fair rate and its shortcut contain the same all-in yield (section 08).</p>
+    <p><b>When the inputs disagree.</b> The model still runs and each loan stays consistent with its own quote, but the two survival curves separate, and the workbook's consistency check (Results rows 54–55) measures the disagreement maturity by maturity:</p>
+    <div class="tbl"><table class="cmp">
+      <thead><tr><th>Inputs</th><th>Survival at 20y, floating / fixed</th><th>Saving, floating / fixed</th><th>Check: implied − quoted YTM</th></tr></thead>
+      <tbody>
+        <tr><td>Consistent (this case)</td><td>0.7454 / 0.7454</td><td>7.12 / 7.51 bp</td><td>0.0 bp everywhere</td></tr>
+        <tr><td>Swap curve taken a few days later</td><td>0.7466 / 0.7191</td><td>7.13 / 7.55 bp</td><td>+4.8 bp at 1y, −9.8 bp at 20y, up to −11.4 bp</td></tr>
+        <tr><td>10-year YTM typed 10bp too high</td><td>0.7454 / 0.7462</td><td>7.12 / 7.90 bp</td><td>−10.0 bp at 10y only</td></tr>
+      </tbody></table></div>
+    <p>A swap curve from another moment moves only the fixed loan's survival, and barely moves either saving. An error in one quote moves only that loan. A single-point typo is not harmless: it lifts the fixed saving by 0.4bp, which is why the workbook flags any gap above 1bp. As a rule of thumb, a gap of g bp shifts λ by about g ÷ (1 − R) on the loan whose quote is higher. The second row is not hypothetical: an earlier version of this page used a swap curve collected a few days after the bond quotes, and the check would have flagged it.</p></div>
+  <div class="take"><b>Takeaway</b><p>The fair price weights each half-year's cost by how much is lent, how soon, and how likely the borrower is to still be paying. The early, cheap years carry most of that weight, but the costs climb so steeply that the tail still pulls the average up: 60.62bp against the 53.50bp shortcut for floating (+7.12bp), 4.1305% against 4.0554% for fixed (+7.51bp). The shortcut reads one quote at the WAL, which is the average cost of a 12.5-year bullet, not of this loan: that timing gap is worth about 8bp a year, and the floating shortcut gives back about 1bp of it by charging a YAS Z-spread as if it were a margin.</p></div>
 </section>
 
 <!-- ================================================================ 08 -->
 <section id="results" class="lvl">
   <div class="eyebrow">08 · What the borrower saves</div>
-  <h2>Results for the EUR 5bn case</h2>
+  <h2>Results for the EUR 1bn case</h2>
   <div class="tbl"><table>
-    <thead><tr><th>Metric</th><th>Floating vs Z-spread</th><th>Fixed vs YTM</th><th>Results row</th></tr></thead>
+    <thead><tr><th>Metric</th><th>Floating vs YAS Z-spread</th><th>Fixed vs YAS YTM</th><th>Results row</th></tr></thead>
     <tbody>
-      <tr><td>Risky annuity, years (the sum of the weights, section 07)</td><td>9.002</td><td>8.943</td><td>9</td></tr>
+      <tr><td>Risky annuity, years (the sum of the weights, section 07)</td><td>8.973</td><td>8.973</td><td>9</td></tr>
       <tr><td>Curve at the WAL (the shortcut, section 01)</td><td>53.5 bp</td><td>4.0965%</td><td>11</td></tr>
       <tr><td>Charged: shortcut + X, on the loan's own basis</td><td>0.5350%</td><td>4.0554%</td><td>12</td></tr>
-      <tr><td>Fair price (section 07)</td><td>0.6232%</td><td>4.1355%</td><td>13</td></tr>
-      <tr class="hl"><td>Net saving, bp per year (the wedge: fair minus charged)</td><td class="g">+8.82</td><td class="g">+8.02</td><td>15</td></tr>
-      <tr><td>As % of the bond-equivalent spread / rate</td><td>14.2%</td><td>1.9%</td><td>16</td></tr>
-      <tr><td>Bond-equivalent all-in rate</td><td>4.0708%</td><td>4.1355%</td><td>17</td></tr>
-      <tr><td>Loan all-in rate</td><td>3.9826%</td><td>4.0554%</td><td>18</td></tr>
-      <tr><td>As % of the bond all-in rate</td><td>2.17%</td><td>1.94%</td><td>19</td></tr>
-      <tr><td>Total saving, nominal (undiscounted)</td><td>€55.1m</td><td>€50.1m</td><td>20</td></tr>
-      <tr class="hl"><td>Total saving, present value</td><td class="g">€39.7m</td><td class="g">€35.8m</td><td>21</td></tr>
-      <tr><td>Average saving per year of life (nominal)</td><td>€2.30m</td><td>€2.09m</td><td>22</td></tr>
-      <tr><td>Loss phase, start → WAL (PV)</td><td class="l">−€26.3m</td><td class="l">−€27.4m</td><td>24</td></tr>
-      <tr><td>Benefit phase, WAL → maturity (PV)</td><td class="g">€66.0m</td><td class="g">€63.2m</td><td>25</td></tr>
-      <tr><td>Loss phase, bp per year</td><td class="l">−5.84</td><td class="l">−6.13</td><td>27</td></tr>
-      <tr><td>Benefit phase, bp per year</td><td class="g">+14.66</td><td class="g">+14.14</td><td>28</td></tr>
+      <tr><td>Fair price (section 07)</td><td>0.6062%</td><td>4.1305%</td><td>13</td></tr>
+      <tr class="hl"><td>Net saving, bp per year (the wedge: fair minus charged)</td><td class="g">+7.12</td><td class="g">+7.51</td><td>15</td></tr>
+      <tr><td>of which WAL timing effect, bp (section 07)</td><td>+8.15</td><td>+7.71</td><td>56</td></tr>
+      <tr><td>of which quote-convention effect, bp (section 07)</td><td>−1.02</td><td>−0.20</td><td>57</td></tr>
+      <tr><td>As % of the bond-equivalent spread / rate</td><td>11.8%</td><td>1.8%</td><td>16</td></tr>
+      <tr><td>Bond-equivalent all-in rate</td><td>4.1305%</td><td>4.1305%</td><td>17</td></tr>
+      <tr><td>Loan all-in rate</td><td>4.0592%</td><td>4.0554%</td><td>18</td></tr>
+      <tr><td>As % of the bond all-in rate</td><td>1.72%</td><td>1.82%</td><td>19</td></tr>
+      <tr><td>Total saving, nominal (undiscounted)</td><td>€8.9m</td><td>€9.4m</td><td>20</td></tr>
+      <tr class="hl"><td>Total saving, present value</td><td class="g">€6.4m</td><td class="g">€6.7m</td><td>21</td></tr>
+      <tr><td>Average saving per year of life (nominal)</td><td>€0.37m</td><td>€0.39m</td><td>22</td></tr>
+      <tr><td>Loss phase, start → WAL (PV)</td><td class="l">−€6.0m</td><td class="l">−€5.8m</td><td>24</td></tr>
+      <tr><td>Benefit phase, WAL → maturity (PV)</td><td class="g">€12.4m</td><td class="g">€12.6m</td><td>25</td></tr>
+      <tr><td>Loss phase, bp per year</td><td class="l">−6.70</td><td class="l">−6.50</td><td>27</td></tr>
+      <tr><td>Benefit phase, bp per year</td><td class="g">+13.82</td><td class="g">+14.01</td><td>28</td></tr>
       <tr><td>Principal-years before / after WAL</td><td>9.50 / 3.00</td><td>9.50 / 3.00</td><td>29–30</td></tr>
-      <tr><td>Average fair cost before / after WAL</td><td>46.6 bp / 149.7 bp</td><td>3.983% / 5.000%</td><td>31–32</td></tr>
+      <tr><td>Average fair cost before / after WAL</td><td>45.6 bp / 145.0 bp</td><td>3.979% / 4.982%</td><td>31–32</td></tr>
     </tbody></table></div>
-  <p>Notice the asymmetry. Only 3.00 of the 12.5 principal-years sit after the WAL date, yet they generate a benefit more than twice the size of the loss. The late years cost about 149.7 bp against 53.5bp charged; the early years about 46.6 bp.</p>
+  <p>Notice the asymmetry. Only 3.00 of the 12.5 principal-years sit after the WAL date, yet they generate a benefit more than twice the size of the loss. The late years cost about 145.0 bp against 53.5bp charged; the early years about 45.6 bp.</p>
 
   <h3>Nominal or present value?</h3>
   <div class="duo">
-    <div><h4>Nominal €55.1m</h4><p>bp saving × amount × WAL: the plain sum of the extra interest the borrower avoids over 24 years. Easy to explain; mixes euros of different years.</p></div>
-    <div><h4>Present value €39.7m</h4><p>bp saving × amount × risky annuity: the value transferred to the borrower today, allowing for time value and default risk. The economically correct number for comparing alternatives.</p></div>
+    <div><h4>Nominal €8.9m</h4><p>bp saving × amount × WAL: the plain sum of the extra interest the borrower avoids over 24 years. Easy to explain; mixes euros of different years.</p></div>
+    <div><h4>Present value €6.4m</h4><p>bp saving × amount × risky annuity: the value transferred to the borrower today, allowing for time value and default risk. The economically correct number for comparing alternatives.</p></div>
   </div>
 
   <h3>The fixed saving, split into rate and credit</h3>
   <p>Reading a fixed rate at the WAL also misprices the risk-free curve itself. The workbook separates the two:</p>
-  <div class="fx"><div class="eq">+8.02 bp = <span class="t c3">risk-free effect −1.23 bp</span> + <span class="t c2">credit effect +9.25 bp</span></div>
-    <dl><dt><span class="t c3">risk-free</span></dt><dd>Profile-weighted risk-free forward (3.4478%) minus the risk-free par yield at 12.5 years (3.4601%). Negative here because the swap curve peaks at 15 years and falls to 3.29% at 30, so the late years this loan reaches have lower risk-free forwards than the 12.5-year par rate implies.</dd>
+  <div class="fx"><div class="eq">+7.51 bp = <span class="t c3">risk-free effect −0.85 bp</span> + <span class="t c2">credit effect +8.36 bp</span></div>
+    <dl><dt><span class="t c3">risk-free</span></dt><dd>Profile-weighted risk-free forward (3.5242%) minus the risk-free par yield at 12.5 years (3.5327%). Negative here because the swap curve peaks at 15 years and falls to 3.45% at 30, so the late years this loan reaches have lower risk-free forwards than the 12.5-year par rate implies.</dd>
     <dt><span class="t c2">credit</span></dt><dd>The pure hazard saving inside the fixed rate: comparable in size to the floating saving.</dd></dl></div>
 
   <h3>How robust is the number?</h3>
   <div class="tbl"><table>
     <thead><tr><th>Change</th><th>Floating saving</th><th>Fixed saving</th></tr></thead>
     <tbody>
-      <tr class="hl"><td>Base case (R 40%)</td><td>8.82 bp</td><td>8.02 bp</td></tr>
-      <tr><td>Swap curve 30bp higher everywhere, 6M fixing included (details below)</td><td>8.70 bp</td><td>8.06 bp</td></tr>
-      <tr><td>Recovery 20%</td><td>8.99 bp</td><td>8.19 bp</td></tr>
-      <tr><td>Recovery 60%</td><td>8.49 bp</td><td>7.68 bp</td></tr>
-      <tr><td>Term sheet copies the annual YTM as a half-yearly coupon</td><td>n/a</td><td>3.90 bp</td></tr>
+      <tr class="hl"><td>Base case (R 40%)</td><td>7.12 bp</td><td>7.51 bp</td></tr>
+      <tr><td>Swap curve 30bp higher everywhere, 6M fixing included (details below)</td><td>6.89 bp</td><td>7.75 bp</td></tr>
+      <tr><td>Recovery 20%</td><td>7.53 bp</td><td>7.91 bp</td></tr>
+      <tr><td>Recovery 60%</td><td>6.36 bp</td><td>6.73 bp</td></tr>
+      <tr><td>Term sheet copies the annual YTM as a half-yearly coupon</td><td>n/a</td><td>3.40 bp</td></tr>
     </tbody></table></div>
   <p>The answer barely depends on the supporting inputs. It depends on the <b>shape of the bond curves</b>: their steepness over the loan's life, and where they bend. Spend data-gathering effort there.</p>
   <h3>Where a swap-curve error goes</h3>
@@ -946,7 +971,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <thead><tr><th>Job</th><th>Floating loan</th><th>Fixed loan</th></tr></thead>
     <tbody>
       <tr><td>1 · Calibrating λ<br>(step 3)</td>
-        <td>Discounts the bond's cash flows with DF, and also supplies its coupon, because a floater pays <i>f + Z</i>. Coupon and discounting rise and fall together, so a bond with no credit risk is worth par on any curve. The curve cancels out of the price, and the Z-spread, already a spread over the same curve, is what pins λ down.</td>
+        <td>Turns the YAS Z-spread into the bond's coupon (the bridge, section 02) and discounts the bond's cash flows with DF. The Z-spread is measured over the same curve, so the bridge coupon rises and falls with it: a bond with no credit risk is worth par on any curve. The curve largely cancels out of the price, and the Z-spread is what pins λ down.</td>
         <td>Discounts the bond's cash flows with DF, but the coupon is the fixed YTM, so nothing offsets it. Whatever part of the yield the curve cannot explain is read as credit: roughly λ ≈ (YTM − swap) ÷ (1 − R). The curve is the ruler that splits one all-in yield into a risk-free part and a credit part.</td></tr>
       <tr><td>2 · Costing each half-year<br>(step 4)</td>
         <td>The forward f enters the loss on default, 1 + f·a − R: the interest due as well as the principal. The half-year's cost is then the credit cost alone, <i>c</i>, because a floating loan passes the base rate straight through to the borrower.</td>
@@ -955,7 +980,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
         <td colspan="2">Both loans. DF is one of four factors in a half-year's <b>weight</b>, the number that decides how much that half-year counts when the 48 half-year costs are averaged into the fair price: balance outstanding × 0.5 × DF × survival (section 07 works an example). Heavier discounting means less weight on distant half-years.</td></tr>
     </tbody></table></div>
 
-  <p>The consequence for robustness: a swap curve that is 30bp too high, with the 6M fixing moved along with it, changes the floating saving from 8.82 to 8.70bp and the fixed saving from 8.02 to 8.06bp. Large effects appear inside the calculation, especially for the fixed loan, but they cancel. Two consistency conditions do matter: the Z-spreads must be measured against the curve you enter, and the 6M fixing must come from the same date and sit on that curve. The fold shows the effect job by job.</p>
+  <p>The consequence for robustness: a swap curve that is 30bp too high, with the 6M fixing moved along with it, changes the floating saving from 7.12 to 6.89bp and the fixed saving from 7.51 to 7.75bp. Large effects appear inside the calculation, especially for the fixed loan, but they cancel. Two consistency conditions do matter: the Z-spreads must be measured against the curve you enter, in the same snapshot (Results row 55 checks it), and the 6M fixing must come from the same snapshot and sit on that curve. The fold shows the effect job by job.</p>
   <details>
     <summary>Stress test: a swap curve 30bp too high, traced through each job</summary>
     <div>
@@ -963,31 +988,31 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="tbl"><table>
     <thead><tr><th>Net saving, bp per year</th><th>Floating</th><th>Fixed</th></tr></thead>
     <tbody>
-      <tr class="hl"><td>Correct curve</td><td>8.822</td><td>8.015</td></tr>
-      <tr><td>1 · Calibrating λ</td><td>+0.55</td><td>−28.66</td></tr>
-      <tr><td>2 · Costing: loss on default</td><td>+0.15</td><td>+0.10</td></tr>
-      <tr><td>2 · Costing: forward added to the cost</td><td>not used</td><td>+29.44</td></tr>
-      <tr><td>3 · Weighting</td><td>−0.82</td><td>−0.83</td></tr>
-      <tr class="tot"><td>Curve 30bp too high</td><td>8.697</td><td>8.061</td></tr>
+      <tr class="hl"><td>Correct curve</td><td>7.124</td><td>7.508</td></tr>
+      <tr><td>1 · Calibrating λ</td><td>+0.41</td><td>−28.49</td></tr>
+      <tr><td>2 · Costing: loss on default</td><td>+0.15</td><td>+0.08</td></tr>
+      <tr><td>2 · Costing: forward added to the cost</td><td>not used</td><td>+29.49</td></tr>
+      <tr><td>3 · Weighting</td><td>−0.79</td><td>−0.83</td></tr>
+      <tr class="tot"><td>Curve 30bp too high</td><td>6.891</td><td>7.747</td></tr>
     </tbody></table></div>
-  <p class="muted">Each step is measured with the earlier ones already switched on; the steps are rounded and add to the total change, −0.125 and +0.045. To reproduce it in the workbook, add 30bp to every swap rate and to the 6M fixing and leave the bond quotes alone.</p>
+  <p class="muted">Each step is measured with the earlier ones already switched on; the steps are rounded and add to the total change, −0.233 and +0.240. To reproduce it in the workbook, add 30bp to every swap rate and to the 6M fixing and leave the bond quotes alone.</p>
   <div class="duo">
     <div><h4>Floating: three small effects that nearly cancel</h4>
-      <p><b>Job 1 (+0.55).</b> Coupon and discounting move together, so the curve cancels from the bond's price and λ barely moves: about 1bp higher (year 10: 159.6 to 160.7bp), which lifts every half-year's cost a little.</p>
+      <p><b>Job 1 (+0.41).</b> The bridge coupon and the discounting move together, so the curve largely cancels from the bond's price and λ barely moves: about 1bp higher (year 10: 156.0 to 156.7bp), which lifts every half-year's cost a little.</p>
       <p><b>Job 2 (+0.15).</b> A default now loses a little more interest, so each half-year costs a little more.</p>
-      <p><b>Job 3 (−0.82).</b> Heavier discounting cuts the weight of distant half-years. Those are the dear ones, about 150bp in the last six years against 13bp in the first six, so the weighted average falls.</p>
-      <p>Net: 8.82 to 8.70bp. The requirement that does remain is that the Z-spreads must be measured against the same swap curve you enter.</p></div>
+      <p><b>Job 3 (−0.79).</b> Heavier discounting cuts the weight of distant half-years. Those are the dear ones, about 144bp in the last six years against 12bp in the first six, so the weighted average falls.</p>
+      <p>Net: 7.12 to 6.89bp. The requirement that does remain is that the Z-spreads must be measured against the same swap curve you enter.</p></div>
     <div><h4>Fixed: two large effects that cancel</h4>
-      <p><b>Job 1 (−28.66).</b> The YTM stays put, so the 30bp the curve now explains comes out of the credit part. At 10 years the credit margin falls from 47.2bp to 17.2bp, and every λ falls by roughly 50bp: with margin ≈ λ(1 − R), 30bp of margin is 50bp of λ at 40% recovery.</p>
-      <p><b>Job 2 (+29.44, +0.10).</b> The forward added to each half-year's cost has risen by about 29bp on average over the loan's life, a little less at the far end. That puts back almost exactly what job 1 took out.</p>
+      <p><b>Job 1 (−28.49).</b> The YTM stays put, so the 30bp the curve now explains comes out of the credit part. At 10 years the credit margin falls from 41.9bp to 11.9bp, and every λ falls by roughly 50bp: with margin ≈ λ(1 − R), 30bp of margin is 50bp of λ at 40% recovery.</p>
+      <p><b>Job 2 (+29.49, +0.08).</b> The forward added to each half-year's cost has risen by about 29bp on average over the loan's life, a little less at the far end. That puts back almost exactly what job 1 took out.</p>
       <p><b>Job 3 (−0.83).</b> The same weighting effect as for the floating loan.</p>
-      <p>Net: 8.02 to 8.06bp. A fixed rate is one all-in number split into a risk-free part and a credit part; a wrong curve moves the dividing line, not the total.</p></div>
+      <p>Net: 7.51 to 7.75bp. A fixed rate is one all-in number split into a risk-free part and a credit part; a wrong curve moves the dividing line, not the total.</p></div>
   </div>
-  <p><b>Why the fixing must sit on the curve.</b> Shift the swap rates but leave the 6M fixing behind, and the first half-year's forward is not raised with the rest. That half-year carries 2.8% of the weight, so the fixed saving comes out at 8.89bp instead of 8.06, an error of 0.8bp (30bp × 2.8%) that is purely an inconsistency. And the levels of λ are a different matter from the saving: on the fixed calibration they move by about 50bp, so read them as pricing inputs and never as default estimates.</p>
+  <p><b>Why the fixing must sit on the curve.</b> Shift the swap rates but leave the 6M fixing behind, and the first half-year's forward is not raised with the rest. That half-year carries 2.7% of the weight, so the fixed saving comes out at 8.54bp instead of 7.75, an error of 0.8bp (30bp × 2.7%) that is purely an inconsistency. And the levels of λ are a different matter from the saving: on the fixed calibration they move by about 50bp, so read them as pricing inputs and never as default estimates.</p>
     </div>
   </details>
 
-  <div class="take"><b>Takeaway</b><p>For this EUR 5bn, 24-year amortiser, WAL pricing undercharges by about 9bp a year whether the loan is floating or fixed. That is roughly EUR 36–40m of value in today's money, or 14% of the fair floating credit spread.</p></div>
+  <div class="take"><b>Takeaway</b><p>For this EUR 1bn, 24-year amortiser, WAL pricing undercharges by about 7 to 7.5bp a year whether the loan is floating or fixed. That is roughly EUR 6.4–6.7m of value in today's money, or 12% of the fair floating credit spread. The result is robust to the supporting inputs (swap curve, recovery) and driven by the shape of the bond curves.</p></div>
 </section>
 
 <!-- ================================================================ 09 -->
@@ -1012,7 +1037,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <label for="lb-y0">Repayment years <input type="range" id="lb-y0" min="0.5" max="29" step="0.5" value="23"><output id="lb-y0-o"></output></label>
       <label for="lb-X">Margin vs curve X <input type="range" id="lb-X" min="-30" max="30" step="0.5" value="0"><output id="lb-X-o"></output></label>
       <label for="lb-R">Recovery <input type="range" id="lb-R" min="0" max="0.8" step="0.05" value="0.4"><output id="lb-R-o"></output></label>
-      <label for="lb-N">Amount (EUR bn) <input type="number" id="lb-N" value="5" min="0.1" max="100" step="0.1" style="width:90px"></label>
+      <label for="lb-N">Amount (EUR bn) <input type="number" id="lb-N" value="1" min="0.1" max="100" step="0.1" style="width:90px"></label>
     </div>
     <div class="readout" id="ro-lab"></div>
     <div class="chartbox" id="ch-lab"></div>
@@ -1022,10 +1047,10 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   </figure>
   <div class="quiz">
     <h3>Check yourself</h3>
-    <details><summary>Set the curve to "Flat". What happens to the floating saving, and why?</summary><div><p>It drops to about zero. When every year costs the same, timing stops mattering, so the WAL shortcut is exact. The tiny residue (0.002bp) comes from the model holding λ constant within each year while the first half-year uses the 6M fixing.</p></div></details>
-    <details><summary>Set drawdown to 0 and repayment to 0.5 years. Why is the saving almost zero?</summary><div><p>That loan is a six-month bullet: one repayment date, no dispersion of repayments, so its exposure centre is WAL/2, exactly like a bond. The saving is 0.03bp, not zero, for a technical reason: the shortcut reads the 1-year quote (held flat below 1 year), while the model prices the first six months using the 6M fixing, which differs slightly from the second half of year 1.</p></div></details>
+    <details><summary>Set the curve to "Flat". What happens to the floating saving, and why?</summary><div><p>It drops to −1.27bp, and almost all of that is not timing. When every year costs the same, timing stops mattering: the WAL timing effect is −0.08bp, not quite zero only because a flat YAS curve means par floating spreads that drift slightly down with maturity (section 04). The remaining −1.20bp is the quote-convention effect: the shortcut charges the flat 53.5bp YAS Z-spread as if it were a margin, about 1.2bp more than the par floating spread at 12.5 years (section 07).</p></div></details>
+    <details><summary>Set drawdown to 0 and repayment to 0.5 years. Why is the saving almost zero?</summary><div><p>That loan is a six-month bullet: one repayment date, no dispersion of repayments, so its exposure centre is WAL/2, exactly like a bond. The WAL timing effect is exactly zero. The saving shown, +0.40bp, is the quote-convention effect: the shortcut reads the 1-year YAS Z-spread (held flat below 1 year), which is not the par floating spread of a six-month bullet; the model also prices the first six months off the 6M fixing.</p></div></details>
     <details><summary>Try "Inverted". Who benefits now?</summary><div><p>The lender. Late years are now cheaper than the WAL point, so the shortcut overcharges and the saving turns negative. The workbook reports it as negative and never floors it at zero.</p></div></details>
-    <details><summary>Keep 23 years of repayment and lengthen the drawdown period to 3 and then 5 years. What happens?</summary><div><p>The floating saving roughly doubles and then triples: 8.82bp with 1 year of drawdown, 17.32bp with 3 years, 25.23bp with 5 years (PV €39.7m, €79.3m, €116.5m on EUR 5bn). The shortcut point moves only from 12.5 to 14.5 years, but the loan's tail moves into years 24–28, where this curve implies its highest yearly costs (λ of about 290–325bp in years 23–25). A small move in WAL hides a large move in where the risk sits.</p></div></details>
+    <details><summary>Keep 23 years of repayment and lengthen the drawdown period to 3 and then 5 years. What happens?</summary><div><p>The floating saving roughly doubles and then triples: 7.12bp with 1 year of drawdown, 15.11bp with 3 years, 22.53bp with 5 years (PV €6.4m, €13.8m, €20.7m on EUR 1bn). The shortcut point moves only from 12.5 to 14.5 years, but the loan's tail moves into years 24–28, where this curve implies its highest yearly costs (λ of about 260–290bp in years 23–25). A small move in WAL hides a large move in where the risk sits.</p></div></details>
   </div>
 </section>
 
@@ -1051,35 +1076,53 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <details>
     <summary>Worked through on the case curve</summary>
     <div>
-  <p>The curve's 1-year and 2-year par rates are 3.270% and 3.420%, and the 6M fixing is 3.019%.</p>
+  <p>The curve's 1-year and 2-year par rates are 3.222% and 3.3919%, and the 6M fixing is 3.019%.</p>
   <div class="tbl"><table class="cmp">
     <thead><tr><th>Quantity</th><th>Working</th><th>Result</th></tr></thead>
     <tbody>
-      <tr><td>DF(1)</td><td>1 ÷ (1 + 0.03270)</td><td>0.968335</td></tr>
-      <tr><td>DF(2)</td><td>(1 − 0.03420 × 0.968335) ÷ (1 + 0.03420)</td><td>0.934909</td></tr>
-      <tr><td>DF(1.5)</td><td>√(0.968335 × 0.934909)</td><td>0.951475</td></tr>
+      <tr><td>DF(1)</td><td>1 ÷ (1 + 0.03222)</td><td>0.968786</td></tr>
+      <tr><td>DF(2)</td><td>(1 − 0.033919 × 0.968786) ÷ (1 + 0.033919)</td><td>0.935412</td></tr>
+      <tr><td>DF(1.5)</td><td>√(0.968786 × 0.935412)</td><td>0.951952</td></tr>
       <tr><td>DF(½), with the fixing</td><td>1 ÷ (1 + 0.03019 × 182.5/360)</td><td>0.984926</td></tr>
-      <tr><td>DF(½), without it</td><td>√(1 × 0.968335)</td><td>0.984040</td></tr>
+      <tr><td>DF(½), without it</td><td>√(1 × 0.968786)</td><td>0.984269</td></tr>
       <tr class="hl"><td>Forward, 1st half-year</td><td>(1 ÷ 0.984926 − 1) × 2</td><td>3.0609% a year</td></tr>
-      <tr class="hl"><td>Forward, 2nd half-year</td><td>(0.984926 ÷ 0.968335 − 1) × 2</td><td>3.4266% a year</td></tr>
-      <tr><td>Forward, year 2 (both halves)</td><td>(0.968335 ÷ 0.951475 − 1) × 2</td><td>3.5440% a year</td></tr>
-      <tr><td>Forward, half-year ending year 20</td><td>(0.514075 ÷ 0.505913 − 1) × 2</td><td>3.2268% a year</td></tr>
+      <tr class="hl"><td>Forward, 2nd half-year</td><td>(0.984926 ÷ 0.968786 − 1) × 2</td><td>3.3321% a year</td></tr>
+      <tr><td>Forward, year 2 (both halves)</td><td>(0.968786 ÷ 0.951952 − 1) × 2</td><td>3.5366% a year</td></tr>
+      <tr><td>Forward, half-year ending year 20</td><td>(0.503588 ÷ 0.495226 − 1) × 2</td><td>3.3769% a year</td></tr>
     </tbody></table></div>
-  <p>Three things are worth noticing. Without the fixing, both halves of year 1 would share one forward, 3.2437%; the fixing replaces it with 3.0609% for the first half and lets the second half rise to 3.4266%, while DF(1) is unchanged. From year 2 on the two halves of each year share a forward, as the interpolation rule says. And the year-20 forward, 3.2268%, sits below the year-2 forward because the swap curve peaks at 3.51% at 15 years and then falls (section 08 uses this).</p>
+  <p>Three things are worth noticing. Without the fixing, both halves of year 1 would share one forward, 3.1965%; the fixing replaces it with 3.0609% for the first half and lets the second half rise to 3.3321%, while DF(1) is unchanged. From year 2 on the two halves of each year share a forward, as the interpolation rule says. And the year-20 forward, 3.3769%, sits below the year-2 forward because the swap curve peaks at 3.61% at 15 years and then falls (section 08 uses this).</p>
+    </div>
+  </details>
+
+  <h3>From YAS quotes to λ: the bridge</h3>
+  <p><b>Purpose.</b> Turn each YAS Z-spread into the one thing the bootstrap below can price: the coupon of the issuer's par bond at that maturity. The fixed loan needs no bridge, because its quote, the YTM, already is that coupon. Section 02 gives the idea in words; this block is the exact construction.</p>
+  <div class="fx"><div class="eq">z<sub>t</sub> = m·(DF(t)<sup>−1/(m·t)</sup> − 1)</div>
+    <div class="eq">DFz(t) = (1 + (z<sub>t</sub> + Z<sub>T</sub>)/m)<sup>−m·t</sup> = (DF(t)<sup>−1/(m·t)</sup> + Z<sub>T</sub>/m)<sup>−m·t</sup></div>
+    <div class="eq">price = Σ<sub>t</sub> (c<sub>T</sub>/m)·DFz(t) + DFz(T) = 1 &nbsp;⇒&nbsp; c<sub>T</sub> = m·(1 − DFz(T)) ÷ Σ<sub>t</sub> DFz(t)</div>
+    <dl><dt>m</dt><dd>The bonds' coupon frequency, Inputs row 17: 1 for annual coupons (this case), 2 for semi-annual. YAS compounds the Z-spread at the same frequency by default.</dd>
+    <dt>z<sub>t</sub></dt><dd>The swap zero rate to date t, compounded m times a year, read straight off the discount factors of the block above. Workbook: Curves column AA.</dd>
+    <dt>DFz(t)</dt><dd>The YAS discount factor: the swap zero rate plus the Z-spread Z<sub>T</sub> of the T-year bond. This is Bloomberg's own definition of the Z-spread, written as a discount factor.</dd>
+    <dt>t</dt><dd>The bond's coupon dates, 1/m, 2/m, …, T.</dd>
+    <dt>c<sub>T</sub></dt><dd>The price equation is linear in the coupon, so setting the price to 1 (a par bond) and solving gives c<sub>T</sub> in closed form, with no iteration. Workbook: Curves column AB, one SUMPRODUCT per maturity.</dd>
+    <dt>check</dt><dd>On one consistent snapshot c<sub>T</sub> equals the quoted YTM. Curves column AC holds the gap at every maturity quoted for both; Results rows 54–55 report the largest and flag it above 1bp.</dd></dl></div>
+  <details>
+    <summary>Worked through at 20 years</summary>
+    <div>
+  <p>The 20-year swap discount factor is 0.495226, so the 20-year swap zero rate is 0.495226<sup>−1/20</sup> − 1 = 3.5762%. Adding the 78bp Z-spread gives DFz(20) = (1.035762 + 0.0078)<sup>−20</sup> = 0.426224. Summing DFz over the 20 annual coupon dates gives 13.193318. So c<sub>20</sub> = (1 − 0.426224) ÷ 13.193318 = <b>4.3490%</b>, the quoted 20-year YTM to four decimals. The bootstrap below then prices a bond paying that coupon; on these quotes the floating and fixed calibrations are the same calculation.</p>
     </div>
   </details>
 
   <h3>Bootstrapping λ in closed form</h3>
   <p><b>Purpose.</b> Find the one number — λ<sub>b</sub>, the default intensity for year b — that makes the quoted bond maturing at b worth exactly its market price. Years 1…b−1 are already solved, so λ<sub>b</sub> is the only unknown. Within year b it is held constant (section 06), so both half-years share one survival factor: <b>u = e<sup>−λ<sub>b</sub>/2</sup></b>, the fraction surviving six months.</p>
-  <p><b>The equation.</b> Value the bond, set it equal to its price, and solve. Because the quotes are par levels, that price is 1 per unit of face — which is the left-hand side:</p>
+  <p><b>The equation.</b> Value the bond, set it equal to its price, and solve. The bond is the issuer's par bond paying the coupon c<sub>b</sub>: the YTM for the fixed loan, the bridge coupon for the floating one. Its price is 1 per unit of face — which is the left-hand side:</p>
   <div class="fx"><div class="eq">1 = <span class="t c1">K</span> + <span class="t c2">DF(b−½)·S<sub>p</sub>·[u·g<sub>1</sub> + R(1−u)]</span> + <span class="t c3">DF(b)·S<sub>p</sub>·[u²·g<sub>2</sub> + R(u − u²)]</span></div>
     <dl>
-      <dt>1</dt><dd>The bond's price. It is 1 because each quote is the level at which that maturity would trade at par; repricing to par is the condition being imposed.</dd>
-      <dt><span class="t c1">K</span></dt><dd>Everything the bond pays <em>before</em> year b, already valued because those λs are known: Σ DF[S·coupon + R·ΔS], where ΔS is the fall in survival across a period — the share of scenarios in which default happens and recovery is paid instead. Floating coupon f·a + q·a, fixed coupon q·a (q = Z-spread or semi-annual YTM).</dd>
-      <dt><span class="t c2">first bracket</span></dt><dd>The payment at b−½, discounted by DF(b−½). Two outcomes: survive that half-year, with probability u, and collect coupon g<sub>1</sub>; or default in it, with probability 1−u, and collect recovery R.</dd>
-      <dt><span class="t c3">second bracket</span></dt><dd>The payment at b, discounted by DF(b). Survive <em>both</em> halves, probability u², and collect g<sub>2</sub> — the final coupon plus the principal; or get through the first half and fail in the second, probability u − u², and collect R.</dd>
+      <dt>1</dt><dd>The bond's price. It is 1 because each maturity's quotes describe a par bond; repricing to par is the condition being imposed.</dd>
+      <dt><span class="t c1">K</span></dt><dd>Everything the bond pays <em>before</em> year b, already valued because those λs are known: Σ DF[S·coupon + R·ΔS], where ΔS is the fall in survival across a period — the share of scenarios in which default happens and recovery is paid instead. Coupons are c<sub>b</sub>/m, paid on the bond's own coupon dates (once a year here, at year ends), and recovery R on default in any half-year.</dd>
+      <dt><span class="t c2">first bracket</span></dt><dd>The payment at b−½, discounted by DF(b−½). Two outcomes: survive that half-year, with probability u, and collect g<sub>1</sub>; or default in it, with probability 1−u, and collect recovery R. g<sub>1</sub> = c<sub>b</sub>/2 for a semi-annual bond and 0 for an annual one, which pays nothing mid-year.</dd>
+      <dt><span class="t c3">second bracket</span></dt><dd>The payment at b, discounted by DF(b). Survive <em>both</em> halves, probability u², and collect g<sub>2</sub> = c<sub>b</sub>/m + 1 — the year-end coupon plus the principal; or get through the first half and fail in the second, probability u − u², and collect R.</dd>
       <dt>S<sub>p</sub></dt><dd>Survival to the start of year b. Both brackets sit behind it because none of it happens unless the borrower reaches year b at all.</dd>
-      <dt>DF(b−½), DF(b)</dt><dd>The ordinary discount factors from the block above, read at this year's two payment dates — the same quantity written DF<sub>i</sub> in the weights later on. For year 1 that means DF(0.5) = 0.984926 and DF(1) = 0.968335.</dd>
+      <dt>DF(b−½), DF(b)</dt><dd>The ordinary discount factors from the block above, read at this year's two payment dates — the same quantity written DF<sub>i</sub> in the weights later on. For year 1 that means DF(0.5) = 0.984926 and DF(1) = 0.968786.</dd>
     </dl>
     <p class="muted" style="margin-bottom:0">So the whole right-hand side reads: what the bond has already paid, plus what it pays in its final year under each of the three ways that year can go — survive both halves, fail in the first, fail in the second.</p></div>
   <p><b>Solving it.</b> u appears only as u and u², so multiplying out the brackets and collecting terms leaves an ordinary quadratic, a<sub>2</sub>u² + a<sub>1</sub>u + a<sub>0</sub> = 0:</p>
@@ -1089,7 +1132,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt>a<sub>1</sub></dt><dd>S<sub>p</sub>(DF(b−½)(g<sub>1</sub>−R) + DF(b)R) — the u terms, one from each bracket.</dd>
       <dt>a<sub>0</sub></dt><dd>K + DF(b−½)S<sub>p</sub>R − 1 — everything with no u in it, including the price moved across from the left.</dd>
       <dt>which root</dt><dd>The <b>+</b> root. a<sub>0</sub> is negative whenever the bond's earlier cash flows are worth less than par, so the two roots straddle zero and only the positive one can be a survival ratio.</dd>
-      <dt>λ<sub>b</sub> = −2 ln u</dt><dd>The definition of u read backwards. u = e<sup>−λ<sub>b</sub>/2</sup> is the half-year survival factor of section 06, so taking logs gives ln u = −λ<sub>b</sub>/2, and multiplying by −2 isolates λ<sub>b</sub>. The 2 appears because λ is quoted per year while u spans half a year. Solving in u rather than in λ directly is what keeps this closed form: survival enters the bond's price only as u and u², which is a quadratic, whereas the same equation written in λ would carry e<sup>−λ/2</sup> and e<sup>−λ</sup> and need iterating. The log at the end converts back. For year 10, u = 0.992050 gives λ = 159.6 bp, and u² = 0.984164 is that year's full-year survival, exp(−λ).</dd>
+      <dt>λ<sub>b</sub> = −2 ln u</dt><dd>The definition of u read backwards. u = e<sup>−λ<sub>b</sub>/2</sup> is the half-year survival factor of section 06, so taking logs gives ln u = −λ<sub>b</sub>/2, and multiplying by −2 isolates λ<sub>b</sub>. The 2 appears because λ is quoted per year while u spans half a year. Solving in u rather than in λ directly is what keeps this closed form: survival enters the bond's price only as u and u², which is a quadratic, whereas the same equation written in λ would carry e<sup>−λ/2</sup> and e<sup>−λ</sup> and need iterating. The log at the end converts back. For year 10, u = 0.992232 gives λ = 156.0 bp, and u² = 0.984525 is that year's full-year survival, exp(−λ).</dd>
       <dt>check</dt><dd>Every quoted bond reprices to its input; the workbook shows the maximum error (about 10<sup>−12</sup> bp). Beyond the last quote, the last λ is extended, not the last spread.</dd>
     </dl></div>
 
@@ -1097,24 +1140,24 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <summary>Worked through on the case curve</summary>
     <div>
   <p class="muted">The two highlighted rows are what the formula produces: the half-year survival ratio u, and the λ that follows from it.</p>
-  <p>Year 1 is the clean case to start with, because the chain has not begun: there are no earlier cash flows, so <b>K = 0</b>, and survival to the start of year 1 is certain, so <b>S<sub>p</sub> = 1</b>. The whole equation is then just the two brackets, with the 1-year quote of −19bp:</p>
-  <div class="fx"><div class="eq">1 = 0.984926·[u·0.014355 + 0.4(1−u)] + 0.968335·[u²·1.016183 + 0.4(u − u²)]</div>
-    <p class="muted" style="margin-bottom:0">Solving gives u = 1.001544, so the two brackets come to 0.013552 and 0.986448, which add to exactly 1. Note g<sub>2</sub> = 1.016183 is the final coupon <em>plus</em> the principal of 1, while g<sub>1</sub> = 0.014355 is a coupon alone.</p></div>
+  <p>Year 1 is the clean case to start with, because the chain has not begun: there are no earlier cash flows, so <b>K = 0</b>, and survival to the start of year 1 is certain, so <b>S<sub>p</sub> = 1</b>. The whole equation is then just the two brackets, with the 1-year bond's coupon of 3.032% (the bridge turns the −19bp Z-spread into exactly the quoted 1-year YTM):</p>
+  <div class="fx"><div class="eq">1 = 0.984926·[0.4(1−u)] + 0.968786·[u²·1.030320 + 0.4(u − u²)]</div>
+    <p class="muted" style="margin-bottom:0">Solving gives u = 1.001514, so the two brackets come to −0.000596 and 1.000596, which add to exactly 1. Note g<sub>2</sub> = 1.030320 is the annual coupon <em>plus</em> the principal of 1, and there is no mid-year coupon (g<sub>1</sub> = 0). The first bracket is slightly negative because u above 1 means a negative chance of default, the short-end effect of section 06.</p></div>
   <p>Year 10 is a typical later step: K and S<sub>p</sub> now carry nine years of already-solved history, but the shape of the equation is identical and λ<sub>10</sub> is still the only unknown.</p>
   <div class="tbl"><table class="cmp">
     <thead><tr><th></th><th>Year 1</th><th>Year 10</th></tr></thead>
     <tbody>
-      <tr><td>Quote for that maturity</td><td>−19.0 bp</td><td>42.0 bp</td></tr>
-      <tr><td>K, earlier cash flows</td><td>0 — none yet</td><td>0.310926</td></tr>
-      <tr><td>S<sub>p</sub>, survival to the start</td><td>1 — certain</td><td>0.941313</td></tr>
-      <tr><td>DF(b−½), DF(b)</td><td>0.984926, 0.968335</td><td>0.723251, 0.710651</td></tr>
-      <tr><td>g<sub>1</sub>, g<sub>2</sub></td><td>0.014355, 1.016183</td><td>0.019830, 1.019830</td></tr>
-      <tr><td>a<sub>2</sub>, a<sub>1</sub>, a<sub>0</sub></td><td>0.596672, 0.007502, −0.606030</td><td>0.414632, 0.008756, −0.416752</td></tr>
-      <tr class="hl"><td>u, from the quadratic</td><td>1.001544</td><td>0.992050</td></tr>
-      <tr class="hl"><td>λ<sub>b</sub> = −2 ln u</td><td>−30.9 bp</td><td>159.6 bp</td></tr>
+      <tr><td>YAS Z-spread → bridge coupon c<sub>b</sub></td><td>−19.0 bp → 3.0320%</td><td>42.0 bp → 3.9420%</td></tr>
+      <tr><td>K, earlier cash flows</td><td>0 — none yet</td><td>0.314077</td></tr>
+      <tr><td>S<sub>p</sub>, survival to the start</td><td>1 — certain</td><td>0.942541</td></tr>
+      <tr><td>DF(b−½), DF(b)</td><td>0.984926, 0.968786</td><td>0.719326, 0.706830</td></tr>
+      <tr><td>g<sub>1</sub>, g<sub>2</sub></td><td>0, 1.030320</td><td>0, 1.039420</td></tr>
+      <tr><td>a<sub>2</sub>, a<sub>1</sub>, a<sub>0</sub></td><td>0.610645, −0.006456, −0.606030</td><td>0.425992, −0.004711, −0.414725</td></tr>
+      <tr class="hl"><td>u, from the quadratic</td><td>1.001514</td><td>0.992232</td></tr>
+      <tr class="hl"><td>λ<sub>b</sub> = −2 ln u</td><td>−30.3 bp</td><td>156.0 bp</td></tr>
       <tr class="tot"><td>Bond reprices to</td><td>1.000000000000</td><td>1.000000000000</td></tr>
     </tbody></table></div>
-  <p>Two things are worth noticing. In year 1, u comes out <em>above</em> 1, which makes λ negative. The reason is that this issuer's 1-year bond yields less than the swap rate — 3.032% against 3.270% — so investors are paying more for it than for risk-free cash. Default risk can only ever make a bond <em>cheaper</em>, so no positive intensity could produce a price that high; the only way to reprice the bond is to let λ go below zero. And a<sub>0</sub> is negative in both years, which settles which root to take. In any quadratic the two roots multiplied together come to a<sub>0</sub> ÷ a<sub>2</sub>; with a<sub>0</sub> negative and a<sub>2</sub> positive that product is negative, so one root must be positive and the other negative. In year 1 they are 1.001544 and −1.014117. A survival ratio cannot be negative, so the positive one — the <b>+</b> in the formula — is the only candidate.</p>
+  <p>Two things are worth noticing. In year 1, u comes out <em>above</em> 1, which makes λ negative. The reason is that this issuer's 1-year bond yields less than the swap rate — 3.032% against 3.222% — so investors are paying more for it than for risk-free cash. Default risk can only ever make a bond <em>cheaper</em>, so no positive intensity could produce a price that high; the only way to reprice the bond is to let λ go below zero. And a<sub>0</sub> is negative in both years, which settles which root to take. In any quadratic the two roots multiplied together come to a<sub>0</sub> ÷ a<sub>2</sub>; with a<sub>0</sub> negative and a<sub>2</sub> positive that product is negative, so one root must be positive and the other negative. In year 1 they are 1.001514 and −0.990941. A survival ratio cannot be negative, so the positive one — the <b>+</b> in the formula — is the only candidate.</p>
   <p>The final row is the test that matters: feed u back into the equation and the bond returns its own quoted price to twelve decimal places. Repeat for every maturity and the whole λ curve is fixed, with no guessing at any point.</p>
     </div>
   </details>
@@ -1136,20 +1179,20 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <dt><span class="t c3">1 + fa − R</span></dt><dd>What is lost if default happens: principal plus the forward interest due, less recovery. The numerator as a whole is therefore the expected loss over the period: chance of default times loss given default.</dd>
     <dt><span class="t c2">÷ p<sub>i</sub>·a</span></dt><dd>Two conversions, and the reason the formula is not simply the expected loss. Dividing by <b>a</b> restates a half-year amount as a rate per annum. Dividing by <b>p</b> grosses the margin up: it is charged as a running spread and is therefore only collected if the borrower survives the period, so it has to cover the whole expected loss out of the surviving fraction alone. Setting margin collected equal to loss expected, c·a·p = (1 − p)(1 + fa − R), and solving for c gives exactly this.</dd>
     <dt>sanity check</dt><dd>Because p ≈ 1 − λa, this is close to c ≈ λ(1 − R + fa), slightly above the textbook λ(1 − R).</dd>
-    <dt>k<sub>i</sub></dt><dd>The period's total cost on that same reading, and the quantity the fair price averages. <b>Floating: k<sub>i</sub> = c<sub>i</sub></b> — credit alone, because a floating loan passes the base rate straight through to the borrower, so the only thing the lender prices is the margin over it. <b>Fixed: k<sub>i</sub> = f<sub>i</sub> + c<sub>i</sub></b> — the risk-free forward for that period <em>plus</em> its credit cost, because a fixed loan quotes one all-in rate and therefore has to price the interest rate too. For the half-year ending at year 20: floating k = 145.8bp, fixed k = 3.2268% + 1.5672% = 4.7940%.</dd></dl></div>
+    <dt>k<sub>i</sub></dt><dd>The period's total cost on that same reading, and the quantity the fair price averages. <b>Floating: k<sub>i</sub> = c<sub>i</sub></b> — credit alone, because a floating loan passes the base rate straight through to the borrower, so the only thing the lender prices is the margin over it. <b>Fixed: k<sub>i</sub> = f<sub>i</sub> + c<sub>i</sub></b> — the risk-free forward for that period <em>plus</em> its credit cost, because a fixed loan quotes one all-in rate and therefore has to price the interest rate too. For the half-year ending at year 20: floating k = 140.0bp, fixed k = 3.3769% + 1.4003% = 4.7779%.</dd></dl></div>
 
   <h3>Fair price and saving</h3>
-  <p><b>Purpose.</b> Three steps, in order: decide how much each half-year counts, average the per-period costs using those weights to get the loan's fair price, then turn the gap against the price actually charged into money. N is the amount of the facility, EUR 5bn here.</p>
+  <p><b>Purpose.</b> Three steps, in order: decide how much each half-year counts, average the per-period costs using those weights to get the loan's fair price, then turn the gap against the price actually charged into money. N is the amount of the facility, EUR 1bn here.</p>
   <div class="fx"><div class="eq"><span class="t c3">w<sub>i</sub> = DF<sub>i</sub>·S<sub>i</sub>·a·O<sub>i</sub></span> &nbsp;&nbsp; fair = <span class="t c2">Σ w<sub>i</sub>k<sub>i</sub> ÷ Σ w<sub>i</sub></span> &nbsp;&nbsp; PV saving = N · <span class="t c1">Σ w<sub>i</sub>(k<sub>i</sub> − charged)</span></div>
-    <dl><dt><span class="t c3">w<sub>i</sub></span></dt><dd>The weight on half-year i: how much is outstanding (O<sub>i</sub>), for how long (a), worth what today (DF<sub>i</sub>), and only if the borrower is still there (S<sub>i</sub>). Σ w<sub>i</sub> is the risky annuity, 9.002 for this loan.</dd>
-    <dt>k<sub>i</sub></dt><dd>The cost of half-year i, carried over from the block above: the credit margin alone on a floating loan, or the risk-free forward plus credit on a fixed one. That difference is why the floating answer comes out as a <em>spread</em> (62.32 bp) and the fixed one as an <em>all-in rate</em> (4.1355%) — the two are not quoting the same thing.</dd>
+    <dl><dt><span class="t c3">w<sub>i</sub></span></dt><dd>The weight on half-year i: how much is outstanding (O<sub>i</sub>), for how long (a), worth what today (DF<sub>i</sub>), and only if the borrower is still there (S<sub>i</sub>). Σ w<sub>i</sub> is the risky annuity, 8.973 for this loan.</dd>
+    <dt>k<sub>i</sub></dt><dd>The cost of half-year i, carried over from the block above: the credit margin alone on a floating loan, or the risk-free forward plus credit on a fixed one. That difference is why the floating answer comes out as a <em>spread</em> (60.62 bp) and the fixed one as an <em>all-in rate</em> (4.1305%) — the two are not quoting the same thing.</dd>
     <dt><span class="t c2">fair</span></dt><dd>The weighted average of those per-period costs — one flat spread or rate equivalent to paying each period its own cost. Equivalent to solving PV(loan) = PV(drawdowns) for that flat number, where PV(loan) = Σ DF<sub>i</sub>[S<sub>i</sub>(coupon<sub>i</sub>O<sub>i</sub> + P<sub>i</sub>) + R(S<sub>i−1</sub> − S<sub>i</sub>)O<sub>i</sub>], P<sub>i</sub> being the principal repaid in period i, and drawdowns are valued at DF·S on their dates. The two routes agree because the per-period par conditions telescope; the workbook checks it to about 10<sup>−7</sup> euros.</dd>
     <dt><span class="t c1">PV saving</span></dt><dd>Each half-year contributes the gap between what it costs and what is charged, weighted and discounted; N scales the per-unit answer to the size of the facility. Dividing the same sum by Σ w<sub>i</sub> instead gives the saving in basis points a year.</dd>
     <dt>split</dt><dd>Summing over periods before and after the WAL date (the straddling period split pro rata in time) gives the loss and benefit phases, which add up exactly to the net.</dd>
-    <dt>charged</dt><dd>The shortcut price: linear interpolation of the quoted curve at the exact WAL. For a fixed loan the quoted annual yield is first restated on the loan's semi-annual basis as 2((1 + Y/m)<sup>m/2</sup> − 1), where Y is that annual yield and m = 1 for EUR bonds.</dd></dl></div>
+    <dt>charged</dt><dd>The shortcut price: linear interpolation of the quoted curve at the exact WAL. For a fixed loan the quoted annual yield is first restated on the loan's semi-annual basis as 2((1 + Y/m)<sup>m/2</sup> − 1), where Y is that yield and m the bonds' coupon frequency (Inputs row 17; m = 1 here). Workbook: Calc_Fixed E7. The bullet at the WAL (Calc_* E27) prices the same costs k<sub>i</sub> over a bullet's half-years and splits the saving into WAL timing (fair − bullet) and quote convention (bullet − shortcut), Results rows 56–57.</dd></dl></div>
 
   <details>
-    <summary>Worked through on the EUR 5bn case</summary>
+    <summary>Worked through on the EUR 1bn case</summary>
     <div>
   <p class="muted">The three highlighted rows are the three formulas above: the weight, the fair price, and the present-value saving.</p>
   <p>Take two half-years from opposite ends of the floating loan and run them through, against the 53.5 bp the shortcut charges.</p>
@@ -1157,16 +1200,16 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <thead><tr><th></th><th>Half-year ending year 3</th><th>Half-year ending year 20</th><th>All 48 periods</th></tr></thead>
     <tbody>
       <tr><td>Balance outstanding O<sub>i</sub></td><td>93.48%</td><td>19.57%</td><td>—</td></tr>
-      <tr><td>Discount factor DF<sub>i</sub></td><td>0.9032</td><td>0.5059</td><td>—</td></tr>
-      <tr><td>Survival S<sub>i</sub></td><td>1.0068</td><td>0.7396</td><td>—</td></tr>
-      <tr class="hl"><td>Weight w<sub>i</sub> = DF·S·a·O</td><td>0.4250</td><td>0.0366</td><td>Σw = 9.0024</td></tr>
-      <tr class="hl"><td>Cost of the period k<sub>i</sub></td><td>−11.9 bp</td><td>145.8 bp</td><td>fair = 62.32 bp</td></tr>
-      <tr><td>k<sub>i</sub> − charged</td><td>−65.4 bp</td><td>+92.3 bp</td><td>+8.82 bp</td></tr>
-      <tr><td>w<sub>i</sub>(k<sub>i</sub> − charged)</td><td>−0.002779</td><td>+0.000338</td><td>0.007942</td></tr>
-      <tr class="tot hl"><td>× EUR 5bn &nbsp;= PV saving</td><td>−€13.90m</td><td>+€1.69m</td><td>€39.7m</td></tr>
+      <tr><td>Discount factor DF<sub>i</sub></td><td>0.9021</td><td>0.4952</td><td>—</td></tr>
+      <tr><td>Survival S<sub>i</sub></td><td>1.0067</td><td>0.7454</td><td>—</td></tr>
+      <tr class="hl"><td>Weight w<sub>i</sub> = DF·S·a·O</td><td>0.4244</td><td>0.0361</td><td>Σw = 8.9732</td></tr>
+      <tr class="hl"><td>Cost of the period k<sub>i</sub></td><td>−11.6 bp</td><td>140.0 bp</td><td>fair = 60.62 bp</td></tr>
+      <tr><td>k<sub>i</sub> − charged</td><td>−65.1 bp</td><td>+86.5 bp</td><td>+7.12 bp</td></tr>
+      <tr><td>w<sub>i</sub>(k<sub>i</sub> − charged)</td><td>−0.002765</td><td>+0.000312</td><td>0.006393</td></tr>
+      <tr class="tot hl"><td>× EUR 1bn &nbsp;= PV saving</td><td>−€2.76m</td><td>+€0.31m</td><td>€6.4m</td></tr>
     </tbody></table></div>
-  <p>The two columns show the whole argument in miniature. Year 3 carries a weight of 0.4250 against year 20's 0.0366 — nearly twelve times larger, because almost all the money is still outstanding, it is barely discounted, and the borrower is almost certain to still be there. But the curve says that year is worth −11.9 bp while the loan is charged 53.5, so the borrower <em>overpays</em>, and at that weight the overpayment is substantial: −€13.90m from this one half-year. Year 20 is the mirror image, dear but almost weightless: +92.3 bp on a weight of 0.0366, worth only +€1.69m.</p>
-  <p>Summed over all 48 periods the dear-but-light years win anyway: −€26.3m from everything before the WAL date, +€66.0m from everything after, a net <b>€39.7m</b>. Dividing that same sum by Σw instead of multiplying by the amount restates it as <b>8.82 bp a year</b> — the headline figure, and exactly fair − charged = 62.32 − 53.5.</p>
+  <p>The two columns show the whole argument in miniature. Year 3 carries a weight of 0.4244 against year 20's 0.0361 — nearly twelve times larger, because almost all the money is still outstanding, it is barely discounted, and the borrower is almost certain to still be there. But the curve says that year is worth −11.6 bp while the loan is charged 53.5, so the borrower <em>overpays</em>, and at that weight the overpayment is substantial: −€2.76m from this one half-year. Year 20 is the mirror image, dear but almost weightless: +86.5 bp on a weight of 0.0361, worth only +€0.31m.</p>
+  <p>Summed over all 48 periods the dear-but-light years win anyway: −€6.0m from everything before the WAL date, +€12.4m from everything after, a net <b>€6.4m</b>. Dividing that same sum by Σw instead of multiplying by the amount restates it as <b>7.12 bp a year</b> — the headline figure, and exactly fair − charged = 60.62 − 53.5.</p>
   <p class="muted">Survival above 1 in year 3 is not an error: this issuer's short bonds trade through swaps, so the implied λ is negative there. See the warning in section 06.</p>
     </div>
   </details>
@@ -1176,21 +1219,21 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
 <section id="faq" class="lvl">
   <div class="eyebrow">11 · Questions people ask</div>
   <h2>Questions and answers</h2>
-  <details><summary>What if the bond curve is flat? What if it is straight?</summary><div><p>Flat: every year costs the same, so it does not matter when the money is lent and the shortcut is right (saving ≈ 0; 0.002 bp in this case, a modelling residue). Straight and rising: there is a saving roughly equal to slope × WAL ÷ 3, because the amortiser's exposure sits later than the bullet's. Curvature then adds (steepening) or subtracts (flattening). See section 04.</p></div></details>
+  <details><summary>What if the bond curve is flat? What if it is straight?</summary><div><p>Flat: every year costs the same, so it does not matter when the money is lent and the WAL timing effect is about zero (−0.07bp for a flat 50bp YAS curve). The net saving is then the quote-convention effect, about −1.1bp, because the shortcut charges a YAS Z-spread as if it were a margin (section 07). Straight and rising: there is a saving roughly equal to slope × WAL ÷ 3, because the amortiser's exposure sits later than the bullet's. Curvature then adds (steepening) or subtracts (flattening). See section 04.</p></div></details>
   <details><summary>Isn't the WAL already a centre of gravity? Why is it different?</summary><div><p>WAL is the centre of gravity of the <em>repayments</em>. The credit curve prices the <em>balance outstanding</em>, whose centre of gravity is WAL/2 for a bullet and about 2·WAL/3 for a straight amortiser (8.26 years for this loan vs 6.25 for the bullet). There is no standard name; "exposure-weighted average time" describes it. Macaulay duration is the textbook relative.</p></div></details>
   <details><summary>Does the model recompute a centre of gravity for every half-year?</summary><div><p>No. The centre of gravity is a teaching device and is exact only for straight curves. The model never computes it. It takes each half-year's balance (from the schedule, computed once), each half-year's cost (from the curve) and each half-year's weight, and averages. That works for any curve shape.</p></div></details>
-  <details><summary>Where do the "share of weight" percentages come from?</summary><div><p>Each half-year's weight is balance × 0.5 × discount factor × survival. A block's share is its weights divided by the total, 9.002. The 18–24 year block holds 6.8% of the principal-years but only 3.5% of the weight, because those euros are far in the future and only collected if the borrower survives. The share is not multiplied by the balance again, and the block's cost (153.5 bp) comes from the curve, not from the loan.</p></div></details>
-  <details><summary>Which "spread" drives λ: the Z-spread or the whole YTM?</summary><div><p>Floating: the Z-spread directly, since it is already a spread over swaps. Fixed: the YTM minus the swap rate of the same maturity. The model does not subtract explicitly; it values fixed bonds on the swap curve and attributes whatever yield the swap curve cannot explain to λ. At 1 year: YTM 3.032% minus swap 3.270%, both annual, gives about −24bp of credit. The rule of thumb λ ≈ margin ÷ (1 − R) turns that into about −40bp of λ, close to the −38bp the fixed calibration actually finds for year 1 (the floating calibration finds −31bp from its own Z-spread of −19bp).</p></div></details>
+  <details><summary>Where do the "share of weight" percentages come from?</summary><div><p>Each half-year's weight is balance × 0.5 × discount factor × survival. A block's share is its weights divided by the total, 8.973. The 18–24 year block holds 6.8% of the principal-years but only 3.4% of the weight, because those euros are far in the future and only collected if the borrower survives. The share is not multiplied by the balance again, and the block's cost (143.6 bp) comes from the curve, not from the loan.</p></div></details>
+  <details><summary>Which "spread" drives λ: the Z-spread or the whole YTM?</summary><div><p>Both, each for its own loan, and on one consistent snapshot they agree. Floating: the YAS Z-spread, turned by the bridge into the coupon of the par bond it describes (section 02). Fixed: the YTM, which already is that coupon. The model then values the bond on the swap curve and attributes whatever the curve cannot explain to λ. At 1 year: YTM 3.032% against swap 3.222% gives about −19bp of credit, the same as the 1-year Z-spread; the rule of thumb λ ≈ margin ÷ (1 − R) turns that into about −32bp of λ, close to the −30bp both calibrations find for year 1.</p></div></details>
   <details><summary>Is λ a real probability of default?</summary><div><p>No, it is market-implied. It includes everything investors charge for, not only expected losses, so it is usually well above historical default rates, and here it is even negative at the short end. It is the right input for pricing consistently with the borrower's bonds, and the wrong input for a credit risk forecast.</p></div></details>
-  <details><summary>Why does the workbook warn "Negative forward hazard"?</summary><div><p>Because the short bonds trade below swaps. A bond can only be richer than the risk-free curve if the implied default intensity is negative. The pricing remains internally consistent; the flag asks you to confirm the data (same swap curve as the Z-spreads, same date).</p></div></details>
+  <details><summary>Why does the workbook warn "Negative forward hazard"?</summary><div><p>Because the short bonds trade below swaps. A bond can only be richer than the risk-free curve if the implied default intensity is negative. The pricing remains internally consistent; the flag asks you to confirm the data (same swap curve as the Z-spreads, same snapshot; Results row 55 checks it).</p></div></details>
   <details><summary>Why is row 12 different from row 11 when the margin X is zero?</summary><div><p>Floating: it isn't; 53.5 bp and 0.5350% are the same number. Fixed: the annual-coupon bond yield (4.0965%) is restated as the half-yearly rate with the same effective yield (4.0554%), so it can be compared with the fair rate, which is computed on the loan's half-yearly payments.</p></div></details>
-  <details><summary>What is the risky annuity in row 9?</summary><div><p>The sum of all half-year weights: the loan's principal-years after discounting and default risk. It converts basis points into today's money: 1bp a year on this loan is worth 1bp × 9.002 × EUR 5bn ≈ €4.5m. In CDS markets the same quantity is called the risky PV01 (RPV01).</p></div></details>
-  <details><summary>What is the 6M fixing for?</summary><div><p>The swap curve starts at 1 year, but the model needs a discount factor every six months. The 6M EURIBOR fixing gives the actual rate for the first six months instead of interpolating between today and the 1-year point. For a floating loan it barely matters (0.0004bp here). For a fixed loan it does: it pins the first half-year's forward, which is part of the fixed rate, and leaving it out moves the fixed saving by about 0.5bp (8.02 to 7.51). Enter the real fixing, from the same date as the rest of the curve.</p></div></details>
-  <details><summary>How much does the swap curve matter? Can we use free data?</summary><div><p>Very little for the result: a 30bp error in the whole curve, 6M fixing included, moves the floating saving from 8.82 to 8.70bp and the fixed from 8.02 to 8.06bp. Section 08 shows why: the pieces move, the total hardly does. Free sources with a short delay are adequate, provided the 6M fixing and the Z-spreads are from the same date as the curve. The bond curves are what drive the answer.</p></div></details>
+  <details><summary>What is the risky annuity in row 9?</summary><div><p>The sum of all half-year weights: the loan's principal-years after discounting and default risk. It converts basis points into today's money: 1bp a year on this loan is worth 1bp × 8.973 × EUR 1bn ≈ €0.9m. In CDS markets the same quantity is called the risky PV01 (RPV01).</p></div></details>
+  <details><summary>What is the 6M fixing for?</summary><div><p>The swap curve starts at 1 year, but the model needs a discount factor every six months. The 6M EURIBOR fixing gives the actual rate for the first six months instead of interpolating between today and the 1-year point. For a floating loan it barely matters (0.002bp here). For a fixed loan it does: it pins the first half-year's forward, which is part of the fixed rate, and leaving it out moves the fixed saving by about 0.4bp (7.51 to 7.15). Enter the real fixing, from the same snapshot as the rest of the curve.</p></div></details>
+  <details><summary>How much does the swap curve matter? Can we use free data?</summary><div><p>Its level matters little: a 30bp error in the whole curve, 6M fixing included, moves the floating saving from 7.12 to 6.89bp and the fixed from 7.51 to 7.75bp (section 08). What matters is consistency: the curve must be the one YAS measures the Z-spreads against, from the same snapshot as the bond quotes. Free sources come from another source and another moment, so use them only for indicative work and expect the consistency check (Results row 55) to flag them; in production take everything from one Bloomberg snapshot (Data Sourcing tab). The bond curves are what drive the answer.</p></div></details>
   <details><summary>Why are the loss and the benefit not equal on a straight curve?</summary><div><p>Because the loan's exposure centre is later than the equal-WAL bullet's. The benefit side reaches further up the curve than the loss side reaches down it. See the rectangle-and-triangle figure in section 04.</p></div></details>
-  <details><summary>Why is the fixed "risk-free effect" negative here?</summary><div><p>The swap curve rises to 3.51% at 15 years and then falls to 3.29% at 30. Risk-free forwards in the loan's late years are therefore below the 12.5-year par rate. Reading the fixed rate at 12.5 years slightly <em>overstates</em> the risk-free part for this profile (−1.23 bp), while the credit part is understated by 9.25 bp. Net, the borrower still saves 8.02 bp.</p></div></details>
+  <details><summary>Why is the fixed "risk-free effect" negative here?</summary><div><p>The swap curve rises to 3.61% at 15 years and then falls to 3.45% at 30. Risk-free forwards in the loan's late years are therefore below the 12.5-year par rate. Reading the fixed rate at 12.5 years slightly <em>overstates</em> the risk-free part for this profile (−0.85 bp), while the credit part is understated by 8.36 bp. Net, the borrower still saves 7.51 bp.</p></div></details>
   <details><summary>Does the lender lose money?</summary><div><p>Not in an accounting sense. The saving is margin the lender forgoes relative to pricing the loan consistently with the borrower's bond curve. Whether that is acceptable depends on relationship, ancillary business, funding and capital, none of which this calculator models. Use it to know the price of the convention, then decide.</p></div></details>
-  <details><summary>What does recovery change?</summary><div><p>Almost nothing for the result: from 8.99 bp (20%) to 8.49 bp (60%) on the floating side. A higher recovery raises the implied λ and lowers the loss per default by the same proportion. What matters is applying recovery to the balance outstanding, not to the original amount.</p></div></details>
+  <details><summary>What does recovery change?</summary><div><p>Not much: from 7.53 bp (20%) to 6.36 bp (60%) on the floating side. A higher recovery raises the implied λ and lowers the loss per default, which mostly offsets; the remainder comes from reading a YAS Z-spread as a margin, which itself depends on recovery. What matters is applying recovery to the balance outstanding, not to the original amount.</p></div></details>
 </section>
 
 <!-- ================================================================ 12 -->
@@ -1198,11 +1241,12 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
   <div class="eyebrow">12 · Read before quoting a number</div>
   <h2>Assumptions and limitations</h2>
   <ul>
-    <li><b>Bond quotes as par bonds.</b> Each Z-spread is treated as the spread of a floating bullet at par for that tenor, each YTM as the coupon of a par bullet. Exact for bonds near par; for deep discount or premium lines, prefer a fitted issuer curve (Bloomberg CRVF / BVAL).</li>
+    <li><b>Bond quotes as par bonds.</b> Each maturity's YAS Z-spread and YTM are read as the issuer's par bond at a whole-year maturity, paying coupons at the frequency in Inputs row 17. Exact for a fitted par curve (Bloomberg CRVF / BVAL); for individual bonds far from par each spread level shifts by a few bp, because recovery is paid on face. The consistency check cannot see this, since Z-spread and YTM shift together, so prefer near-par bonds.</li>
+    <li><b>One snapshot, default YAS settings.</b> Z-spreads, YTMs, swap curve and fixing must come from one Bloomberg snapshot, and the swap curve must be the one YAS measures the Z-spreads against, with YAS left at its default compounding (the coupon frequency). The workbook flags gaps above 1bp (Results rows 54–55).</li>
     <li><b>Loan mechanics.</b> Semi-annual periods, accrual 0.5; floating resets to the 6M forward. Interest on drawn balances only; no commitment fee unless entered as a fee. Drawdowns are equal half-yearly amounts from signing.</li>
     <li><b>Fixed rate basis.</b> The charged fixed rate is the semi-annual equivalent of YTM(WAL) + X. If the term sheet uses the annual number as a half-yearly coupon, add the difference through X.</li>
     <li><b>Single curve.</b> The same swap curve projects and discounts. No basis between loan and bond funding, no bond new-issue premium unless entered (Inputs rows 22–24).</li>
-    <li><b>One intensity per year.</b> λ is held flat within each year and steps at year boundaries, because the curve supplies one quote per maturity and so identifies one intensity per year. A genuinely flat curve therefore still leaves a residue of about 0.002bp rather than exactly zero.</li>
+    <li><b>One intensity per year.</b> λ is held flat within each year and steps at year boundaries, because the curve supplies one quote per maturity and so identifies one intensity per year. A curve that is flat in par floating spreads therefore still leaves a tiny residue rather than exactly zero.</li>
     <li><b>Beyond the data.</b> Inside the quotes, years are interpolated linearly; beyond the last bond quote the last λ is extended and flagged. Maximum life 30 years.</li>
     <li><b>Validation.</b> The engine reproduces the reference specification exactly (65.8781bp vs 55.0000bp, wedge +10.8781bp) and, for this case, matches the workbook to the cent. Integrity checks in the workbook: bond repricing error, PV identity, WAL cross-check.</li>
   </ul>
@@ -1218,6 +1262,10 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <tr><td>Weight (of a half-year)</td><td class="txt">How much a half-year counts when the 48 half-year costs are averaged into the fair price: balance outstanding × 0.5 × discount factor × survival. The weights add up to the risky annuity. Section 07.</td></tr>
     <tr><td>Swap curve</td><td class="txt">Par swap rates for 1 to 30 years: the market's risk-free benchmark. Converted into discount factors (DF) and half-year forward rates (f), which are the only two things the model takes from it. Section 02.</td></tr>
     <tr><td>Shortcut</td><td class="txt">Pricing the loan at the bond curve read at its WAL.</td></tr>
+    <tr><td>YAS Z-spread</td><td class="txt">Bloomberg's Z-spread: the extra discount rate, added to every swap zero rate, that discounts a bond's promised cash flows to its price. The floating loan's input. Section 02.</td></tr>
+    <tr><td>Par floating spread</td><td class="txt">The margin over the 6M rate at which a six-monthly floating bond of the issuer would be worth 100, given default and recovery. The unit of every floating price the model outputs. Section 02.</td></tr>
+    <tr><td>YAS bridge</td><td class="txt">The closed-form conversion of a YAS Z-spread into the coupon of the par bond it describes, so the model can solve λ from it. Sections 02 and 10.</td></tr>
+    <tr><td>WAL timing / quote-convention effect</td><td class="txt">The two parts of the net saving: fair price against a bullet at the WAL, and that bullet against the shortcut. Section 07, Results rows 56–57.</td></tr>
     <tr><td>Wedge / net saving</td><td class="txt">Fair price minus the price charged. Positive: the borrower saves.</td></tr>
   </tbody></table></div>
   <footer>Prepared from the WAL-wedge calculator workbook. Market data as entered for this example; replace with live data before use.</footer>
@@ -1250,19 +1298,25 @@ const ENG = (() => {
     if (r6 !== null && r6 !== undefined) g[1] = 1 / (1 + r6 * 182.5 / 360);
     return g;
   }
-  function model(curve, kind, dfg, R, x, y, Xbp, ycomp) {
-    ycomp = ycomp || 1;
-    const F = fill(curve); let q = F.out.slice(); const last = F.last;
-    if (kind === 'fixed') q = q.map(v => 2 * (Math.pow(1 + v / ycomp, ycomp / 2) - 1));
+  // YAS bridge: par coupon of the T-year bond (coupon frequency m) whose YAS Z-spread is z.
+  function bridge(dfg, z, T, m) {
+    const dfz = t => Math.pow(Math.pow(dfg[Math.round(2 * t)], -1 / (m * t)) + z / m, -m * t);
+    let s = 0; for (let j = 1; j <= Math.round(m * T); j++) s += dfz(j / m);
+    return m * (1 - dfz(T)) / s;
+  }
+  // kind 'float': curve = YAS Z-spreads (decimal); 'fixed': curve = YAS YTMs. m = bond coupon frequency.
+  function model(curve, kind, dfg, R, x, y, Xbp, m) {
+    m = m || 1;
+    const F = fill(curve); const last = F.last;
+    const q = kind === 'float' ? F.out.map((v, i) => bridge(dfg, v, i + 1, m)) : F.out.slice();
     const a = 0.5; const fa = [null]; for (let i = 1; i <= 60; i++) fa.push(dfg[i - 1] / dfg[i] - 1);
     const S = [1]; const lam = []; let cumC = 0, cumAnn = 0;
     for (let b = 1; b <= 30; b++) {
       let l;
       if (b <= last) {
-        const sb = q[b - 1], i1 = 2 * b - 1, i2 = 2 * b, Sp = S[S.length - 1];
-        const K = cumC + sb * cumAnn;
-        const g1 = kind === 'float' ? fa[i1] + sb * a : sb * a;
-        const g2 = kind === 'float' ? fa[i2] + sb * a + 1 : sb * a + 1;
+        const c = q[b - 1], i1 = 2 * b - 1, i2 = 2 * b, Sp = S[S.length - 1];
+        const K = cumC + c * cumAnn;
+        const g1 = m === 2 ? c / 2 : 0, g2 = c / m + 1;
         const D1 = dfg[i1], D2 = dfg[i2];
         const a2 = D2 * Sp * (g2 - R), a1 = Sp * (D1 * (g1 - R) + D2 * R), a0 = K + D1 * Sp * R - 1;
         const u = (-a1 + Math.sqrt(a1 * a1 - 4 * a2 * a0)) / (2 * a2); l = -2 * Math.log(u);
@@ -1270,8 +1324,9 @@ const ENG = (() => {
       lam.push(l);
       for (const i of [2 * b - 1, 2 * b]) {
         const Sprev = S[S.length - 1], Si = Sprev * Math.exp(-l * a);
-        cumC += kind === 'float' ? dfg[i] * (Si * fa[i] + R * (Sprev - Si)) : dfg[i] * R * (Sprev - Si);
-        cumAnn += dfg[i] * Si * a; S.push(Si);
+        cumC += dfg[i] * R * (Sprev - Si);
+        if (m === 2 || i % 2 === 0) cumAnn += dfg[i] * Si / m;
+        S.push(Si);
       }
     }
     const D = Math.round(2 * x), Rn = Math.round(2 * y), n = D + Rn, DDc = Math.max(D, 1);
@@ -1287,14 +1342,18 @@ const ENG = (() => {
     const fair = sk / B, wf = sf / B;
     const qq = F.out; const fl = Math.min(Math.max(WAL, 1), 30); const lo = Math.max(1, Math.min(29, Math.floor(fl)));
     let sc = qq[lo - 1] + (qq[lo] - qq[lo - 1]) * (fl - lo); const scQuoted = sc;
-    if (kind === 'fixed') sc = 2 * (Math.pow(1 + sc / ycomp, ycomp / 2) - 1);
+    if (kind === 'fixed') sc = 2 * (Math.pow(1 + sc / m, m / 2) - 1);
     const charged = sc + Xbp / 1e4; const wedge = fair - charged;
     let after = 0, tot = 0;
     for (const e of per) { const s = e.w * (e.k - charged); tot += s; after += s * Math.max(0, Math.min(1, (e.t - WAL) / a)); }
+    // Fair price of a bullet maturing at the WAL (same λ): splits the saving into timing and quote convention.
+    const upto = nn => { let num = 0, den = 0; for (let i = 0; i < nn; i++) { num += per[i].DF * per[i].S * per[i].k; den += per[i].DF * per[i].S; } return num / den; };
+    const n0 = Math.max(1, Math.min(59, Math.floor(2 * WAL))); const bullet = upto(n0) + (2 * WAL - n0) * (upto(n0 + 1) - upto(n0));
     return { lam, S, per, WAL, B, fair, wf, scQuoted, shortcut: sc, charged, wedge_bp: wedge * 1e4,
-             pvUnit: tot, pvAfterUnit: after, pvBeforeUnit: tot - after, cg: cg / WAL, maturity: n / 2, qfill: qq, last };
+             pvUnit: tot, pvAfterUnit: after, pvBeforeUnit: tot - after, cg: cg / WAL, maturity: n / 2, qfill: qq, last,
+             coupon: q, bullet, timing_bp: (fair - bullet) * 1e4, convention_bp: (bullet - sc) * 1e4 };
   }
-  return { fill, swapDfs, model };
+  return { fill, swapDfs, bridge, model };
 })();
 
 
@@ -1303,7 +1362,7 @@ const ENG = (() => {
 (function(){
 const Zq={1:-19,2:-15,3:-14,4:-2,5:6,6:13,7:24,8:30,9:37,10:42,11:46,14:61,15:65,18:74,20:78,25:89,28:92};
 const Yq={1:3.032,2:3.242,3:3.349,4:3.431,5:3.522,6:3.597,7:3.726,8:3.804,9:3.888,10:3.942,11:3.995,14:4.198,15:4.256,18:4.320,20:4.349,25:4.349,28:4.376};
-const Sq={1:3.270,2:3.420,3:3.450,4:3.440,5:3.440,6:3.440,7:3.440,8:3.450,10:3.470,15:3.510,20:3.470,30:3.290};
+const Sq={1:3.2220,2:3.3919,3:3.4888,4:3.4510,5:3.4620,6:3.4671,7:3.4863,8:3.5045,9:3.5188,10:3.5229,11:3.5362,12:3.5545,13:3.5728,14:3.5913,15:3.6103,16:3.6011,17:3.5919,18:3.5826,19:3.5767,20:3.5707,21:3.5467,22:3.5225,23:3.4981,24:3.4735,25:3.4487,26:3.4477,27:3.4467,28:3.4456,29:3.4458,30:3.4460};
 const z=[],y=[],s=[];for(let k=1;k<=30;k++){z.push(k in Zq?Zq[k]/1e4:null);y.push(k in Yq?Yq[k]/100:null);s.push(k in Sq?Sq[k]/100:null);}
 const R0=0.4, R6=0.03019, DFG=ENG.swapDfs(s,1,R6);
 const BASE={float:ENG.model(z,'float',DFG,R0,1,23,0,1),fixed:ENG.model(y,'fixed',DFG,R0,1,23,0,1)};
@@ -1435,7 +1494,7 @@ function drawLam(kind){
 segBind(['lm-f','lm-x'],id=>drawLam(id==='lm-f'?'float':'fixed')); drawLam('float');
 
 /* ---- 07 block sum ---- */
-(function(){const b=[[0.5247992688946758,0.0012586030730914852],[0.3062108735513425,0.009985684915819632],[0.13428863542738612,0.014753017125332649],[0.03470122212659554,0.015353886825999816]];
+(function(){const P=BASE.float.per,B=BASE.float.B;const b=[0,6,12,18].map(lo=>{const s=P.filter(e=>e.t>lo&&e.t<=lo+6);const w=s.reduce((a,e)=>a+e.w,0);return [w/B,s.reduce((a,e)=>a+e.w*e.k,0)/w];});
   let t=0;const parts=b.map(([sh,k])=>{t+=sh*k;return `<span class="t c1">${(sh*100).toFixed(1)}%</span> × <span class="t c4">${(k*1e4).toFixed(1)}</span>`;});
   $('blk-sum').innerHTML=parts.join(' + ')+` = <span class="t c2">${(t*1e4).toFixed(1)} bp</span>`;})();
 
@@ -1461,8 +1520,8 @@ function drawCost(r,kind,elA,elB,lg,cap,N){
   legend(lg,[[C.gain,'Half-year dearer than charged (borrower gains)','blk'],[C.loss,'Half-year cheaper than charged (borrower overpays)','blk'],[C.amber,'Price charged'],[C.ink,'Running PV total of the saving']]);
   if(cap)cap.textContent=`The running total adds each half-year's weight × (its cost − the price charged), in euros of today. It falls while half-years are cheaper than the price charged (loss phase), turns once they become dearer, and ends at ${money(r.pvUnit*N)}, the PV saving. Late half-years move the line less per bp of gap because their weights are small, yet the gaps there are large.`;
 }
-segBind(['pr-f','pr-x'],id=>{const k=id==='pr-f'?'float':'fixed';drawCost(BASE[k],k,$('ch-cost'),$('ch-contrib'),$('lg-cost'),$('cap-cost'),5e9);});
-drawCost(BASE.float,'float',$('ch-cost'),$('ch-contrib'),$('lg-cost'),$('cap-cost'),5e9);
+segBind(['pr-f','pr-x'],id=>{const k=id==='pr-f'?'float':'fixed';drawCost(BASE[k],k,$('ch-cost'),$('ch-contrib'),$('lg-cost'),$('cap-cost'),1e9);});
+drawCost(BASE.float,'float',$('ch-cost'),$('ch-contrib'),$('lg-cost'),$('cap-cost'),1e9);
 
 /* ---- converter ---- */
 function conv(){
@@ -1484,7 +1543,7 @@ function scen(kind,name){
 }
 function lab(){
   let x0=+$('lb-x0').value,y0=+$('lb-y0').value; if(x0+y0>30){y0=30-x0;$('lb-y0').value=y0;}
-  const X=+$('lb-X').value,R=+$('lb-R').value; let N=parseFloat($('lb-N').value); if(!isFinite(N)||N<=0)N=5;
+  const X=+$('lb-X').value,R=+$('lb-R').value; let N=parseFloat($('lb-N').value); if(!isFinite(N)||N<=0)N=1;
   $('lb-x0-o').value=x0.toFixed(1)+' y';$('lb-y0-o').value=y0.toFixed(1)+' y';$('lb-X-o').value=(X>0?'+':'')+X+' bp';$('lb-R-o').value=(R*100).toFixed(0)+'%';
   const sc=$('lb-sc').value; const cv=scen(LK,sc);
   const r=ENG.model(cv,LK,DFG,R,x0,y0,X,1); const isF=LK==='float';
