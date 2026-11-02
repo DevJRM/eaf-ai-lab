@@ -1,6 +1,9 @@
 // Shared password gate for bizView, marketsView, and the WAL Wedge module.
-const EAF_CORRECT_HASH = '4d5552e83562426e627146467a476e2abe25d5f6feea8e4a53ad8cf1dafd85c8';
-const EAF_SESSION_KEY = 'eaf_restricted_authenticated';
+// A module can set its own password and session by defining window.EAF_AUTH = {hash, key}
+// before loading this script (the WAL Wedge pages do); otherwise the defaults below apply.
+const EAF_AUTH_CFG = window.EAF_AUTH || {};
+const EAF_CORRECT_HASH = EAF_AUTH_CFG.hash || '2b35a0164970212745940305ae056f2708a43e93388be37a6bb04ccd123d4982';
+const EAF_SESSION_KEY = EAF_AUTH_CFG.key || 'eaf_restricted_authenticated';
 
 async function eafSha256(message) {
     const msgBuffer = new TextEncoder().encode(message);

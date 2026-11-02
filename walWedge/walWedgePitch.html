@@ -1,0 +1,90 @@
+<!doctype html><html><head><link rel="stylesheet" href="../assets/auth.css"><script>try{if(sessionStorage.getItem('eaf_walwedge_authenticated')==='true'){document.documentElement.classList.add('eaf-authed');}}catch(e){}</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><div id="auth-overlay"><div id="auth-modal"><h2>🔒 EAF AI Lab — Restricted</h2><p>Please enter your password</p><input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password" autofocus/><button onclick="checkPassword()">Access</button><div id="auth-error">❌ Incorrect password. Please try again.</div></div></div><script>window.EAF_AUTH={hash:'2b35a0164970212745940305ae056f2708a43e93388be37a6bb04ccd123d4982',key:'eaf_walwedge_authenticated'};</script><script src="../assets/auth.js"></script>
+
+<title>WAL Wedge One-Pager</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="clientStyle.css">
+<style>
+/* One page: the cover of the client view, compact enough to print on A4. */
+.sheet{max-width:960px;margin:0 auto;padding-block:22px 30px}
+.sheet .disc{margin-top:18px;font-size:11.5px}
+@page{size:A4;margin:10mm}
+@media print{
+  .bar{display:none}
+  .sheet{padding:0;max-width:none}
+  body{font-size:9.5pt}
+  .hero{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:10px 16px}
+  .hero h1{font-size:22pt}.lead{font-size:10pt;margin-top:8px}.meta{margin-top:6px}
+  .case-strip{font-size:8pt;margin:8px 0 0}.case-strip .chip{font-size:8pt;padding:1px 7px}
+  .ans{padding:10px 14px;box-shadow:none}.ans .res-big{font-size:26pt}.res-t{font-size:9pt}.res-t dd{font-size:9pt}
+  .sig{margin-top:12px;padding:10px 14px 8px}.sig .eh{font-size:12pt}.sig .key b{font-size:15pt}.lg{font-size:8pt}
+  .pillars{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.pillar{font-size:8.5pt;padding:8px 10px}.pillar h3{font-size:10.5pt}
+  .dep{font-size:8pt;margin-top:6px}
+  .sig .cb{width:86%;margin:2px auto 0}
+  .sig .fs,.eqn .d{display:none}
+  .sig{margin-top:8px}.pillars{margin-top:6px}.sheet .disc{margin-top:6px;padding-top:6px}.disc p{margin:3px 0}.lg{margin-top:4px}
+  .sig .fs{font-size:8.5pt;margin-top:2px}.eqn{margin-top:6px;padding-top:6px}.eqn b{font-size:13pt}.eqn .op{font-size:13pt}.eqn .k{font-size:7pt}.eqn .term{padding:3px 6px}.eqn .op{margin-top:-12px}
+  .sig .lg,.sig .eqn{margin-left:13.5%;margin-right:8.8%}.sig .et{font-size:7.5pt}
+  .pillar{font-size:8pt;padding:6px 9px;line-height:1.4}.pillar h3{font-size:10pt}.res-d{font-size:8.5pt}.ans .res-big{font-size:22pt}
+  .lead{font-size:9.5pt}.hero h1{font-size:20pt}
+  .sheet .disc{font-size:7pt;margin-top:10px;padding-top:8px}
+  svg.ch{min-width:0}
+}
+</style>
+
+<div class="bar"><div class="in">
+  <div class="left"><div class="nm">Amortising loan pricing <span>one-page summary</span></div></div>
+  <div class="tog" role="group" aria-label="Interest basis"><button type="button" id="m-float" aria-pressed="true">Floating rate</button><button type="button" id="m-fixed" aria-pressed="false">Fixed rate</button></div>
+  <a class="back-btn" href="index.html" title="Back to the WAL Wedge Tool Set">&larr; Tool Set</a>
+</div></div>
+
+<div class="sheet">
+<div class="ribbon" data-ribbon hidden></div>
+<header id="top" class="hero">
+  <div>
+    <div class="lab">For discussion · indicative</div>
+    <h1>A <span data-v="maturity"></span>-year amortising loan at your <span data-v="wal"></span>-year price</h1>
+    <div class="meta"><span>Prepared for <b data-v="client"></b></span><span>Market data as of <b data-v="asOf"></b><span data-v="dataNote"></span></span></div>
+    <p class="lead">Priced where your own <span data-v="wal"></span>-year bond is quoted, but repaid over <span data-v="maturity"></span> years. Measured against funding the same repayment profile through your own bonds, one maturing on each repayment date, that price works in your favour.</p>
+    <p class="case-strip"><span class="cs-k">The loan</span><span class="chip" data-v="amount"></span><span class="chip" data-v="rateChip"></span><span class="chip">drawn over <span data-v="xYears"></span> year<span data-v="xPlural"></span></span><span class="chip">repaid over <span data-v="yYears"></span> years</span><span class="chip">average life <span data-v="wal"></span> years</span></p>
+  </div>
+  <aside class="ans" aria-label="The answer">
+    <div class="res-k" data-v="cardTitle"></div>
+    <div class="res-big"><span data-v="wedgeS" style="font-size:inherit;margin:0"></span><span>bp a year</span></div>
+    <div class="res-d">below the price your own curve implies for this repayment profile</div>
+    <dl class="res-t"><dt>Price you pay</dt><dd data-v="charged"></dd><dt>Bond-equivalent price</dt><dd data-v="fair"></dd><dt>Value today</dt><dd class="hl" data-v="pv"></dd><dt>As an upfront fee</dt><dd data-v="fee"></dd><dt>Positive from</dt><dd>year <span data-v="breakEven"></span></dd></dl>
+  </aside>
+</header>
+<section class="glance" aria-label="At a glance">
+  <div class="ex sig">
+    <div class="et">At a glance</div><div class="eh">Your loan, seen as the <span data-v="miniN"></span> bonds it replaces</div>
+    <p class="fs">An amortising loan is equivalent to a strip of bullet bonds, one for each instalment. Seen that way, each part has its own price on your curve, and the loan charges all of them a single price.</p>
+    <div class="cb" id="c-strip" data-compact="1"></div>
+    <div class="lg"><span><i class="b" style="background:var(--accent)"></i>Mini-bonds the loan charges less than their own bond price</span><span><i class="b" style="background:var(--slate);opacity:.5"></i>Charged more than their own bond price</span></div>
+    <div class="eqn" role="group" aria-label="Bond-equivalent price minus the price you pay equals your benefit">
+      <div class="term"><b data-v="fair2"></b><span class="k">Bond-equivalent price</span><span class="d">the <span data-v="miniN"></span> mini-bond prices, weighted by how long each is outstanding</span></div>
+      <span class="op" aria-hidden="true">−</span>
+      <div class="term"><b data-v="charged2"></b><span class="k">Price you pay</span><span class="d">one price for all, read at the average life</span></div>
+      <span class="op" aria-hidden="true">=</span>
+      <div class="term res"><b data-v="wedge"></b><span class="k">Your benefit, a year</span><span class="d"><span data-v="pv"></span> in today's money</span></div>
+    </div>
+  </div>
+  <div class="pillars">
+    <div class="pillar"><span class="pn">01</span><h3>One price for <span data-v="miniN"></span> different bonds</h3>Each instalment is a mini-bond. As bonds they would price from <span data-v="miniShortP"></span> (<span data-v="miniShortT"></span> years) to <span data-v="miniLongP"></span> (<span data-v="miniLongT"></span> years); the loan charges all of them <span data-v="charged"></span>.</div>
+    <div class="pillar"><span class="pn">02</span><h3>The long ones count most</h3>The long mini-bonds are charged less than their bond price and are outstanding longest: the <span data-v="miniLongT"></span>-year one weighs <span data-v="miniWeight"></span> times the shortest. Net, <span data-v="wedge"></span> a year below the bond-equivalent price.</div>
+    <div class="pillar"><span class="pn">03</span><h3>No refinancing wall</h3><span data-v="nInst"></span> instalments of <span data-v="peak"></span>, <span data-v="peakPct"></span> of the amount each, instead of <span data-v="amount"></span> due on a single date.</div>
+  </div>
+  <p class="dep"><span class="cs-k">It depends on</span><span>a rising curve; on a flat one the benefit disappears, on an inverted one it reverses (<span data-v="sc_inv"></span>)</span><span class="sep">|</span><span>holding the loan: positive from about year <span data-v="breakEven"></span></span><span class="sep">|</span><span>fees, excluded on both sides</span></p>
+  
+</section>
+<div class="disc">
+  <p data-illus hidden><b>Illustrative template.</b> The market data are simulated; the figures are not an indication of terms.</p>
+  <p>Indicative, for discussion only; not an offer, a commitment to lend, or investment, legal, tax or accounting advice. Figures are based on your Bloomberg YAS bond quotes and the matching swap curve at the date shown, and will change with market conditions and final terms. Any transaction is subject to credit approval, documentation and market conditions at execution. Full analysis and methodology available on request.</p>
+</div>
+</div>
+
+<script src="clientCase.js"></script>
+<script src="clientKit.js"></script>
+<script src="clientView.js"></script>
