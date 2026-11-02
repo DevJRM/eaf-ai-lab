@@ -10,13 +10,26 @@ Inputs are Bloomberg YAS quotes taken at one moment: Z-spread and YTM per tenor
 for one issuer in one currency, plus the swap curve YAS measures the Z-spread
 against. Rates are decimals unless a name ends in _bp.
 
-Map to the workbook (sheet!columns) and the tutorial (section):
+Map to the workbook (sheet!columns) and the tutorial (section, deep-dive card;
+section 10 of the tutorial is the formula catalog, section 11 the deep dives):
     fill_curve          Curves!A:S       gap-filling of the three input curves      02
-    swap_discount       Curves!Q:R,U:Z   annual swap bootstrap, half-year grid      10
-    bridge_coupon       Curves!AA:AD     YAS Z-spread -> par coupon of its bond     02, 10
-    bootstrap           Calc_*!D:P,AH    λ per year so each par bond reprices       06, 10
-    price_loan          Calc_*!Q:AG,E4:E28  loan grid, fair price, saving, split    07, 10
+    swap_discount       Curves!Q:R,U:Z   swap bootstrap, half-year DFs, forwards,   02, 11.1
+                                         risk-free par yield
+    zero_rate           Curves!AA        swap zero rate at the coupon frequency m   11.1
+    bridge_coupon       Curves!AB        YAS Z-spread -> par coupon of its bond     02, 11.2
+    ytm_gaps            Curves!AC:AD,E45 bridge coupon vs quoted YTM                11.3
+    bootstrap           Calc_*!D:P,AH    λ per year so each par bond reprices       06, 11.4
+    price_loan          Calc_*!Q:AG,E4:E28  balance (11.5), half-year cost (11.6),  05-08
+                                         weights, fair price, PV (11.7), shortcut
+                                         and splits (11.8, 11.9)
     results             Results!C:D      rows 7-57                                  08
+
+The tutorial walks the same calculation as an 8-stage route:
+    1 market data (fill_curve, swap_discount, bridge_coupon, ytm_gaps)
+    2 loan and shortcut price (price_loan: balance, WAL, curve read at the WAL)
+    3 default risk (bootstrap: λ per year, survival)     4 loss if default
+    5 cost of each half-year   6 weight of each half-year   7 fair price
+    8 the saving and where it comes from (timing/convention split; fixed: risk-free/credit)
 
 Calibration (since Nov 2026): both loans calibrate λ on the issuer's par bond
 paying its real coupon frequency m (Inputs row 17). The floating loan reads the
@@ -375,11 +388,13 @@ def figures(inp=SAMPLE):
     print(f"== {inp['name']}")
     print(f"WAL {F['WAL']:.4f}  maturity {F['maturity']}  risky annuity {F['annuity']:.4f} / {X['annuity']:.4f}")
     for k, r in (("floating", F), ("fixed", X)):
+        # The bullet's fair price is a margin for the floating loan and an all-in rate for the fixed one.
+        bullet = (f"{r['bullet_fair'] * 1e4:.2f}bp" if k == "floating" else f"{r['bullet_fair'] * 100:.4f}%")
         print(f"{k}: quote {r['quote']:.6f} shortcut {r['shortcut']*100:.4f}% charged {r['charged']*100:.4f}% "
               f"fair {r['fair']*100:.4f}% net {r['net']*1e4:.2f}bp | PV {r['pv']*amt/1e6:.1f}m "
               f"nominal {r['net']*amt*r['WAL']/1e6:.1f}m | loss {r['pv_before']/r['annuity']*1e4:.2f} "
               f"benefit {r['pv_after']/r['annuity']*1e4:.2f} | timing {r['timing']*1e4:.2f} "
-              f"convention {r['convention']*1e4:.2f} | bullet fair {r['bullet_fair']*1e4:.2f}bp | "
+              f"convention {r['convention']*1e4:.2f} | bullet fair {bullet} | "
               f"rf fwd {r['rf_fwd']*100:.4f}% rf par {r['rf_par']*100:.4f}% | min λ {r['min_lam']*1e4:.1f}bp")
     print(f"Fixed split: risk-free {(X['rf_fwd']-X['rf_par'])*1e4:.2f}bp credit {(X['net']-(X['rf_fwd']-X['rf_par']))*1e4:.2f}bp")
     S = F["cal"]["S"]; lam = F["cal"]["lam"]
@@ -389,6 +404,16 @@ def figures(inp=SAMPLE):
           {T: (round(F['cal']['coupon'][T - 1] * 100, 4), round(par_floating_spread(g, S, R, T) * 1e4, 2)) for T in (5, 10, 12, 13, 20)})
     print("Swap zero (annual) 1,10,20:", {T: round(zero_rate(g['W'], T, inp['coupon_freq']) * 100, 4) for T in (1, 10, 20)})
     print("Gaps (bp):", {T: round(v, 3) for T, v in res["gaps"].items()})
+    # Section 03 table and takeaway: the cost of each year is the credit cost of its half-years
+    # (λ is flat within a year, so both halves carry the same cost).
+    print("Yearly credit cost (bp) at years 1,4,10,13,20:",
+          {b: round(F["rows"][2 * b - 1]["credit"] * 1e4, 1) for b in (1, 4, 10, 13, 20)})
+    # Section 05: exposure centre, each half-year dated at its middle (t_i − 1/4).
+    ec = sum((r["t"] - 0.25) * r["O"] * 0.5 for r in F["rows"]) / F["WAL"]
+    print(f"Exposure centre {ec:.2f}y (bullet at the WAL: {F['WAL'] / 2:.2f}y)")
+    # Results rows 16 and 19.
+    print(f"Saving as % of fair: floating {F['net'] / F['fair'] * 100:.2f}%  fixed {X['net'] / X['fair'] * 100:.2f}%  | "
+          f"as % of bond all-in: floating {F['net'] / (F['rf_fwd'] + F['fair']) * 100:.2f}%  fixed {X['net'] / X['fair'] * 100:.2f}%")
     return res
 
 

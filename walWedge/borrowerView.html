@@ -210,7 +210,7 @@ details li,details p{font-size:15px}
       <tr class="hl"><td>Net benefit</td><td data-v="pv"></td><td data-v="wedgeTxt"></td></tr>
       <tr><td>Undiscounted over the life</td><td data-v="nom"></td><td></td></tr>
     </tbody></table></div>
-  <div class="callout" data-mode="fixed" hidden><p>For the fixed-rate loan, the benefit is entirely credit-driven: <b>+8.36bp</b> comes from your credit curve. The interest-rate component slightly reduces it, by 0.85bp, because swap rates decline beyond 15 years.</p></div>
+  <div class="callout" data-mode="fixed" hidden><p>For the fixed-rate loan, the benefit is mostly credit-driven: <b>+8.36bp</b> comes from your credit curve. The interest-rate component slightly reduces it, by 0.85bp, because swap rates decline beyond 15 years.</p></div>
 </section>
 
 <!-- ============ 5 ============ -->
@@ -264,7 +264,7 @@ details li,details p{font-size:15px}
     <li>Compare it with the price read at the loan's average life. The difference, multiplied by the loan's credit-adjusted annuity of <span data-v="annuity"></span> years, gives the present value of the benefit.</li>
   </ol></div></details>
   <details><summary>Points to note</summary><div><ul>
-    <li>Your curve trades below swaps at maturities up to three years. The analysis uses it as quoted, which treats the short end as cheaper than swaps.</li>
+    <li>Your curve trades below swaps at maturities up to four years. The analysis uses it as quoted, which treats the short end as cheaper than swaps.</li>
     <li data-mode="fixed" hidden>Your bond yields are annual. The loan pays semi-annually, so the loan rate is the semi-annual rate with the same yield as your annual bond yield: 4.0965% annual is 4.0554% semi-annual.</li>
     <li>Each quoted level is treated as the price of a bond trading at par for that maturity. For bonds far from par, a fitted issuer curve gives a cleaner input.</li>
     <li>Bond issuance costs, new-issue premium and loan fees are excluded from the headline figures.</li>
@@ -433,9 +433,9 @@ const ticks=(a,b,st)=>{const r=[];for(let v=Math.ceil(a/st-1e-9)*st;v<=b+1e-9;v+
 function profile(){
   const r=R.float;
   chart($('c-profile'),{label:'Loan balance against a 12.5-year bond',x:{min:0,max:24.5,ticks:ticks(0,24,2),fmt:v=>v+'y',label:'Years from signing'},
-   y:{min:0,max:5.6,ticks:[0,1,2,3,4,5],fmt:v=>'€'+v+'bn'},
-   layers:[{t:'rect',x0:0,x1:12.5,y0:0,y1:5,f:C.brass,o:.16},{t:'line',p:[[0,5],[12.5,5],[12.5,0]],c:C.brass,w:1.5},
-    {t:'bars',d:r.per.filter(e=>e.O>0).map(e=>({x0:e.t-.5,x1:e.t,y0:0,y1:e.O*5,f:C.acc,o:.8}))},
+   y:{min:0,max:1120,ticks:[0,200,400,600,800,1000],fmt:v=>'€'+v+'m'},
+   layers:[{t:'rect',x0:0,x1:12.5,y0:0,y1:1000,f:C.brass,o:.16},{t:'line',p:[[0,1000],[12.5,1000],[12.5,0]],c:C.brass,w:1.5},
+    {t:'bars',d:r.per.filter(e=>e.O>0).map(e=>({x0:e.t-.5,x1:e.t,y0:0,y1:e.O*1000,f:C.acc,o:.8}))},
     {t:'v',x:12.5,c:C.ink,lab:'Average life 12.5 years'}]});
 }
 function curve(m){
@@ -461,7 +461,7 @@ function cost(m){
   chart($('c-cost'),{label:'Implied cost per period against price paid',x:{min:0,max:24.5,ticks:ticks(0,24,2),fmt:v=>v+'y',label:'Years from signing'},
     y:{min:lo,max:hi,ticks:ticks(lo,hi,st),fmt:v=>isF?v+'bp':v.toFixed(2)+'%'},
     layers:[{t:'bars',d:per.map(e=>({x0:e.t-.5,x1:e.t,y0:ch,y1:e.k*sc,f:e.k*sc>=ch?C.acc:C.rust,o:.75}))},
-      {t:'h',y:ch,c:C.brass,w:2,dash:'6 4',lab:'Price you pay: '+(isF?'53.5bp':'4.0554%'),dy:-8},{t:'v',x:12.5,c:C.ink,lab:'Average life'}]});
+      {t:'h',y:ch,c:C.ink,w:2,lab:'Price you pay: '+(isF?'53.5bp':'4.0554%'),dy:-8},{t:'v',x:12.5,c:C.ink,lab:'Average life'}]});
   $('lg-cost').innerHTML='<span><i class="b" style="background:var(--rust)"></i>Period cheaper than your price (you pay more)</span><span><i class="b" style="background:var(--accent)"></i>Period dearer than your price (you pay less)</span>';
 }
 function waterfall(m){
