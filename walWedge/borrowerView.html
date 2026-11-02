@@ -95,7 +95,7 @@ details:last-of-type{border-bottom:1px solid var(--rule)}
 summary{cursor:pointer;font-family:var(--f-display);font-size:19px;list-style:none;display:grid;grid-template-columns:1fr auto;gap:12px}
 summary::-webkit-details-marker{display:none}
 summary::after{content:"+";font-family:var(--f-mono);color:var(--accent)}
-details[open] summary::after{content:"−"}
+details[open]>summary::after{content:"−"}
 details>div{padding-top:4px}
 details li,details p{font-size:15px}
 .disc{font-size:13px;color:var(--muted);margin-top:56px;border-top:1px solid var(--rule);padding-top:18px;line-height:1.55}
