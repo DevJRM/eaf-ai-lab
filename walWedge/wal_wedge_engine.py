@@ -10,6 +10,14 @@ Inputs are Bloomberg YAS quotes taken at one moment: Z-spread and YTM per tenor
 for one issuer in one currency, plus the swap curve YAS measures the Z-spread
 against. Rates are decimals unless a name ends in _bp.
 
+Currencies (Inputs row 4): EUR, USD and GBP. The method is the same in all three;
+only two swap-curve conventions differ (accrual() and swap_discount()):
+    EUR  vs 6M EURIBOR, annual 30/360 fixed leg  α = 1           6M fixing /360
+         vs €STR OIS, annual ACT/360             α = 365.25/360  6M fixing /360
+    USD  SOFR OIS, annual ACT/360                α = 365.25/360  6M fixing /360
+    GBP  SONIA OIS, annual ACT/365F              α = 365.25/365  6M fixing /365
+The bonds' coupon frequency (1 or 2) is a separate input, set per issuer curve.
+
 Map to the workbook (sheet!columns) and the tutorial (section, deep-dive card;
 section 10 of the tutorial is the formula catalog, section 11 the deep dives):
     fill_curve          Curves!A:S       gap-filling of the three input curves      02
@@ -92,9 +100,18 @@ def fill_curve(quotes):
 
 def accrual(inp):
     """Inputs row 16: fixed-leg accrual factor of the swap curve."""
-    if inp["currency"] == "USD" or inp["swap_basis"] == "ESTR":
+    if inp["currency"] == "USD":
+        return 365.25 / 360
+    if inp["currency"] == "GBP":
+        return 365.25 / 365
+    if inp["swap_basis"] == "ESTR":
         return 365.25 / 360
     return 1.0
+
+
+def mm_basis(inp):
+    """Curves!W6: day basis of the 6M fixing (ACT/365 for GBP, ACT/360 otherwise)."""
+    return 365 if inp["currency"] == "GBP" else 360
 
 
 def swap_discount(inp):
@@ -107,7 +124,7 @@ def swap_discount(inp):
     for i in range(1, 61):
         W.append(Q[i // 2] if i % 2 == 0 else math.sqrt(Q[(i - 1) // 2] * Q[(i + 1) // 2]))
     if inp.get("fixing_6m") is not None:
-        W[1] = 1 / (1 + inp["fixing_6m"] * 182.5 / 360)
+        W[1] = 1 / (1 + inp["fixing_6m"] * 182.5 / mm_basis(inp))
     fa = [None] + [W[i - 1] / W[i] - 1 for i in range(1, 61)]
     Z = [None]; cum = 0.0
     for i in range(1, 61):
@@ -363,6 +380,22 @@ def self_tests():
     u = run(usd)
     check("a semi-annual-coupon (USD) case runs and reprices", u["float"]["reprice_err_bp"] < 1e-6
           and u["fixed"]["reprice_err_bp"] < 1e-6)
+    # Inputs C16 / Curves W6: the swap conventions per currency.
+    conv = {(c, b): (accrual(dict(SAMPLE, currency=c, swap_basis=b)), mm_basis(dict(SAMPLE, currency=c)))
+            for c, b in (("EUR", "EURIBOR6M"), ("EUR", "ESTR"), ("USD", "SOFR"), ("GBP", "SONIA"))}
+    check("swap conventions per currency (α, 6M fixing basis) match Inputs C16 and Curves W6",
+          conv == {("EUR", "EURIBOR6M"): (1.0, 360), ("EUR", "ESTR"): (365.25 / 360, 360),
+                   ("USD", "SOFR"): (365.25 / 360, 360), ("GBP", "SONIA"): (365.25 / 365, 365)})
+    for m in (1, 2):
+        gbp = dict(SAMPLE, currency="GBP", swap_basis="SONIA", coupon_freq=m)
+        W = swap_discount(gbp)["W"]   # YTMs consistent with the Z-spreads on SONIA conventions
+        gbp["ytm"] = {T: bridge_coupon(W, z / 1e4, T, m) for T, z in SAMPLE["z_bp"].items()}
+        gr = run(gbp)
+        check(f"a GBP case (coupon frequency {m}) reprices to par and shows no YTM gap",
+              gr["float"]["reprice_err_bp"] < 1e-6 and gr["fixed"]["reprice_err_bp"] < 1e-6
+              and max(abs(v) for v in gr["gaps"].values()) < 1e-6)
+    check("the EUR sample is unchanged (7.12 / 7.51bp)",
+          round(res["float"]["net"] * 1e4, 2) == 7.12 and round(res["fixed"]["net"] * 1e4, 2) == 7.51)
     return ok
 
 
