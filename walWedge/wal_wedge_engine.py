@@ -366,7 +366,7 @@ def self_tests():
     check("PV identity and WAL cross-check hold",
           abs(res["float"]["pv_identity"] - res["float"]["pv"]) < 1e-12
           and abs(res["fixed"]["pv_identity"] - res["fixed"]["pv"]) < 1e-12)
-    check("saving = WAL timing + quote convention − X",
+    check("saving = timing effect + quote-convention effect − X",
           all(abs(res[k]["net"] - (res[k]["timing"] + res[k]["convention"] - res[k]["X"])) < 1e-14
               for k in ("float", "fixed")))
     shifted = dict(SAMPLE, swap={k: v + 0.003 for k, v in SAMPLE["swap"].items()}, fixing_6m=SAMPLE["fixing_6m"] + 0.003)
@@ -404,14 +404,14 @@ def print_results(inp, res):
     labels = {7: "Final maturity (y)", 8: "WAL (y)", 9: "Risky annuity", 11: "Curve at WAL (bp | YTM)",
               12: "Charged", 13: "Fair", 15: "NET saving (bp p.a.)", 21: "PV saving (money)",
               20: "Nominal saving (money)", 27: "Loss phase (bp)", 28: "Benefit phase (bp)",
-              34: "Fixed: risk-free effect (bp)", 35: "Fixed: credit effect (bp)",
+              34: "Component: risk-free effect (bp)", 35: "Component: credit effect (bp)",
               43: "Max repricing error (bp)", 54: "Max YTM gap (bp)", 55: "Gap check",
-              56: "WAL timing effect (bp)", 57: "Quote-convention effect (bp)"}
+              56: "Cause: timing effect (bp)", 57: "Cause: quote-convention effect (bp)"}
     print(f"{inp['name']} — Results")
     for r, lab in labels.items():
         c, d = rows["C"].get(r), rows["D"].get(r)
         fmt = lambda v: "" if v is None else (v if isinstance(v, str) else f"{v:,.6f}")
-        print(f"  row {r:2d}  {lab:30s} {fmt(c):>22s} {fmt(d):>22s}")
+        print(f"  row {r:2d}  {lab:36s} {fmt(c):>22s} {fmt(d):>22s}")
 
 
 def figures(inp=SAMPLE):

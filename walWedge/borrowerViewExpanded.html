@@ -15,6 +15,10 @@
     <button type="button" id="m-float" aria-pressed="true">Floating rate</button>
     <button type="button" id="m-fixed" aria-pressed="false">Fixed rate</button>
   </div>
+  <div class="tog aud" id="aud-tog" role="group" aria-label="Audience">
+    <button type="button" id="a-sovereign" aria-pressed="true">Sovereign</button>
+    <button type="button" id="a-corporate" aria-pressed="false">Corporate</button>
+  </div>
   <a class="back-btn" href="index.html" title="Back to the WAL Wedge Tool Set">&larr; Tool Set</a>
 </div></div>
 
@@ -34,7 +38,7 @@
     <div class="res-k" data-v="cardTitle"></div>
     <div class="res-big"><span data-v="wedgeS" style="font-size:inherit;margin:0"></span><span>bp a year</span></div>
     <div class="res-d">below the price your own curve implies for this repayment profile</div>
-    <dl class="res-t"><dt>Price you pay</dt><dd data-v="charged"></dd><dt>Bond-equivalent price</dt><dd data-v="fair"></dd><dt>Value today</dt><dd class="hl" data-v="pv"></dd><dt>As an upfront fee</dt><dd data-v="fee"></dd><dt>Positive from</dt><dd>year <span data-v="breakEven"></span></dd></dl>
+    <dl class="res-t"><dt data-v="payLab"></dt><dd data-v="charged"></dd><dt data-v="fairLab"></dt><dd data-v="fair"></dd><dt>Value today</dt><dd class="hl" data-v="pv"></dd><dt>Equivalent upfront fee</dt><dd data-v="fee"></dd></dl>
   </aside>
 </header>
 <section class="glance" aria-label="At a glance">
@@ -44,9 +48,9 @@
     <div class="cb" id="c-strip"></div>
     <div class="lg"><span><i class="b" style="background:var(--accent)"></i>Mini-bonds the loan charges less than their own bond price</span><span><i class="b" style="background:var(--slate);opacity:.5"></i>Charged more than their own bond price</span></div>
     <div class="eqn" role="group" aria-label="Bond-equivalent price minus the price you pay equals your benefit">
-      <div class="term"><b data-v="fair2"></b><span class="k">Bond-equivalent price</span><span class="d">the <span data-v="miniN"></span> mini-bond prices, weighted by how long each is outstanding</span></div>
+      <div class="term"><b data-v="fair2"></b><span class="k">Bond-equivalent price</span><span class="d">the <span data-v="miniN"></span> mini-bond prices, each weighted by how long and how safely it is outstanding</span></div>
       <span class="op" aria-hidden="true">−</span>
-      <div class="term"><b data-v="charged2"></b><span class="k">Price you pay</span><span class="d">one price for all, read at the average life</span></div>
+      <div class="term"><b data-v="charged2"></b><span class="k">Price you pay</span><span class="d">one price for all: your curve at the average life</span></div>
       <span class="op" aria-hidden="true">=</span>
       <div class="term res"><b data-v="wedge"></b><span class="k">Your benefit, a year</span><span class="d"><span data-v="pv"></span> in today's money</span></div>
     </div>
@@ -57,7 +61,7 @@
     <a class="pillar" href="#beyond"><span class="pn">03</span><h3>No refinancing wall</h3><span data-v="nInst"></span> instalments of <span data-v="peak"></span>, <span data-v="peakPct"></span> of the amount each, instead of <span data-v="amount"></span> due on a single date.</a>
   </div>
   <p class="dep"><span class="cs-k">It depends on</span><a href="#robust">a rising curve</a><span class="sep">|</span><a href="#timing">holding the loan beyond about year <span data-v="breakEven"></span></a><span class="sep">|</span><a href="#benefit">fees, excluded on both sides</a></p>
-  <nav class="toc" aria-label="Contents"><a href="#loan"><span>1</span>The loan</a><a href="#price"><span>2</span>The price</a><a href="#benchmark"><span>3</span>The comparison</a><a href="#split"><span>4</span>Sources</a><a href="#why"><span>5</span>Why it works</a><a href="#timing"><span>6</span>When it arrives</a><a href="#benefit"><span>7</span>Net benefit</a><a href="#beyond"><span>8</span>Beyond the price</a><a href="#robust"><span>9</span>Robustness</a><a href="#faq"><span>10</span>Questions</a><a href="#method"><span>11</span>Method</a></nav>
+  <nav class="toc" aria-label="Contents"><a href="#loan"><span>1</span>The loan</a><a href="#price"><span>2</span>The price</a><a href="#benchmark"><span>3</span>The comparison</a><a href="#split"><span>4</span>Two effects</a><a href="#why"><span>5</span>Why it works</a><a href="#timing"><span>6</span>When it arrives</a><a href="#benefit"><span>7</span>Net benefit</a><a href="#beyond"><span>8</span>Beyond the price</a><a href="#robust"><span>9</span>Robustness</a><a href="#faq"><span>10</span>Questions</a><a href="#method"><span>11</span>Method</a></nav>
 </section>
 
 <!-- ============ 1 ============ -->
@@ -69,7 +73,7 @@
     <tr><th>Drawdown</th><td data-v="drawdown"></td></tr>
     <tr><th>Repayment</th><td data-v="repayment"></td></tr>
     <tr><th>Final maturity</th><td><span data-v="maturity"></span> years</td></tr>
-    <tr><th>Average life</th><td><span data-v="wal"></span> years</td></tr>
+    <tr><th>Average life</th><td><span data-v="wal"></span> years, measured for each euro from its drawing to its repayment</td></tr>
     <tr><th>Interest</th><td data-v="interest"></td></tr>
     <tr><th>Pricing reference</th><td data-v="pricingRef"></td></tr>
   </tbody></table>
@@ -86,7 +90,7 @@
 <section class="s" id="price">
   <div class="lab"><span class="n">2</span>How the price is set</div>
   <h2>Your own curve, read at the loan's average life</h2>
-  <p>Reading the borrower's bond curve at the loan's average life is a widely used way to price an amortising loan off observable bond levels. It is simple and transparent, and you can verify it on your own screen.</p>
+  <p>Reading your bond curve at the loan's average life is a widely used way to price an amortising loan off observable bond levels. It is simple and transparent, and you can verify it on your own screen.</p>
   <div class="ex">
     <div class="et">Exhibit 2</div><div class="eh" data-v="ex2Title"></div>
     <div class="cb" id="c-curve"></div>
@@ -103,40 +107,55 @@
   <ol class="steps">
     <li><b>Each instalment is a mini-bond.</b> <span data-v="miniN"></span> of them, <span data-v="peak"></span> each, maturing from year <span data-v="miniShortT"></span> to year <span data-v="miniLongT"></span>.</li>
     <li><b>As bonds, each would have its own price.</b> On your curve, from <span data-v="miniShortP"></span> for the <span data-v="miniShortT"></span>-year one to <span data-v="miniLongP"></span> for the <span data-v="miniLongT"></span>-year one.</li>
-    <li><b>The loan charges one price for all of them.</b> Your curve read at the average life of <span data-v="wal"></span> years: <span data-v="charged"></span>.</li>
+    <li><b>The loan charges one price for all of them:</b> <span data-v="payDesc"></span>.</li>
     <li><b>The short ones pay more, the long ones pay less.</b> The <span data-v="miniBelow"></span> mini-bonds maturing before year <span data-v="miniSwitch"></span> are charged more than their own bond price, <span data-v="miniBelowV"></span> in today's money; the <span data-v="miniAbove"></span> from year <span data-v="miniSwitch"></span> on are charged less, <span data-v="miniAboveV"></span>.</li>
     <li><b>The long ones count for more.</b> A price is paid for as long as a mini-bond is outstanding, so the <span data-v="miniLongT"></span>-year one weighs <span data-v="miniWeight"></span> times the <span data-v="miniShortT"></span>-year one.</li>
     <li><b>Net, the loan is priced below the sum of its parts.</b> Weighted that way, the <span data-v="miniN"></span> bond prices average <span data-v="fair"></span>: the bond-equivalent price of the loan. You pay <span data-v="charged"></span>, <span data-v="wedge"></span> a year less, <span data-v="pv"></span> in today's money.</li>
     <li><b>Why one bond with the same average life misses it.</b> A <span data-v="wal"></span>-year bond is, in effect, one of these mini-bonds: the one in the middle. It captures none of the difference between the short mini-bonds and the long ones, which is where the value lies.</li>
   </ol>
   <div class="tbl"><table class="d">
-    <thead><tr><th>Mini-bonds</th><th>Count</th><th>Value to you today</th></tr></thead>
+    <thead><tr><th>Mini-bonds, by maturity</th><th>Count</th><th>Value to you today</th></tr></thead>
     <tbody>
       <tr><td>Maturing before year <span data-v="miniSwitch"></span>: charged more than their bond price</td><td data-v="miniBelow"></td><td class="neg" data-v="miniBelowV"></td></tr>
       <tr><td>Maturing from year <span data-v="miniSwitch"></span>: charged less than their bond price</td><td data-v="miniAbove"></td><td class="pos" data-v="miniAboveV"></td></tr>
-      <tr class="hl"><td>The loan</td><td data-v="miniN"></td><td data-v="pv"></td></tr>
+      <tr class="hl"><td>The loan, net</td><td data-v="miniN"></td><td data-v="pv"></td></tr>
     </tbody></table></div>
+  <p class="cap">Split by when each mini-bond matures. Section 7 splits the same net benefit by date instead, so its two halves differ slightly from these.</p>
   <p class="big">In other words: a <b><span data-v="maturity"></span>-year amortising profile at your <span data-v="wal"></span>-year price</b>, with the mini-bonds that count most charged the least relative to their bond price.</p>
 </section>
 
 <!-- ============ 4 (expanded) ============ -->
 <section class="s" id="split">
-  <div class="lab"><span class="n">4</span>Where the benefit comes from, precisely</div>
-  <h2>A timing effect, and a quote convention</h2>
-  <p>A <span data-v="wal"></span>-year bullet loan priced on exactly the same basis as this loan separates the two things the average-life price leaves out.</p>
-  <div class="tbl"><table class="d">
-    <thead><tr><th>Step</th><th>Price</th><th>Effect</th></tr></thead>
-    <tbody>
-      <tr><td>This loan, priced period by period at your curve (bond-equivalent)</td><td data-v="fair"></td><td></td></tr>
-      <tr><td>A <span data-v="wal"></span>-year bullet loan, priced the same way</td><td data-v="bullet"></td><td class="pos" data-v="timing"></td></tr>
-      <tr><td>The price read at the average life</td><td data-v="charged"></td><td data-v="convention"></td></tr>
-      <tr class="hl"><td>Benefit to you</td><td></td><td data-v="wedge"></td></tr>
-    </tbody></table></div>
-  <div class="pr">
-    <div><h3>Timing effect</h3><p>The difference between this loan and a bullet with the same average life, both priced at your curve: the value of the loan's longer profile, which sits further up your curve. It is the core of the benefit.</p></div>
-    <div class="alt"><h3>Quote convention</h3><p data-mode="float">Even for a bullet, the reading of your curve is not exactly its bond-equivalent margin. A Z-spread is a spread on discount rates; a loan margin is paid periodically and only while the borrower performs. Converting one into the other moves the price by <span data-v="convention"></span>.</p><p data-mode="fixed" hidden>Even for a bullet, the reading of your yield curve, restated semi-annually, differs slightly from the rate the same bullet would pay when priced period by period on your curve: a yield is one average rate for all of a bond's cash flows, and the reading between quoted maturities is interpolated. The difference here is <span data-v="convention"></span>.</p></div>
+  <div class="lab"><span class="n">4</span>Where the benefit comes from</div>
+  <h2>Two effects: the loan's timing, and how your curve is quoted</h2>
+  <p>The price you pay and the bond-equivalent price differ in two ways at once. They describe different instruments, a <span data-v="wal"></span>-year bond against this <span data-v="maturity"></span>-year amortising profile, and they are priced different ways, a reading of your quoted curve against a period-by-period valuation. A third price separates the two: the <b>reference bond</b>, a <span data-v="wal"></span>-year bullet bond valued on your curve exactly as the loan is. Each step from one price to the next then changes one thing only.</p>
+  <div class="ex">
+    <div class="et">Exhibit 3</div><div class="eh">Three prices, two effects</div>
+    <figure class="split3" aria-label="Bond-equivalent price minus reference bond is the timing effect; reference bond minus average-life price is the quote-convention effect; together they make your benefit">
+      <div class="px f"><div class="k">Bond-equivalent price</div><div class="d">this loan, valued period by period on your curve</div><div class="v" data-v="fair"></div></div>
+      <div class="px r"><div class="k">Reference bond</div><div class="d">a <span data-v="wal"></span>-year bullet, valued the same way</div><div class="v" data-v="bullet"></div></div>
+      <div class="px s"><div class="k">Average-life price</div><div class="d">your curve read at <span data-v="wal"></span> years</div><div class="v" data-v="avgLife"></div></div>
+      <div class="sp tm"><div class="u"></div><div class="t">Timing effect<small>only the profile differs</small></div><div class="n pos" data-v="timing"></div></div>
+      <div class="sp qc"><div class="u"></div><div class="t">Quote-convention effect<small>only the valuation differs</small></div><div class="n neg" data-v="convention"></div></div>
+      <div class="sp w"><div class="u"></div><div class="t" data-v="benefitLab"></div><div class="n" data-v="wedgeP"></div></div>
+    </figure>
+    <p class="split3-x" data-xrow hidden data-v="xSentence"></p>
   </div>
-  <div class="callout" data-mode="fixed" hidden><p data-v="rfSentence"></p></div>
+  <p><b>Timing effect, <span data-v="timing"></span>.</b> The core of the benefit. The loan and the reference bond have the same average life and are valued the same way; only the loan's profile differs. Part of its principal stays out well beyond <span data-v="wal"></span> years, where your curve is higher, and the average-life price does not charge for it.</p>
+  <p data-v="convText"></p>
+  <div data-mode="fixed" hidden>
+    <h3>Fixed rate: the credit effect and the interest-rate effect</h3>
+    <p>A fixed rate prices two things at once: the cost of money over the period lent, from the swap curve, and your credit. Split both prices into these two parts and compare like with like.</p>
+    <div class="tbl"><table class="d">
+      <thead><tr><th>Fixed rate</th><th>Bond-equivalent</th><th>Price you pay</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr><td>Interest-rate part: swap rates over the loan's life, against the <span data-v="wal"></span>-year rate</td><td data-v="rfFair"></td><td data-v="rfPaid"></td><td data-v="rfEffect"></td></tr>
+        <tr><td>Credit part: your credit cost over the loan's life, against your credit premium</td><td data-v="crFair"></td><td data-v="crPaid"></td><td class="pos" data-v="creditEffect"></td></tr>
+        <tr class="hl"><td>The whole rate</td><td data-v="fair"></td><td data-v="charged"></td><td data-v="wedgeP"></td></tr>
+      </tbody></table></div>
+    <p class="cap">Your credit premium is your bond yield minus the swap rate for the same maturity, both on the loan's semi-annual basis: <span data-v="creditPremium"></span> at <span data-v="wal"></span> years.</p>
+    <div class="callout"><p data-v="rfMsg"></p></div>
+  </div>
 </section>
 
 <!-- ============ 4 ============ -->
@@ -146,7 +165,7 @@
   <div class="pr">
     <div><h3>A quoted level is an average</h3><p data-v="p1"></p></div>
     <div><h3>The same average life, a different timing</h3>
-      <p>The bond's principal is outstanding, on average, at year <span data-v="bondCg"></span>; the loan's at year <span data-v="cg"></span>, and <span data-v="shareAfter"></span> of its principal-years fall after year <span data-v="wal"></span>. On a rising curve, later exposure costs more, and the price read at the average life does not charge for it.</p></div>
+      <p>The bond's principal is outstanding, on average, at year <span data-v="bondCg"></span>; the loan's at year <span data-v="cg"></span>, and <span data-v="shareAfter"></span> of its principal-years fall after year <span data-v="wal"></span>. On a rising curve, later exposure costs more, and the average-life price does not charge for it.</p></div>
   </div>
   <div class="ex">
     <div class="et">Exhibit 4</div><div class="eh">What your curve implies for each six-month period, against the price you pay</div>
@@ -167,9 +186,9 @@
     <div class="cb" id="c-run"></div>
     <p class="cap">Cumulative difference, period by period, between what your curve implies and what you pay, in today's money.</p>
   </div>
-  <div class="callout"><p><b>What this means.</b> The benefit is collected by keeping the loan to maturity. Repaying it early, voluntarily or through a refinancing, before about year <span data-v="breakEven"></span> would mean having paid more than the bond-equivalent cost of the periods already run. Prepayment terms are part of the value of the proposal.</p></div>
+  <div class="callout"><p><b>What this means.</b> The benefit is collected by keeping the loan to maturity. Repaying it early, voluntarily or through a refinancing, before about year <span data-v="breakEven"></span> would mean having paid more than your curve implies for the periods already run. Prepayment terms are part of the value of the proposal.</p></div>
   <h3>If the loan were repaid early</h3>
-  <p>Present value of the benefit accumulated up to each date, relative to the bond-equivalent cost of the periods run; both loan types.</p>
+  <p>Present value of the benefit accumulated up to each date, relative to what your curve implies for the periods run; both loan types.</p>
   <div class="tbl"><table class="d">
     <thead><tr><th>Scenario</th><th>Floating</th><th>Fixed</th></tr></thead>
     <tbody id="pp-body"></tbody></table></div>
@@ -187,13 +206,13 @@
   <div class="tbl"><table class="d">
     <thead><tr><th>Period</th><th>Present value</th><th>Per year</th></tr></thead>
     <tbody>
-      <tr><td>Signing to the average life (0–<span data-v="wal"></span> years)</td><td class="neg" data-v="lossPV"></td><td class="neg" data-v="lossBp"></td></tr>
-      <tr><td>Average life to final maturity (<span data-v="wal"></span>–<span data-v="maturity"></span> years)</td><td class="pos" data-v="gainPV"></td><td class="pos" data-v="gainBp"></td></tr>
+      <tr><td>By date: signing to the average life (0–<span data-v="wal"></span> years)</td><td class="neg" data-v="lossPV"></td><td class="neg" data-v="lossBp"></td></tr>
+      <tr><td>By date: average life to final maturity (<span data-v="wal"></span>–<span data-v="maturity"></span> years)</td><td class="pos" data-v="gainPV"></td><td class="pos" data-v="gainBp"></td></tr>
       <tr class="hl"><td>Net benefit</td><td data-v="pv"></td><td data-v="wedge"></td></tr>
       <tr><td>Equivalent upfront fee on the loan amount</td><td></td><td data-v="fee"></td></tr>
       <tr><td>Undiscounted, over the life (for reference)</td><td data-v="nominal"></td><td></td></tr>
     </tbody></table></div>
-  <p>The upfront-fee equivalent is a useful yardstick when comparing all-in offers. The comparison excludes fees on both sides: bond issuance costs and any new-issue premium would add to the benefit; the loan's own fees would reduce it.</p>
+  <p>This splits the benefit by date. Section 3 splits it by the maturity of each mini-bond, so the two halves differ slightly; the net is the same. The upfront-fee equivalent is a useful yardstick when comparing all-in offers. The comparison excludes fees on both sides: bond issuance costs and any new-issue premium would add to the benefit; the loan's own fees would reduce it.</p>
 </section>
 
 <!-- ============ beyond ============ -->
@@ -201,8 +220,10 @@
   <div class="lab"><span class="n">8</span>Beyond the price</div>
   <h2>A smoother debt profile, and a structure you can shape</h2>
   <div class="pr">
-    <div><h3>No refinancing wall</h3><p>A bond of the same average life puts <span data-v="amount"></span> on one date, year <span data-v="wal"></span>. This loan spreads repayment over <span data-v="nInst"></span> instalments of <span data-v="peak"></span>, <span data-v="peakPct"></span> of the amount each, out to year <span data-v="maturity"></span>. It removes a concentration point from your redemption profile rather than adding one.</p></div>
-    <div><h3>One facility, priced once</h3><p>A single facility, priced at signing, replaces the several bond issues and market windows the same profile would otherwise need. Bond issuance costs and any new-issue premium fall away; the loan's own fees apply instead (see <a href="#benefit">the net benefit</a>).</p></div>
+    <div data-borrower="sovereign"><h3>Same average maturity, no redemption peak</h3><p>The loan's redemptions fall, on average, <span data-v="avgRepay"></span> years from signing, so in your average time to maturity it counts much like a <span data-v="wal"></span>-year bond. But a bond redeems <span data-v="amount"></span> in a single year, while this loan spreads repayment over <span data-v="nInst"></span> instalments of <span data-v="peak"></span>, <span data-v="peakPct"></span> of the amount each, out to year <span data-v="maturity"></span>. Your redemption profile gains length without a new peak, and refinancing risk is spread rather than concentrated.</p></div>
+    <div data-borrower="corporate"><h3>No maturity wall</h3><p>A bond of the same average life puts <span data-v="amount"></span> on one date, year <span data-v="wal"></span>. This loan spreads repayment over <span data-v="nInst"></span> instalments of <span data-v="peak"></span>, <span data-v="peakPct"></span> of the amount each, out to year <span data-v="maturity"></span>. It removes a concentration point from your maturity profile rather than adding one, which supports liquidity planning and the maturity-profile assessment of rating agencies.</p></div>
+    <div data-borrower="sovereign"><h3>A complement to your issuance programme</h3><p>One facility, priced at signing, diversifies your funding sources and investor base beyond your auction and syndication programme, with certainty of execution whatever market conditions bring. No new-issue concession or syndication fees apply; the loan's own fees apply instead (see <a href="#benefit">the net benefit</a>).</p></div>
+    <div data-borrower="corporate"><h3>One facility, priced once</h3><p>A single facility, priced at signing, replaces the several bond issues and market windows the same profile would otherwise need, with one set of documentation. Bond issuance costs and any new-issue premium fall away; the loan's own fees apply instead (see <a href="#benefit">the net benefit</a>).</p></div>
   </div>
   <h3>Shaping the profile</h3>
   <p>The benefit depends on the repayment profile as much as on your curve, and not always in the obvious direction: a longer loan is priced further out on your curve, where it may be flatter. The same calculation, on the same curve, for alternative profiles:</p>
@@ -210,7 +231,7 @@
     <thead><tr><th>Profile</th><th>Final maturity</th><th>Average life</th><th>Price</th><th>Benefit per year</th><th>Value today</th></tr></thead>
     <tbody id="pf-body"></tbody></table></div>
   <p class="cap" id="pf-note" hidden>* Beyond your longest quoted maturity: the credit cost of the last quoted year is extended.</p>
-  <p class="cap">Average life is measured from the average drawdown date. A longer drawdown period with the same final maturity keeps the average life, and so the price, while the money is drawn and repaid later on your curve. A lender measuring average life from signing would read your curve further out.</p>
+  <p class="cap">A longer drawdown keeps the average life, and so the price, while your money is drawn and repaid later on your curve. Alternative profiles are indicative and subject to agreement. A longer drawdown would normally carry a commitment fee on undrawn amounts, not included here.</p>
 </section>
 
 <!-- ============ 7 ============ -->
@@ -237,25 +258,27 @@
     <div class="et">Exhibit 7</div><div class="eh">Benefit against the steepness of your curve</div>
     <div class="cb" id="c-slope"></div>
     <div class="lg"><span><i style="background:var(--accent)"></i>Floating</span><span><i style="background:var(--slate)"></i>Fixed</span></div>
-    <p class="cap">Every quoted level moved towards (or beyond) today's average-life reading: 1 is today's curve, 0 a flat curve, −1 the mirror image of today's slope. The benefit rises roughly in line with the slope; at zero slope what remains is the small quote-convention effect of section 4.</p>
+    <p class="cap">Every quoted level moved towards (or beyond) today's average-life reading: 1 is today's curve, 0 a flat curve, −1 the mirror image of today's slope. The benefit rises roughly in line with the slope; at zero slope it is close to zero.</p>
   </div>
   <h3>How the curve is read matters</h3>
-  <p>Maturities without a quote are filled by straight lines between the nearest quotes, and the price read at the average life depends on that interpolation. A fitted issuer curve (Bloomberg BVAL or a curve-finder fit) describes par bonds at every whole-year maturity and is the cleanest input. With quotes taken bond by bond, bonds trading far from par can shift each level by a few basis points.</p>
+  <p>Maturities without a quote are filled by straight lines between the nearest quotes, and the average-life price depends on that interpolation. A fitted issuer curve (Bloomberg BVAL or a curve-finder fit) describes par bonds at every whole-year maturity and is the cleanest input. With quotes taken bond by bond, bonds trading far from par can shift each level by a few basis points.</p>
 </section>
 
 <!-- ============ 9 (expanded) ============ -->
 <section class="s" id="faq">
   <div class="lab"><span class="n">10</span>Questions you may have</div>
   <h2>The points we would challenge, if we were you</h2>
-  <details><summary>Why not simply issue a <span data-v="wal"></span>-year bond at the same price?</summary><div><p>You can, and on price the two are level. The difference is the profile: the bond concentrates refinancing on one date, while the loan amortises over <span data-v="nInst"></span> instalments to year <span data-v="maturity"></span>. Replicating the loan's profile in your bond market, with a bond maturing on each repayment date, would cost <span data-v="fair"></span> rather than <span data-v="charged"></span>.</p></div></details>
-  <details><summary>If the price is below my bond-equivalent cost, why would a lender offer it?</summary><div><p>Average-life pricing is a widely used, transparent convention for amortising loans, and a lender's economics are set by its own funding, capital and relationship considerations rather than by your bond curve. This analysis measures what the convention is worth to you on your own curve; it makes no statement about the lender's margin.</p></div></details>
+  <details><summary>Why not simply issue a <span data-v="wal"></span>-year bond at the same price?</summary><div><p>You can, and on price the two are level. The difference is the profile: the bond concentrates refinancing on one date, while the loan amortises over <span data-v="nInst"></span> instalments to year <span data-v="maturity"></span>. Replicating the loan's profile in your bond market, with a bond maturing on each repayment date, would cost <span data-v="fair"></span>, the bond-equivalent price, rather than <span data-v="charged"></span>.</p></div></details>
+  <details><summary>If the price is below my bond-equivalent price, why would a lender offer it?</summary><div><p>Average-life pricing is a widely used, transparent convention for amortising loans, and a lender's economics are set by its own funding, capital and relationship considerations rather than by your bond curve. This analysis measures what the convention is worth to you on your own curve; it makes no statement about the lender's margin.</p></div></details>
   <details><summary>Is the benefit real money, or a modelling result?</summary><div><p>It is the present value of paying less than your own market price for the later periods of the loan, computed from your quoted bonds only. It is not a payment: it shows up as interest below the bond-equivalent level in the later years, offset in part by interest above it in the early years (section 6). The assumptions that cannot be observed in your bond prices move it by no more than <span data-v="maxMove"></span>.</p></div></details>
   <details data-mode="float"><summary>A Z-spread is not my floating funding cost. Does the comparison hold?</summary><div><p>The analysis does not use the Z-spread as a margin. It infers from your Z-spreads the cost of lending to you in each period and prices the loan's margin on that basis. The only place where the Z-spread is used as a margin is the average-life price itself, and the cost of that convention, <span data-v="convention"></span>, is already netted in the benefit (section 4).</p></div></details>
   <details><summary>Why does the cost per period step up and down?</summary><div><p>Each year's cost is inferred from the difference between neighbouring quoted levels. With a limited number of quotes joined by straight lines, those differences jump where the slope of the interpolated curve changes. A fitted issuer curve gives a smoother profile. The bond-equivalent price is a weighted average over all of the loan's periods, so a step in any single year carries a small weight in it.</p></div></details>
   <details><summary>What if my curve flattens after signing?</summary><div><p>The price is fixed at signing, and the benefit shown is measured on the curve at signing. If your curve later flattened, new long-dated issuance would become cheaper for you, which would reduce, in hindsight, the value of having fixed the long end of this loan at today's levels. The analysis does not forecast your curve.</p></div></details>
   <details><summary>What if we prepay?</summary><div><p>The benefit is back-loaded: it is positive in present value only from about year <span data-v="breakEven"></span>. The table in section 6 shows the position at earlier dates. Prepayment terms should be read with this in mind.</p></div></details>
-  <details><summary>How do fees change the picture?</summary><div><p>The headline excludes fees on both sides. As a yardstick, the benefit is equivalent to an upfront fee of <span data-v="fee"></span> on the loan amount: loan fees below that level leave you ahead of the bond-equivalent cost, before counting the bond route's own issuance costs and any new-issue premium.</p></div></details>
+  <details><summary>How do fees change the picture?</summary><div><p>The headline excludes fees on both sides. As a yardstick, the benefit is equivalent to an upfront fee of <span data-v="fee"></span> on the loan amount: loan fees below that level leave you ahead of the bond-equivalent price, before counting the bond route's own issuance costs and any new-issue premium.</p></div></details>
   <details><summary>Does the recovery assumption drive the result?</summary><div><p>No. Recovery is not observable in bond prices, so we test it: at 20% or 60% instead of <span data-v="recovery"></span> the benefit moves by no more than <span data-v="maxMove"></span> (section 9). A different recovery changes the inferred default risk and the loss given default in opposite directions, which largely offset.</p></div></details>
+  <details data-borrower="sovereign"><summary>How does this compare with our auction or syndication cost?</summary><div><p>The comparison uses your bonds at their secondary-market levels on Bloomberg YAS. Issuing new bonds usually adds a new-issue concession and, for syndications, fees; both are excluded here, so the bond route's all-in cost would be higher than the bond-equivalent price shown. The loan's own fees are excluded too, and section 7 gives the yardstick for comparing them.</p></div></details>
+  <details data-borrower="corporate"><summary>How does this affect our ratings or covenants?</summary><div><p>This analysis is economic only: it compares the cost of the loan with the cost of the same profile in your bond market. Accounting, tax, rating and covenant treatment depend on your circumstances and the final documentation, and are for your advisers.</p></div></details>
   <details><summary>Can the figures be reproduced on our own data?</summary><div><p>Yes. The calculation needs one Bloomberg YAS snapshot of your bonds (Z-spreads and yields by maturity), the swap curve YAS measures them against, and the loan's profile. It runs in a spreadsheet without macros, and it checks itself: every quoted bond is repriced exactly, and the Z-spreads and yields must describe the same bonds (section 11).</p></div></details>
 </section>
 
@@ -270,7 +293,7 @@
     <li>Find, year by year, the default intensity that reprices each of your bonds exactly at its quoted level. This turns each quoted level, an average to maturity, into the cost of each individual year.</li>
     <li>Build the loan's half-yearly balance from its drawdown and repayment schedule.</li>
     <li>Price each six-month period at the cost your curve implies for it, weighted by the balance outstanding, the discount factor and the probability of no default. The weighted average is the bond-equivalent price of the whole profile.</li>
-    <li>Compare it with the price read at the loan's average life. The difference, multiplied by the loan's credit-adjusted annuity of <span data-v="annuity"></span> years and the amount, is the present value of the benefit.</li>
+    <li>Compare it with the average-life price, your curve read at the loan's average life. The difference, multiplied by the loan's credit-adjusted annuity of <span data-v="annuity"></span> years and the amount, is the present value of the benefit.</li>
   </ol></div></details>
   <details><summary>The calculation, precisely</summary><div>
     <p><b>From your quotes to the cost of each year.</b> Each quoted maturity T is read as your par bond paying a coupon c<sub>T</sub> at its own frequency m. For the fixed-rate loan c<sub>T</sub> is the YAS yield. For the floating-rate loan c<sub>T</sub> is recovered from the YAS Z-spread z, which Bloomberg defines as a spread added to every swap zero rate:</p>
@@ -280,7 +303,7 @@
     <div class="fx">s<sub>i</sub> = (1 − p<sub>i</sub>)·(1 + f<sub>i</sub>·a − R) / (p<sub>i</sub>·a); &nbsp; floating k<sub>i</sub> = s<sub>i</sub>, &nbsp; fixed k<sub>i</sub> = f<sub>i</sub> + s<sub>i</sub></div>
     <p><b>Bond-equivalent price and benefit</b>, with balance O<sub>i</sub>, discount factor DF<sub>i</sub> and amount N:</p>
     <div class="fx">w<sub>i</sub> = DF<sub>i</sub>·S<sub>i</sub>·a·O<sub>i</sub>; &nbsp; fair = Σ w<sub>i</sub>·k<sub>i</sub> / Σ w<sub>i</sub>; &nbsp; PV = N·(fair − charged)·Σ w<sub>i</sub></div>
-    <p>Σ w<sub>i</sub> = <span data-v="annuity"></span> years is the loan's credit-adjusted annuity. The fair price is the rate at which the loan's cash flows, valued on your curve, are worth exactly what is drawn: the price of funding this profile at your own bond curve.</p>
+    <p>Σ w<sub>i</sub> = <span data-v="annuity"></span> years is the loan's credit-adjusted annuity. The bond-equivalent price, <i>fair</i> above, is the rate at which the loan's cash flows, valued on your curve, are worth exactly what is drawn: the price of funding this profile at your own bond curve.</p>
   </div></details>
   <details><summary>Data and built-in checks</summary><div><ul>
     <li>All market inputs come from one Bloomberg snapshot: your YAS Z-spreads and yields by maturity, the swap curve YAS measures the Z-spreads against, and the 6-month fixing.</li>
@@ -291,9 +314,7 @@
   <details><summary>Points to note</summary><div><ul id="notes-list"></ul></div></details>
   <details><summary>Limitations</summary><div><ul>
     <li>Your bonds must be in the currency of the loan; the analysis makes no cross-currency adjustment.</li>
-    <li>The whole spread of your bonds over swaps is read as the price of your credit, including any liquidity component.</li>
     <li>The loan is modelled in six-month periods with an accrual of half a year; the loan's actual day count changes the result only marginally.</li>
-    <li>Fees, bond issuance costs and any new-issue premium are excluded from the headline figures.</li>
   </ul></div></details>
 
   <div class="disc">

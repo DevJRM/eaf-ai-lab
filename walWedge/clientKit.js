@@ -180,7 +180,7 @@
       client: cs.client || '[Client name]', asOf: cs.asOf, dataNote: cs.illustrative ? ' (simulated, template)' : '',
       xYears: fmt.yrs(cs.drawdownYears), yYears: fmt.yrs(cs.repaymentYears), xPlural: cs.drawdownYears === 1 ? '' : 's', ccy: cs.currency, sym, glyph: cv.glyph,
       amount: fmt.amount(N, sym), amountFull: sym + ' ' + N.toLocaleString('en-GB'),
-      wal: fmt.yrs(WAL), maturity: fmt.yrs(mat), cg: f.cg.toFixed(2), bondCg: (WAL / 2).toFixed(2),
+      wal: fmt.yrs(WAL), maturity: fmt.yrs(mat), avgRepay: fmt.yrs(WAL + (nDraw > 1 ? (nDraw - 1) / 4 : 0)), cg: f.cg.toFixed(2), bondCg: (WAL / 2).toFixed(2),
       shareAfter: Math.round(f.pyAfter / WAL * 100) + '%',
       tailYears: fmt.yrs(mat - WAL),
       drawdown: nDraw === 0 ? 'Fully drawn at signing' : nDraw === 1 ? 'Single drawing at signing'
@@ -195,6 +195,7 @@
       lastQuote: String(Math.max(...Object.keys(cs.zspreadBp).map(Number))),
       borrower: cs.borrowerType === 'corporate' ? 'company' : 'sovereign',
       gapBp: (() => { let g = 0; const W = R.dfg; Object.keys(cs.zspreadBp).forEach(k => { if (k in cs.ytmPct) g = Math.max(g, Math.abs(bridge(W, cs.zspreadBp[k] / 1e4, +k, m) - cs.ytmPct[k] / 100) * 1e4); }); return g.toFixed(2) + 'bp'; })(),
+      swapPeak: (() => { const sw = fill(R.inputs.s).out; let k = 0; for (let i = 1; i < 30; i++) if (sw[i] > sw[k]) k = i; return String(k + 1); })(),
       swapTail: (() => { const sw = fill(R.inputs.s).out, a = sw[Math.min(29, Math.max(0, Math.round(WAL) - 1))], b = sw[Math.min(29, Math.ceil(mat) - 1)]; return b < a ? 'lower' : 'higher'; })(),
       yrsShort: t => fmt.yrs(t) + '-year',
       maxMove: (() => { const b = sc.base; let mv = 0; ['swap30', 'rec20', 'rec60'].forEach(n => ['float', 'fixed'].forEach(k => { mv = Math.max(mv, Math.abs(sc[n][k] - b[k])); })); return mv.toFixed(1) + 'bp'; })(),
@@ -209,7 +210,7 @@
       const wb = r.wedge * 1e4, key = isF ? 'float' : 'fixed';
       let dear = 0; for (const e of r.per) if (e.O > 0 && e.k > r.charged) dear += e.O * 0.5;
       return {
-        wedge: fmt.bp(wb), wedgeN: wb.toFixed(2), wedgeS: (wb < 0 ? MINUS : '+') + Math.abs(wb).toFixed(2), pv: fmt.money(r.pv * N, sym), nominal: fmt.money(r.wedge * N * WAL, sym),
+        wedge: fmt.bp(wb), wedgeP: fmt.sbp(wb), wedgeN: wb.toFixed(2), wedgeS: (wb < 0 ? MINUS : '+') + Math.abs(wb).toFixed(2), pv: fmt.money(r.pv * N, sym), nominal: fmt.money(r.wedge * N * WAL, sym),
         perYear: sym + ' ' + (Math.abs(r.wedge * N * WAL / mat) / 1e6).toFixed(2) + 'm',
         fee: Math.round(wb * r.B) + 'bp', annuity: r.B.toFixed(2),
         breakEven: be === null ? 'never' : fmt.yrs(be), minPV: fmt.money(minV * N, sym), minYear: fmt.yrs(minT),
@@ -218,9 +219,20 @@
         quote: isF ? fmt.bp(r.quote * 1e4, 1) : fmt.pct(r.quote), charged: unit(r.charged), fair: unit(r.fair),
         charged2: isF ? fmt.bp(r.charged * 1e4) : fmt.pct(r.charged), fair2: isF ? fmt.bp(r.fair * 1e4) : fmt.pct(r.fair),
         bullet: unit(r.bullet), timing: fmt.sbp(r.timing * 1e4), convention: fmt.sbp(r.convention * 1e4),
-        rfEffect: fmt.sbp((r.wf - r.rfPar) * 1e4), creditEffect: fmt.sbp(wb - (r.wf - r.rfPar) * 1e4),
+        rfEffect: fmt.sbp((r.wf - r.rfPar) * 1e4), creditEffect: fmt.sbp(wb - (r.wf - r.rfPar) * 1e4), rfNeg: r.wf < r.rfPar,
+        // the average-life price (the curve read at the WAL, before any agreed margin X) and X itself
+        avgLife: unit(r.shortcut), xBp: (r.charged - r.shortcut) * 1e4, xEffect: fmt.sbp(-(r.charged - r.shortcut) * 1e4),
+        // fixed loan, split by component: risk-free (interest-rate) part and credit part of each price
+        rfFair: fmt.pct(r.wf), rfPaid: fmt.pct(r.rfPar), crFair: fmt.bp((r.fair - r.wf) * 1e4), crPaid: fmt.bp((r.charged - r.rfPar) * 1e4),
+        creditPremium: fmt.bp((r.shortcut - r.rfPar) * 1e4),
+        ...(() => { // the timing effect split into its credit and risk-free shares: fair price against reference bullet, part by part
+          const upto = n => { let a = 0, b = 0; for (let i = 0; i < n; i++) { const e = r.per[i]; a += e.DF * e.S * e.f; b += e.DF * e.S; } return a / b; };
+          const n0 = Math.max(1, Math.min(59, Math.floor(2 * r.WAL))), bRF = upto(n0) + (2 * r.WAL - n0) * (upto(n0 + 1) - upto(n0));
+          const cr = (r.fair - r.wf) - (r.bullet - bRF);
+          return { creditTiming: fmt.sbp(cr * 1e4), rfTiming: fmt.sbp((r.timing - cr) * 1e4) }; })(),
         fairAnnual: isF ? '' : fmt.pct(Math.pow(1 + r.fair / 2, 2) - 1),
         yearQuote: isF ? fmt.bp(ycQ * 1e4, 0) : fmt.pct(ycQ, 3), yearCost: isF ? fmt.bp(ycC * 1e4, 0) : fmt.pct(ycC, 2),
+        yearQuoteSA: isF ? '' : fmt.pct(m === 2 ? ycQ : 2 * (Math.pow(1 + ycQ / m, m / 2) - 1), 2),
         yearRatio: (ycC / ycQ).toFixed(1),
         sc_base: fmt.bp(sc.base[key]), sc_swap30: fmt.bp(sc.swap30[key]), sc_rec20: fmt.bp(sc.rec20[key]), sc_rec60: fmt.bp(sc.rec60[key]),
         sc_inv: fmt.bp(sc.inv[key]), sc_flat: fmt.bp(sc.flat[key]), sc_half: fmt.bp(sc.half[key]), sc_double: fmt.bp(sc.double[key]),

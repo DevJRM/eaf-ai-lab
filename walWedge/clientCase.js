@@ -12,6 +12,8 @@ window.WW_CASE = {
   illustrative: true,              // true = shows the "illustrative template, simulated data" ribbon
   client: '',                      // e.g. 'Republic of X' or 'X Group plc'; blank shows a placeholder
   borrowerType: 'sovereign',       // 'sovereign' or 'corporate' (wording only)
+  showAudienceToggle: true,        // true = Sovereign | Corporate switch in the top bar (internal review);
+                                   // false = the pages show only the borrowerType above (client version)
   asOf: '26 October 2026',         // date of the market-data snapshot (workbook Inputs C10)
 
   currency: 'EUR',                 // 'EUR', 'USD' or 'GBP' — of the loan AND of the bonds quoted below
