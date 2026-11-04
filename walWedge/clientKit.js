@@ -357,7 +357,7 @@
   function drawCost(el, F, mode) {
     const r = F.R[mode], isF = mode === 'float', sc = isF ? 1e4 : 100, ch = r.charged * sc, per = r.per.filter(e => e.O > 0);
     const v = per.map(e => e.k * sc).concat([ch]); const st = isF ? 40 : 0.25;
-    const lo = Math.floor(Math.min(...v) / st) * st, hi = Math.ceil(Math.max(...v) / st) * st, mat = r.maturity;
+    const lo = Math.floor(Math.min(...v) / st) * st, hi = Math.ceil((Math.max(...v) + 0.6 * st) / st) * st, mat = r.maturity; // headroom for the 'Average life' label
     chart(el, { label: 'Implied cost per period against the price paid', x: { min: 0, max: mat + 0.5, ticks: ticks(0, mat, mat > 16 ? 2 : 1), fmt: v => v + 'y', label: 'Years from signing' },
       y: { min: lo, max: hi, ticks: ticks(lo, hi, st), fmt: v => isF ? v + 'bp' : v.toFixed(2) + '%' },
       layers: [{ t: 'bars', d: per.map(e => ({ x0: e.t - .5, x1: e.t, y0: ch, y1: e.k * sc, f: e.k * sc >= ch ? C.acc : C.slate, o: .75 })) },
@@ -370,7 +370,8 @@
     const st = niceStep(Math.max(...vs) - Math.min(...vs)); const lo = Math.floor((Math.min(0, ...vs) - st / 3) / st) * st, hi = Math.ceil((Math.max(0, ...vs) + st / 3) / st) * st;
     const be = F[mode].breakEven, layers = [{ t: 'area', p, base: 0, f: C.acc, o: .12 }, { t: 'h', y: 0, c: C.muted, w: 1 }, { t: 'line', p, c: C.acc, w: 2.4 },
       { t: 'v', x: r.WAL, c: C.ink, lab: 'Average life' }];
-    if (be !== 'never' && +be > 0) layers.push({ t: 'v', x: +be, c: C.gain, lab: 'Break-even, year ' + be, end: false, dy: 18 });
+    // break-even label below the zero line, right of the marker: the curve is above zero there, so the space is free
+    if (be !== 'never' && +be > 0) layers.push({ t: 'v', x: +be, c: C.gain }, { t: 'txt', x: +be + 0.35, y: lo / 2, s: 'Break-even, year ' + be, c: C.gain, anchor: 'start' });
     layers.push({ t: 'dots', c: C.acc, r: 4, p: [[+F[mode].minYear, Math.min(...vs), false], [p[p.length - 1][0], vs[vs.length - 1], false]] });
     chart(el, { label: 'Running present value of the benefit', x: { min: 0, max: mat + 0.5, ticks: ticks(0, mat, mat > 16 ? 2 : 1), fmt: v => v + 'y', label: 'Years from signing' },
       y: { min: lo, max: hi, ticks: ticks(lo, hi, st), fmt: v => (v < 0 ? '−' : '') + F.common.glyph + Math.abs(v) + 'm' }, layers });

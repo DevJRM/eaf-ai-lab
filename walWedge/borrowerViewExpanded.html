@@ -5,7 +5,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="clientStyle.css">
+<link rel="stylesheet" href="clientStyle.css?v=20261104">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23800020'/%3E%3Cg fill='%23fff' opacity='.9'%3E%3Crect x='11' y='16' width='5' height='36'/%3E%3Crect x='18' y='21' width='5' height='31'/%3E%3Crect x='25' y='26' width='5' height='26'/%3E%3Crect x='32' y='31' width='5' height='21'/%3E%3Crect x='39' y='36' width='5' height='16'/%3E%3Crect x='46' y='41' width='5' height='11'/%3E%3C/g%3E%3Cpolygon points='30.3,30 54,16 54,30' fill='%23E2A940' opacity='.85'/%3E%3Cline x1='9' y1='42' x2='54' y2='16' stroke='%23E2A940' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 
 <div class="bar"><div class="in">
   <div class="left">
@@ -58,7 +59,8 @@
   <div class="pillars">
     <a class="pillar" href="#benchmark"><span class="pn">01</span><h3>One price for <span data-v="miniN"></span> different bonds</h3>Each instalment is a mini-bond. As bonds they would price from <span data-v="miniShortP"></span> (<span data-v="miniShortT"></span> years) to <span data-v="miniLongP"></span> (<span data-v="miniLongT"></span> years); the loan charges all of them <span data-v="charged"></span>.</a>
     <a class="pillar" href="#benchmark"><span class="pn">02</span><h3>The long ones count most</h3>The long mini-bonds are charged less than their bond price and are outstanding longest: the <span data-v="miniLongT"></span>-year one weighs <span data-v="miniWeight"></span> times the shortest. Net, <span data-v="wedge"></span> a year below the bond-equivalent price.</a>
-    <a class="pillar" href="#beyond"><span class="pn">03</span><h3>No refinancing wall</h3><span data-v="nInst"></span> instalments of <span data-v="peak"></span>, <span data-v="peakPct"></span> of the amount each, instead of <span data-v="amount"></span> due on a single date.</a>
+    <a class="pillar" href="#beyond" data-borrower="sovereign"><span class="pn">03</span><h3>No redemption peak</h3><span data-v="nInst"></span> instalments of <span data-v="peak"></span>, <span data-v="peakPct"></span> of the amount each, instead of <span data-v="amount"></span> redeemed in a single year, with an average maturity close to a <span data-v="wal"></span>-year bond's.</a>
+    <a class="pillar" href="#beyond" data-borrower="corporate"><span class="pn">03</span><h3>No maturity wall</h3><span data-v="nInst"></span> instalments of <span data-v="peak"></span>, <span data-v="peakPct"></span> of the amount each, instead of <span data-v="amount"></span> due on a single date.</a>
   </div>
   <p class="dep"><span class="cs-k">It depends on</span><a href="#robust">a rising curve</a><span class="sep">|</span><a href="#timing">holding the loan beyond about year <span data-v="breakEven"></span></a><span class="sep">|</span><a href="#benefit">fees, excluded on both sides</a></p>
   <nav class="toc" aria-label="Contents"><a href="#loan"><span>1</span>The loan</a><a href="#price"><span>2</span>The price</a><a href="#benchmark"><span>3</span>The comparison</a><a href="#split"><span>4</span>Two effects</a><a href="#why"><span>5</span>Why it works</a><a href="#timing"><span>6</span>When it arrives</a><a href="#benefit"><span>7</span>Net benefit</a><a href="#beyond"><span>8</span>Beyond the price</a><a href="#robust"><span>9</span>Robustness</a><a href="#faq"><span>10</span>Questions</a><a href="#method"><span>11</span>Method</a></nav>
@@ -324,6 +326,6 @@
 </section>
 </div>
 
-<script src="clientCase.js"></script>
-<script src="clientKit.js"></script>
-<script src="clientView.js"></script>
+<script src="clientCase.js?v=20261104"></script>
+<script src="clientKit.js?v=20261104"></script>
+<script src="clientView.js?v=20261104"></script>

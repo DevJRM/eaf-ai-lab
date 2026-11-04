@@ -12,8 +12,8 @@
   function texts(md) {
     const f = F[md], restate = cs.couponFreq !== 2;
     const shared = {
-      payDesc: X[md] ? `the average-life price, your curve read at the average life of ${c.wal} years (${f.avgLife}), plus the agreed ${xLab(md)}: ${f.charged}`
-                     : `the average-life price, your curve read at the average life of ${c.wal} years: ${f.charged}`,
+      payDesc: X[md] ? `the average-life price, your curve read at ${c.wal} years (${f.avgLife}), plus the agreed ${xLab(md)}: ${f.charged}`
+                     : `the average-life price, your curve read at ${c.wal} years: ${f.charged}`,
       xSentence: X[md] ? `The agreed margin, ${xLab(md)}, is added to the average-life price, so it changes your benefit by ${f.xEffect}.` : '',
       benefitLab: X[md] ? `Your benefit, after the agreed ${xLab(md)}` : 'Your benefit',
     };
