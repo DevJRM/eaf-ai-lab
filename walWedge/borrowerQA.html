@@ -5,7 +5,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="clientStyle.css?v=20261104">
+<link rel="stylesheet" href="clientStyle.css?v=20261104b">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23800020'/%3E%3Cg fill='%23fff' opacity='.9'%3E%3Crect x='11' y='16' width='5' height='36'/%3E%3Crect x='18' y='21' width='5' height='31'/%3E%3Crect x='25' y='26' width='5' height='26'/%3E%3Crect x='32' y='31' width='5' height='21'/%3E%3Crect x='39' y='36' width='5' height='16'/%3E%3Crect x='46' y='41' width='5' height='11'/%3E%3C/g%3E%3Cpolygon points='30.3,30 54,16 54,30' fill='%23E2A940' opacity='.85'/%3E%3Cline x1='9' y1='42' x2='54' y2='16' stroke='%23E2A940' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 /* Internal meeting guide: filterable question cards. */
@@ -67,10 +67,10 @@
   <div class="results2">
     <div class="res"><div class="res-k">Floating rate</div>
       <div class="res-big"><span data-v="float.wedgeS" style="font-size:inherit;margin:0"></span><span>bp a year</span></div>
-      <dl class="res-t"><dt>Price charged · bond-equivalent</dt><dd><span data-v="float.charged"></span> · <span data-v="float.fair"></span></dd><dt>Value today · as upfront fee</dt><dd><span class="hl" data-v="float.pv"></span> · <span data-v="float.fee"></span></dd><dt>Lowest point</dt><dd><span data-v="float.minPV"></span> in year <span data-v="float.minYear"></span></dd><dt>Positive from</dt><dd>year <span data-v="float.breakEven"></span></dd><dt>Flat · inverted curve</dt><dd><span data-v="float.sc_flat"></span> · <span data-v="float.sc_inv"></span></dd></dl></div>
+      <dl class="res-t"><dt>Price you pay · bond-equivalent</dt><dd><span data-v="float.charged"></span> · <span data-v="float.fair"></span></dd><dt>Value today · as upfront fee</dt><dd><span class="hl" data-v="float.pv"></span> · <span data-v="float.fee"></span></dd><dt>Lowest point</dt><dd><span data-v="float.minPV"></span> in year <span data-v="float.minYear"></span></dd><dt>Positive from</dt><dd>year <span data-v="float.breakEven"></span></dd><dt>Flat · inverted curve</dt><dd><span data-v="float.sc_flat"></span> · <span data-v="float.sc_inv"></span></dd></dl></div>
     <div class="res"><div class="res-k">Fixed rate</div>
       <div class="res-big"><span data-v="fixed.wedgeS" style="font-size:inherit;margin:0"></span><span>bp a year</span></div>
-      <dl class="res-t"><dt>Price charged · bond-equivalent</dt><dd><span data-v="fixed.charged"></span> · <span data-v="fixed.fair"></span></dd><dt>Value today · as upfront fee</dt><dd><span class="hl" data-v="fixed.pv"></span> · <span data-v="fixed.fee"></span></dd><dt>Lowest point</dt><dd><span data-v="fixed.minPV"></span> in year <span data-v="fixed.minYear"></span></dd><dt>Positive from</dt><dd>year <span data-v="fixed.breakEven"></span></dd><dt>Flat · inverted curve</dt><dd><span data-v="fixed.sc_flat"></span> · <span data-v="fixed.sc_inv"></span></dd></dl></div>
+      <dl class="res-t"><dt>Price you pay · bond-equivalent</dt><dd><span data-v="fixed.charged"></span> · <span data-v="fixed.fair"></span></dd><dt>Value today · as upfront fee</dt><dd><span class="hl" data-v="fixed.pv"></span> · <span data-v="fixed.fee"></span></dd><dt>Lowest point</dt><dd><span data-v="fixed.minPV"></span> in year <span data-v="fixed.minYear"></span></dd><dt>Positive from</dt><dd>year <span data-v="fixed.breakEven"></span></dd><dt>Flat · inverted curve</dt><dd><span data-v="fixed.sc_flat"></span> · <span data-v="fixed.sc_inv"></span></dd></dl></div>
   </div>
   <p class="dep"><span class="cs-k">Also at hand</span><span>assumptions move it by at most <b data-v="maxMove"></b></span><span class="sep">|</span><span>year <span data-v="longYear"></span> alone costs <b data-v="float.yearCost"></b> vs a <b data-v="float.yearQuote"></b> quote</span><span class="sep">|</span><span>loan centre year <b data-v="cg"></b> vs bond <b data-v="bondCg"></b></span></p>
 </div>
@@ -82,6 +82,7 @@
     <li>Lead with present value and bp a year; undiscounted totals only for reference.</li>
     <li>Use the borrower's own YAS snapshot; offer the workbook.</li>
     <li>Send accounting, tax, rating and statistical questions to their advisers.</li>
+    <li>Use the pitch's words: <b>bond-equivalent price</b>, <b>reference bond</b>, <b>average-life price</b>, <b>price you pay</b>; <b>timing</b> and <b>quote-convention effect</b>; <b>credit</b> and <b>interest-rate effect</b>.</li>
   </ul></div>
   <div class="dont"><h3>Never</h3><ul>
     <li>Call it a discount, a subsidy or "free money", or promise a saving.</li>
@@ -89,12 +90,13 @@
     <li>Speculate on the lender's margin or funding cost.</li>
     <li>Show the illustrative template as a client's numbers.</li>
     <li>Negotiate the margin with the analysis.</li>
+    <li>Use the tutorial's internal names in front of a client: "the shortcut" sounds like a criticism of our own pricing, and "fair price" begs the question of fair to whom.</li>
   </ul></div>
 </div>
 <div class="postures">
-  <div class="r"><h3>Receptive</h3><p>Wants the idea and its fit. Use the one-pager; offer the client view.</p></div>
-  <div class="n"><h3>Neutral</h3><p>Wants to check the work. Walk through the client view; offer data and workbook.</p></div>
-  <div class="s"><h3>Sceptical</h3><p>Tests the premise. Concede what is true, hold the core argument; use the expanded edition.</p></div>
+  <div class="r"><h3>Receptive</h3><p>Wants the idea and its fit. Use the one-pager; offer the pitch.</p></div>
+  <div class="n"><h3>Neutral</h3><p>Wants to check the work. Walk through the pitch; offer data and workbook.</p></div>
+  <div class="s"><h3>Sceptical</h3><p>Tests the premise. Concede what is true, hold the core argument; use the pitch's sections 4, 9 and 10.</p></div>
 </div>
 
 <div class="filters" role="search">
@@ -108,165 +110,192 @@
 <div class="disc"><p>Internal use only. The answers summarise the analysis in the client documents and are not advice to any borrower. Figures follow the case file and change with it; when the case is illustrative, they are based on simulated market data.</p></div>
 </div>
 
-<script src="clientCase.js?v=20261104"></script>
-<script src="clientKit.js?v=20261104"></script>
+<script src="clientCase.js?v=20261104b"></script>
+<script src="clientKit.js?v=20261104b"></script>
 <script>
 (function () {
   const F = WW.figures(WW_CASE);
   const v = k => `<b data-v="${k}"></b>`;
-  const BV = 'borrowerView.html', BX = 'borrowerViewExpanded.html', P1 = 'walWedgePitch.html';
+  const PX = 'borrowerPitch.html', P1 = 'walWedgePitch.html';
   const where = (...l) => l.map(([u, t]) => `<a href="${u}">${t}</a>`).join(' · ');
+  // The 3-year-drawdown alternative of the pitch's 'Shaping the profile' table, and the proposal, for the drawdown questions.
+  const cs = WW_CASE, fmt = WW.fmt, P = WW.profiles(cs), base = P[0], dd = P.find(p => /^Drawdown over/.test(p.lab));
+  const avgDraw = x => { const D = Math.round(2 * x); return D > 1 ? (D - 1) / 4 : 0; };
+  const rd = (q, t) => { const fl = Math.min(Math.max(t, 1), 30), lo = Math.max(1, Math.min(29, Math.floor(fl))); return q[lo - 1] + (q[lo] - q[lo - 1]) * (fl - lo); };
+  const atRepay = p => (p.float.fair - rd(p.float.qfill, p.float.WAL + avgDraw(p.x))) * 1e4;   // floating benefit if the curve were read at the average repayment date
+  const D = dd ? { x: fmt.yrs(dd.x), bDraw: fmt.yrs(avgDraw(base.x)), bRep: fmt.yrs(base.float.WAL + avgDraw(base.x)), dDraw: fmt.yrs(avgDraw(dd.x)), dRep: fmt.yrs(dd.float.WAL + avgDraw(dd.x)),
+    wal: fmt.yrs(dd.float.WAL), bCg: base.float.cg.toFixed(2), dCg: dd.float.cg.toFixed(2), bW: fmt.bp(base.float.wedge * 1e4), dW: fmt.bp(dd.float.wedge * 1e4), dWx: fmt.bp(dd.fixed.wedge * 1e4),
+    bAlt: fmt.bp(atRepay(base)), dAlt: fmt.bp(atRepay(dd)) } : null;
   // p: r receptive, n neutral, s sceptical. t: both, sov, corp.
   const QA = [
    ['The proposition', [
     { p: 'r', t: 'both', q: 'In one sentence, what are you proposing?',
       say: `An amortising loan priced where your own ${v('wal')}-year bond is quoted, although it repays over ${v('maturity')} years. Against funding the same repayment profile through your own bonds, that price is worth ${v('float.wedge')} a year on a floating loan, ${v('float.pv')} in today's money.`,
       facts: `Floating ${v('float.wedge')} / ${v('float.pv')}; fixed ${v('fixed.wedge')} / ${v('fixed.pv')}. Equivalent upfront fee ${v('float.fee')} / ${v('fixed.fee')}.`,
-      avoid: 'Calling it a discount or a saving the borrower is promised.', where: where([P1, 'One-pager'], [BV + '#top', 'Client view, cover']) },
+      avoid: 'Calling it a discount or a saving the borrower is promised.', where: where([P1, 'One-pager'], [PX + '#top', 'Pitch, cover']) },
     { p: 'r', t: 'both', q: 'What is the simplest way to see the value?',
       say: `Picture the loan as ${v('float.miniN')} mini-bonds of ${v('peak')}, one maturing on each repayment date. As bonds, each would price at its own maturity on your curve, from ${v('float.miniShortP')} to ${v('float.miniLongP')}. The loan charges all of them one price, ${v('float.charged')}. The long ones, charged less than their bond price, are outstanding longest and so count most: net, ${v('float.wedge')} a year below the bond-equivalent price.`,
       facts: `Short mini-bonds (${v('float.miniBelow')}): ${v('float.miniBelowV')}; long ones (${v('float.miniAbove')}): ${v('float.miniAboveV')}; the longest weighs ${v('float.miniWeight')} times the shortest.`,
-      avoid: 'Suggesting the borrower could issue the mini-bonds; they are a way of pricing the loan, not an execution plan.', where: where([BV + '#top', 'Client view, cover exhibit'], [BV + '#benchmark', '§3']) },
+      avoid: 'Suggesting the borrower could issue the mini-bonds; they are a way of pricing the loan, not an execution plan.', where: where([PX + '#top', 'Pitch, cover exhibit'], [PX + '#benchmark', '§3']) },
     { p: 'r', t: 'both', q: 'What is the average life, and why does it set the price?',
-      say: `The average life is the average time each unit of principal is outstanding: ${v('wal')} years here, the same as a ${v('wal')}-year bond. Reading your curve there is a widely used, transparent way to price an amortising loan. What it does not capture is that the loan's money sits later than the bond's.`,
+      say: `The average life is the average time each euro is outstanding, from its drawing to its repayment: ${v('wal')} years here, the same as a ${v('wal')}-year bond. Reading your curve there is a widely used, transparent way to price an amortising loan. What it does not capture is that the loan's money sits later than the bond's.`,
       facts: `Average life ${v('wal')} years. Average date the principal is outstanding: loan year ${v('cg')}, bond year ${v('bondCg')}; ${v('shareAfter')} of the loan's principal-years fall after year ${v('wal')}.`,
-      avoid: 'Implying the average-life convention is wrong or unfair; it is a convention, and this is its value to the borrower.', where: where([BV + '#loan', 'Client view §1'], [BV + '#why', '§4']) },
+      avoid: 'Implying the average-life convention is wrong or unfair; it is a convention, and this is its value to the borrower.', where: where([PX + '#loan', 'Pitch §1'], [PX + '#why', '§5']) },
     { p: 'n', t: 'both', q: 'Is this a new product?',
       say: 'No. It is a standard amortising loan. What we show is the value, measured on your own bond curve, of pricing it at its average life, which is common practice.',
       facts: 'Same loan terms as any amortising facility; the analysis concerns the pricing basis only.',
-      avoid: 'Presenting it as a proprietary structure or an innovation.', where: where([BV + '#price', 'Client view §2']) },
+      avoid: 'Presenting it as a proprietary structure or an innovation.', where: where([PX + '#price', 'Pitch §2']) },
     { p: 'r', t: 'sov', q: 'How does this fit our debt management strategy?',
-      say: `It smooths the redemption profile, with ${v('nInst')} instalments and no single refinancing date, and it adds funding out to year ${v('maturity')} at a ${v('wal')}-year price. How it fits your benchmarks, supply and risk targets is your call; we can run the analysis on the profile that fits them best.`,
+      say: `Its redemptions fall on average ${v('avgRepay')} years from signing, so in your average time to maturity it counts much like a ${v('wal')}-year bond, but with ${v('nInst')} instalments instead of a single redemption, and funding out to year ${v('maturity')} at a ${v('wal')}-year price. How it fits your benchmarks, supply and risk targets is your call; we can run the analysis on the profile that fits them best.`,
       facts: `${v('nInst')} semi-annual instalments; ${v('tailYears')} years of funding beyond the average life.`,
-      avoid: 'Commenting on their debt-sustainability metrics, IMF programmes or ratings.', where: where([BV + '#benchmark', 'Client view §3']) },
+      avoid: 'Commenting on their debt-sustainability metrics, IMF programmes or ratings.', where: where([PX + '#benchmark', 'Pitch §3']) },
     { p: 'r', t: 'corp', q: 'How does this fit our funding plan?',
       say: 'It diversifies funding away from the bond market and gives an amortising profile that can match the life of the assets it finances, at the price of a shorter bond. The decision depends on your liquidity, leverage and maturity targets, which you know best.',
       facts: `Amortising over ${v('maturity')} years; priced at your ${v('wal')}-year point.`,
       avoid: 'Accounting, covenant-headroom or rating claims.', where: where([P1, 'One-pager']) },
     { p: 'r', t: 'sov', q: 'What does this do to our refinancing risk?',
       say: `It spreads repayment over ${v('nInst')} instalments of ${v('peak')}, ${v('peakPct')} of the amount each, instead of ${v('amount')} due on one date. It removes a concentration point from the redemption profile rather than adding one.`,
-      facts: `Largest single repayment ${v('peak')} (${v('peakPct')}); final maturity year ${v('maturity')}.`, avoid: 'Claims about their refinancing-risk targets or limits.', where: where([BV + '#beyond', 'Client view §7']) },
+      facts: `Largest single repayment ${v('peak')} (${v('peakPct')}); final maturity year ${v('maturity')}.`, avoid: 'Claims about their refinancing-risk targets or limits.', where: where([PX + '#beyond', 'Pitch §8']) },
     { p: 'r', t: 'both', q: 'How much of the loan is actually priced below what our curve implies?',
       say: `${v('float.dearShare')} of the loan's principal-years fall in periods your curve prices above the price you pay. That is where the benefit comes from; the early periods, priced above your curve, are the other side of it.`,
-      facts: 'Cover exhibit "Where your money sits".', avoid: 'Implying every period is cheaper than the curve.', where: where([BV + '#top', 'Client view, cover']) },
-    { p: 'n', t: 'both', q: 'Besides price, what does a loan give us that bonds do not?',
-      say: 'One facility, priced at signing, instead of several issues across market windows; no bond issuance costs or new-issue premium, although the loan carries its own fees. Whether that matters depends on your market access and programme.',
-      facts: 'Fees and issuance costs are excluded from the headline figures.', avoid: 'Disparaging the bond market or their market access.', where: where([BV + '#beyond', 'Client view §7']) },
+      facts: `Mini-bonds charged less than their bond price: ${v('float.miniAbove')} of ${v('float.miniN')}, worth ${v('float.miniAboveV')} today; the others ${v('float.miniBelowV')}.`, avoid: 'Implying every period is cheaper than the curve.', where: where([PX + '#top', 'Pitch, cover exhibit'], [PX + '#benchmark', '§3']) },
+    { p: 'n', t: 'sov', q: 'Besides price, what does a loan give us that our bond programme does not?',
+      say: 'A complement to your auctions and syndications: it diversifies your funding sources and investor base, with certainty of execution whatever market conditions bring, and no new-issue concession or syndication fees. The loan carries its own fees, and how it fits your programme is your call.',
+      facts: 'Fees and issuance costs are excluded from the headline figures on both sides.', avoid: 'Disparaging the bond market or their market access.', where: where([PX + '#beyond', 'Pitch §8']) },
+    { p: 'n', t: 'corp', q: 'Besides price, what does a loan give us that bonds do not?',
+      say: 'One facility, priced at signing, with one set of documentation, instead of several issues across market windows; no bond issuance costs or new-issue premium, although the loan carries its own fees. Whether that matters depends on your market access and programme.',
+      facts: 'Fees and issuance costs are excluded from the headline figures on both sides.', avoid: 'Disparaging the bond market or their market access.', where: where([PX + '#beyond', 'Pitch §8']) },
    ]],
    ['The comparison point', [
     { p: 's', t: 'both', q: 'Why not simply issue a bond of the same average life at the same price?',
       say: `You can, and on price the two are level: that is the point of reference. The difference is the profile. The bond concentrates refinancing on one date; the loan amortises to year ${v('maturity')}. Funding the loan's profile through your bond market would cost ${v('float.fair')} rather than ${v('float.charged')}.`,
       facts: `Floating ${v('float.charged')} charged against ${v('float.fair')} bond-equivalent; fixed ${v('fixed.charged')} against ${v('fixed.fair')}.`,
-      avoid: 'Claiming the loan is cheaper than the bullet bond: on price it is not.', where: where([BV + '#benchmark', 'Client view §3'], [BX + '#faq', 'Expanded §10']) },
+      avoid: 'Claiming the loan is cheaper than the bullet bond: on price it is not.', where: where([PX + '#benchmark', 'Pitch §3'], [PX + '#faq', 'Pitch §10']) },
     { p: 'n', t: 'both', q: 'What exactly is the "bond-equivalent" price?',
-      say: 'The price at which funding this exact profile through your own bonds would cost the same: a strip of mini-bonds, one maturing on each repayment date, each priced at its own point on your curve, averaged by how long each is outstanding.',
+      say: 'The price at which funding this exact profile through your own bonds would cost the same: a strip of mini-bonds, one maturing on each repayment date, each priced at its own point on your curve, each weighted by how long and how safely it is outstanding.',
       facts: `Bond-equivalent ${v('float.fair')} (floating), ${v('fixed.fair')} (fixed).`,
-      avoid: 'Calling it "the fair price" without giving the definition.', where: where([BV + '#benchmark', 'Client view §3'], [BX + '#method', 'Expanded §11']) },
+      avoid: 'Calling it "the fair price" (the tutorial\'s internal name) in front of the client.', where: where([PX + '#benchmark', 'Pitch §3'], [PX + '#method', 'Pitch §11']) },
+    { p: 'n', t: 'both', q: 'Where exactly does the benefit come from?',
+      say: `From two effects, separated by a third price, the reference bond: a ${v('wal')}-year bullet valued on your curve exactly as the loan is. The timing effect, the bond-equivalent price against the reference bond, is the loan's profile at work and the core of the benefit. The quote-convention effect, the reference bond against the average-life price, would arise even for a bullet; it is small and works slightly against you.`,
+      facts: `Floating: ${v('float.fair')} → ${v('float.bullet')} → ${v('float.avgLife')}; timing ${v('float.timing')}, quote convention ${v('float.convention')}, benefit ${v('float.wedgeP')}. Fixed: timing ${v('fixed.timing')}, quote convention ${v('fixed.convention')}.`,
+      avoid: 'Presenting the quote-convention effect as part of the value; it is a small cost, already netted.', where: where([PX + '#split', 'Pitch §4, Exhibit 3']) },
+    { p: 's', t: 'both', q: 'A Z-spread is not a loan margin. Isn\'t the average-life price comparing apples and oranges?',
+      say: `Yes, slightly, and we account for it. A Z-spread is a measure of price, the spread that discounts your bond's cash flows to its market price; a margin is a cash payment each period. The analysis never uses the Z-spread as a margin. Only the average-life price does, by convention: that is the quote-convention effect, ${v('float.convention')}, already netted in the benefit.`,
+      facts: `Average-life price ${v('float.avgLife')}; reference bond, the margin at which a ${v('wal')}-year bond is worth par on your curve, ${v('float.bullet')}.`,
+      avoid: 'Claiming the convention is exact, or that it favours the borrower.', where: where([PX + '#split', 'Pitch §4'], [PX + '#faq', '§10']) },
     { p: 's', t: 'both', q: 'Nobody issues a bond for every repayment date. Isn\'t the benchmark artificial?',
       say: 'It is a yardstick, not an execution plan: it is what your own market charges for the money outstanding at each date. The practical alternatives, a few bullets, concentrate refinancing; the loan gives you the strip\'s profile at the bullet\'s price.',
       facts: 'The strip is priced on your quoted curve, before issuance costs or new-issue premium.',
-      avoid: 'Suggesting the borrower could actually issue the strip at those levels.', where: where([BX + '#split', 'Expanded §4']) },
+      avoid: 'Suggesting the borrower could actually issue the strip at those levels.', where: where([PX + '#benchmark', 'Pitch §3']) },
     { p: 's', t: 'both', q: 'Isn\'t this just the term premium I would pay anyway for longer funding?',
       say: `Yes, and that is the point. Your curve charges more for later years; the average-life price does not charge for the loan's later years.`,
       facts: `Your ${v('longYear')}-year quote ${v('float.yearQuote')} averages years 1 to ${v('longYear')}; year ${v('longYear')} alone costs about ${v('float.yearCost')}.`,
-      avoid: 'Denying the term premium exists.', where: where([BV + '#why', 'Client view §4']) },
+      avoid: 'Denying the term premium exists.', where: where([PX + '#why', 'Pitch §5']) },
    ]],
    ['The numbers', [
     { p: 'n', t: 'both', q: 'How large is the benefit in money?',
       say: `${v('float.pv')} in present value on a floating loan, ${v('fixed.pv')} on a fixed one. Present value is the right measure: it compares money at different dates on your own curve.`,
       facts: `Undiscounted for reference: ${v('float.nominal')} / ${v('fixed.nominal')}, about ${v('float.perYear')} a year.`,
-      avoid: 'Leading with the undiscounted figure.', where: where([BV + '#benefit', 'Client view §6']) },
+      avoid: 'Leading with the undiscounted figure.', where: where([PX + '#benefit', 'Pitch §7']) },
+    { p: 's', t: 'both', q: 'Your before / after split differs between two sections. Which is right?',
+      say: 'Both. Section 3 splits the net benefit by the maturity of each mini-bond; section 7 splits it by date, before and after the average life. They are two cuts of the same total, so the halves differ while the net is the same.',
+      facts: `Floating, by maturity: ${v('float.miniBelowV')} / ${v('float.miniAboveV')}; by date: ${v('float.lossPV')} / ${v('float.gainPV')}; net ${v('float.pv')} either way.`,
+      avoid: 'Reconciling the halves line by line; they answer different questions.', where: where([PX + '#benchmark', 'Pitch §3'], [PX + '#benefit', '§7']) },
     { p: 'n', t: 'both', q: 'Why is the fixed-rate figure different from the floating one?',
-      say: 'The profile is the same, but the curves differ: the floating loan reads your Z-spreads, the fixed loan your yields, which also contain the swap curve.',
-      facts: `Fixed: credit part ${v('fixed.creditEffect')}, interest-rate part ${v('fixed.rfEffect')}.`,
-      avoid: 'Recommending one over the other on this basis.', where: where([BX + '#split', 'Expanded §4']) },
+      say: `The core is the same: the timing effect on your credit curve, ${v('fixed.creditTiming')}, is identical for both. A fixed rate also prices the swap curve, so it adds an interest-rate effect that depends only on that curve's shape: here it peaks at ${v('swapPeak')} years and falls after, which costs ${v('fixed.rfEffect')}. On a steadily rising swap curve it would add to the benefit.`,
+      facts: `Fixed: credit effect ${v('fixed.creditEffect')}, interest-rate effect ${v('fixed.rfEffect')}, net ${v('fixed.wedgeP')}; credit premium (yield minus swap rate at ${v('wal')} years) ${v('fixed.creditPremium')}.`,
+      avoid: 'Recommending one over the other on this basis.', where: where([PX + '#split', 'Pitch §4']) },
+    { skip: cs.couponFreq === 2, p: 'n', t: 'both', q: `Our ${F.common.wal}-year yield is ${F.fixed.quote}. Why is the fixed rate ${F.fixed.avgLife}?`,
+      say: `It is the same yield, paid differently. Your bonds pay once a year; the loan pays twice. ${v('fixed.quote')} paid annually is worth exactly the same as ${v('fixed.avgLife')} paid semi-annually. Charging the annual figure semi-annually would overcharge you.`,
+      facts: 'Restated as 2 × ((1 + y)^½ − 1) for annual coupons.', avoid: 'Calling the difference a discount.', where: where([PX + '#price', 'Pitch §2']) },
     { p: 's', t: 'both', q: 'Is this real money, or a model output?',
       say: 'It is computed from your quoted bonds only, and it shows up as interest below the bond-equivalent level in the later years, partly offset by interest above it in the early years. The assumptions that cannot be observed in your bond prices barely move it.',
       facts: `Largest move from swap-curve and recovery assumptions: ${v('maxMove')}.`,
-      avoid: '"Guaranteed saving"; "cash back".', where: where([BV + '#robust', 'Client view §8']) },
+      avoid: '"Guaranteed saving"; "cash back".', where: where([PX + '#robust', 'Pitch §9']) },
     { p: 'n', t: 'both', q: 'What does "equivalent upfront fee" mean?',
       say: 'It expresses the present value of the benefit as a one-off fee on the loan amount. Loan fees up to that level leave you no worse off than the bond-equivalent cost, before counting the bond route\'s own costs.',
       facts: `${v('float.fee')} floating, ${v('fixed.fee')} fixed; the benefit per year multiplied by the loan's annuity of ${v('float.annuity')} years.`,
-      avoid: 'Suggesting it is a fee the lender will pay.', where: where([BV + '#benefit', 'Client view §6']) },
+      avoid: 'Suggesting it is a fee the lender will pay.', where: where([PX + '#benefit', 'Pitch §7']) },
     { p: 's', t: 'both', q: 'Why does the per-period cost chart jump around?',
       say: 'Each year\'s cost is inferred from the difference between neighbouring quoted levels; with a few quotes joined by straight lines, those differences step where the slope changes. A fitted issuer curve gives a smoother profile; the weighted average is much less sensitive than any single year.',
       facts: `Quotes from 1 to ${v('lastQuote')} years; gaps filled by straight lines.`,
-      avoid: 'Presenting a single year\'s cost as precise.', where: where([BV + '#why', 'Client view §4, Exhibit 3']) },
+      avoid: 'Presenting a single year\'s cost as precise.', where: where([PX + '#why', 'Pitch §5, Exhibit 4']) },
    ]],
    ['Market and curve dependence', [
     { p: 's', t: 'both', q: 'What if our curve were flat, or inverted?',
       say: 'Then the effect disappears or reverses: on a flat curve there is essentially no benefit, on an inverted curve the same pricing works against the borrower. We show this openly; it is why the analysis is run on your own curve.',
       facts: `Floating: flat ${v('float.sc_flat')}, inverted ${v('float.sc_inv')}. Fixed: flat ${v('fixed.sc_flat')}, inverted ${v('fixed.sc_inv')}.`,
-      avoid: 'Presenting the template to a borrower whose curve is flat or inverted.', where: where([BV + '#robust', 'Client view §8'], [BX + '#robust', 'Expanded, Exhibit 7']) },
+      avoid: 'Presenting the template to a borrower whose curve is flat or inverted.', where: where([PX + '#robust', 'Pitch §9, Exhibit 7']) },
     { p: 'n', t: 'both', q: 'What if our curve moves before signing?',
       say: 'The benefit scales with the slope of your curve: it grows if the curve steepens and shrinks if it flattens. We rerun the analysis on the signing-date snapshot.',
       facts: `Twice as steep ${v('float.sc_double')}; half as steep ${v('float.sc_half')} (floating).`,
-      avoid: 'Forecasting the curve.', where: where([BV + '#robust', 'Client view §8']) },
+      avoid: 'Forecasting the curve.', where: where([PX + '#robust', 'Pitch §9']) },
     { p: 's', t: 'both', q: 'And after signing, if our spreads tighten?',
       say: 'The price is fixed at signing and the benefit is measured on that day\'s curve. If your curve later flattened, new long-dated issuance would become cheaper, which would reduce, in hindsight, the value of having fixed the long end at today\'s levels. That is true of any fixed-price funding decision.',
-      facts: 'The analysis measures value at signing; it does not forecast spreads.', avoid: 'Claiming the benefit is "locked in" whatever happens.', where: where([BX + '#faq', 'Expanded §10']) },
+      facts: 'The analysis measures value at signing; it does not forecast spreads.', avoid: 'Claiming the benefit is "locked in" whatever happens.', where: where([PX + '#faq', 'Pitch §10']) },
     { p: 'n', t: 'sov', q: 'Our curve trades below swaps at the short end. Does that matter?',
       say: 'It is used as quoted. It makes the early periods cheaper, which adds to the early years in which the loan is priced above your curve; it is already in the figures.',
-      facts: `Below swaps up to ${v('belowSwaps')} years in this case.`, avoid: 'Adjusting the curve to remove it.', where: where([BV + '#method', 'Client view §9']) },
+      facts: `Below swaps up to ${v('belowSwaps')} years in this case.`, avoid: 'Adjusting the curve to remove it.', where: where([PX + '#method', 'Pitch §11']) },
     { p: 'n', t: 'both', q: 'Do the swap curve or the recovery assumption drive the result?',
       say: 'No. They are the inputs that cannot be read from your bond prices, so we test them; neither moves the figure materially.',
       facts: `Swap +30bp: ${v('float.sc_swap30')}; recovery 20%: ${v('float.sc_rec20')}; recovery 60%: ${v('float.sc_rec60')} (floating, base ${v('float.wedge')}).`,
-      avoid: '', where: where([BV + '#robust', 'Client view §8']) },
+      avoid: '', where: where([PX + '#robust', 'Pitch §9']) },
    ]],
    ['Prepayment and structure', [
     { p: 's', t: 'both', q: 'What happens if we prepay or refinance?',
       say: `The benefit is back-loaded: in present value it is at its lowest, ${v('float.minPV')}, in year ${v('float.minYear')} and positive from about year ${v('float.breakEven')}. Repaying before then means having paid more than the bond-equivalent cost of the periods already run. Prepayment terms should be read with this in mind.`,
       facts: `Break-even year ${v('float.breakEven')} floating, ${v('fixed.breakEven')} fixed.`,
-      avoid: 'Leaving this for the borrower to discover.', where: where([BV + '#timing', 'Client view §5'], [BX + '#timing', 'Expanded §6 (table)']) },
+      avoid: 'Leaving this for the borrower to discover.', where: where([PX + '#timing', 'Pitch §6 (table)']) },
     { p: 'n', t: 'both', q: 'Can the drawdown or repayment profile be changed, and does it matter?',
       say: 'Yes, and it matters a great deal, in both directions. A longer drawdown period with the same final maturity keeps the price while the money sits later on your curve, which raises the benefit. A longer loan is priced further out on your curve, where it may be flatter, and can lower it. We run the alternatives on your curve rather than assume.',
-      facts: 'Client view, "Beyond the price": the benefit for alternative profiles, recomputed on the same curve.',
-      avoid: 'Saying a longer loan always increases the benefit: on a curve that flattens at the long end it does not.', where: where([BV + '#beyond', 'Client view §7'], [BX + '#beyond', 'Expanded §8']) },
-    { p: 's', t: 'both', q: 'Doesn\'t a longer drawdown period just exploit how the average life is measured?',
-      say: 'It depends on the convention: here the average life is measured from the average drawdown date. A lender measuring it from signing would read your curve further out, and the gain from a longer drawdown would shrink. We state the convention and show the effect openly.',
-      facts: 'Average life measured from the average drawdown date in all figures.', avoid: 'Presenting the larger figure without the convention.', where: where([BV + '#beyond', 'Client view §7']) },
+      facts: D ? `Drawdown over ${D.x} years, same final maturity: ${D.dW} floating, ${D.dWx} fixed, against ${D.bW} as proposed. Pitch §8, "Shaping the profile", shows all alternatives on the same curve.` : 'Pitch §8, "Shaping the profile": the benefit for alternative profiles, recomputed on the same curve.',
+      avoid: 'Saying a longer loan always increases the benefit: on a curve that flattens at the long end it does not.', where: where([PX + '#beyond', 'Pitch §8']) },
+    { p: 's', t: 'both', q: 'Why does a longer drawdown raise the benefit so much, if the average life does not change?',
+      say: 'Because the money sits later. A longer drawdown with the same final maturity draws every euro later and repays it later by the same amount, so each euro is still outstanding as long and the average life, and the price, stay the same. But your curve is quoted from today, and the loan now reaches further up it. It is the same effect as the whole proposition: equal average life, later timing. We show it openly; alternative profiles are indicative and subject to agreement, and a longer drawdown would normally carry a commitment fee.',
+      facts: D ? `Average life = average repayment date − average drawdown date: ${D.bRep} − ${D.bDraw} as proposed, ${D.dRep} − ${D.dDraw} with ${D.x} years of drawdown, both ${D.wal} years. Exposure centre from signing ${D.bCg} → ${D.dCg} years; floating benefit ${D.bW} → ${D.dW}. Internal only: reading the curve at the average repayment date instead would give ${D.bAlt} as proposed and ${D.dAlt} with the longer drawdown; that is a pricing-policy choice, not used in the documents.` : '—',
+      avoid: 'Promising the alternative profile at the proposal\'s price; implying the average life is being stretched.', where: where([PX + '#beyond', 'Pitch §8']) },
     { p: 'n', t: 'both', q: 'Floating or fixed: which should we choose?',
-      say: 'Both carry the benefit. The choice should follow your interest-rate risk strategy, not this analysis.',
-      facts: `Floating ${v('float.wedge')}, fixed ${v('fixed.wedge')}.`, avoid: 'Recommending one.', where: where([BV + '#top', 'Client view (toggle)']) },
+      say: 'Both carry the benefit, and its core from your credit curve is the same for both. The choice should follow your interest-rate risk strategy, not this analysis.',
+      facts: `Floating ${v('float.wedge')}, fixed ${v('fixed.wedge')} (of which interest-rate effect ${v('fixed.rfEffect')}).`, avoid: 'Recommending one.', where: where([PX + '#top', 'Pitch (toggle)']) },
     { p: 'n', t: 'corp', q: 'Would security or covenants change the picture?',
       say: 'The analysis uses your senior unsecured bond curve. Secured or structured terms would be priced on their own merits; the recovery assumption, which security would affect, moves the result very little.',
-      facts: `Recovery 20%–60% range: ${v('float.sc_rec20')} to ${v('float.sc_rec60')} (floating).`, avoid: 'Committing to terms.', where: where([BV + '#robust', 'Client view §8']) },
+      facts: `Recovery 20%–60% range: ${v('float.sc_rec20')} to ${v('float.sc_rec60')} (floating).`, avoid: 'Committing to terms.', where: where([PX + '#robust', 'Pitch §9']) },
    ]],
    ['Fees and all-in cost', [
     { p: 'n', t: 'both', q: 'How do fees change the picture?',
       say: 'The headline excludes fees on both sides. Loan fees reduce the benefit; the bond route\'s issuance costs and any new-issue premium would add to it. We show the net figure once fees are agreed.',
-      facts: `Equivalent upfront fee: ${v('float.fee')} / ${v('fixed.fee')}.`, avoid: 'Quoting the headline as an all-in comparison.', where: where([BV + '#benefit', 'Client view §6']) },
+      facts: `Equivalent upfront fee: ${v('float.fee')} / ${v('fixed.fee')}.`, avoid: 'Quoting the headline as an all-in comparison.', where: where([PX + '#benefit', 'Pitch §7']) },
     { p: 's', t: 'both', q: 'By excluding costs, aren\'t you flattering the loan?',
       say: 'We exclude costs on both sides, which cuts both ways: leaving out the loan\'s fees helps the loan, leaving out bond issuance costs and the new-issue premium helps the bond. The workbook adds both when they are known.',
-      facts: 'Workbook Inputs rows 22–24 (fees, issuance costs, new-issue premium).', avoid: 'Claiming the headline is conservative.', where: where([BV + '#benefit', 'Client view §6']) },
+      facts: 'Workbook Inputs rows 22–24 (fees, issuance costs, new-issue premium).', avoid: 'Claiming the headline is conservative.', where: where([PX + '#benefit', 'Pitch §7']) },
     { p: 'r', t: 'both', q: 'What would we actually pay?',
-      say: `Floating: ${v('ref')} plus ${v('float.charged')}. Fixed: ${v('fixed.charged')} paid semi-annually. Both are your curve read at ${v('wal')} years, before any agreed adjustment.`,
-      facts: `Market data as of ${v('asOf')}.`, avoid: 'Presenting indicative pricing as an offer.', where: where([BV + '#price', 'Client view §2']) },
+      say: `Floating: ${v('ref')} plus ${v('float.charged')}. Fixed: ${v('fixed.charged')} paid semi-annually. Both are the average-life price, your curve read at ${v('wal')} years, before any agreed margin.`,
+      facts: `Market data as of ${v('asOf')}.`, avoid: 'Presenting indicative pricing as an offer.', where: where([PX + '#price', 'Pitch §2']) },
    ]],
    ['Methodology and data', [
     { p: 'n', t: 'both', q: 'What data did you use?',
       say: 'One Bloomberg YAS snapshot of your bonds, Z-spreads and yields by maturity, the swap curve YAS measures the Z-spreads against, and the 6-month fixing. Nothing else about your credit.',
-      facts: `${v('swapName')}; recovery ${v('recovery')}; snapshot ${v('asOf')}.`, avoid: 'Using any other source, or presenting simulated template data as theirs.', where: where([BV + '#method', 'Client view §9']) },
+      facts: `${v('swapName')}; recovery ${v('recovery')}; snapshot ${v('asOf')}.`, avoid: 'Using any other source, or presenting simulated template data as theirs.', where: where([PX + '#method', 'Pitch §11']) },
     { p: 's', t: 'both', q: 'Why Z-spreads, and not our spread to Treasuries, gilts or mid-swaps?',
       say: 'A floating loan pays a margin over the swap-curve reference rate, so its price must be read against that curve. The Z-spread is measured over the same curve; a Treasury or gilt spread is measured over one benchmark bond and differs by the swap spread. The fixed loan uses your yield and is unaffected by the benchmark.',
-      facts: `Reference rate: ${v('ref')}.`, avoid: 'Mixing a desk spread into the Z-spread inputs.', where: where([BX + '#faq', 'Expanded §10']) },
+      facts: `Reference rate: ${v('ref')}.`, avoid: 'Mixing a desk spread into the Z-spread inputs.', where: where([PX + '#faq', 'Pitch §10']) },
     { p: 's', t: 'both', q: 'Can we reproduce your numbers?',
       say: 'Yes. The calculation runs in a spreadsheet without macros, and we can share it. It checks itself: every quoted bond is repriced exactly, and your Z-spreads and yields must describe the same bonds.',
-      facts: `Largest difference between the yields implied by your Z-spreads and your quoted yields: ${v('gapBp')}.`, avoid: '', where: where([BX + '#method', 'Expanded §11']) },
+      facts: `Largest difference between the yields implied by your Z-spreads and your quoted yields: ${v('gapBp')}.`, avoid: '', where: where([PX + '#method', 'Pitch §11']) },
     { p: 's', t: 'both', q: 'Isn\'t a default-intensity model just an assumption about default?',
       say: 'It is a way of reading your market prices, the standard one for credit default swaps and issuer curves: the inferred intensities reprice every quoted bond exactly. The one unobservable input, recovery, barely moves the result.',
-      facts: `Recovery sensitivity: ${v('float.sc_rec20')} to ${v('float.sc_rec60')} (floating).`, avoid: 'Defending the model with jargon.', where: where([BX + '#method', 'Expanded §11']) },
+      facts: `Recovery sensitivity: ${v('float.sc_rec20')} to ${v('float.sc_rec60')} (floating).`, avoid: 'Defending the model with jargon.', where: where([PX + '#method', 'Pitch §11']) },
     { p: 'n', t: 'sov', q: 'Are you implying a probability that we default?',
       say: 'No. We make no assessment of your credit. We read the market\'s pricing of your bonds, nothing more, and treat the whole spread, including any liquidity premium, as that price.',
-      facts: 'The client documents show costs per period, never default probabilities.', avoid: 'Quoting implied default or survival probabilities.', where: where([BV + '#method', 'Client view §9']) },
+      facts: 'The client documents show costs per period, never default probabilities.', avoid: 'Quoting implied default or survival probabilities.', where: where([PX + '#method', 'Pitch §11']) },
     { p: 'n', t: 'both', q: 'What about bonds far from par, or callable bonds?',
       say: 'Each quote is read as a par bond for its maturity; a fitted issuer curve is the cleanest input. Bonds quoted to a call date, sinking-fund and step-up bonds are left out; make-whole calls are fine.',
-      facts: 'Workbook Data Sourcing tab, section F.', avoid: '', where: where([BX + '#robust', 'Expanded §9']) },
+      facts: 'Workbook Data Sourcing tab, section F.', avoid: '', where: where([PX + '#robust', 'Pitch §9']) },
    ]],
    ['The lender\'s side', [
     { p: 's', t: 'both', q: 'If this is worth that much to us, why would you offer it?',
       say: 'Average-life pricing is a widely used, transparent convention. A lender\'s economics are set by its own funding, capital and relationship considerations, not by your bond curve. We show what the convention is worth to you; we make no statement about our margin.',
-      facts: '—', avoid: 'Speculating on internal margins, or implying the lender loses money.', where: where([BX + '#faq', 'Expanded §10']) },
+      facts: '—', avoid: 'Speculating on internal margins, or implying the lender loses money.', where: where([PX + '#faq', 'Pitch §10']) },
     { p: 's', t: 'both', q: 'Then why not reduce the margin further?',
       say: 'The margin is a commercial matter. This analysis measures the value of the pricing basis on your curve; it is not a breakdown of the lender\'s margin and should not be read as one.',
       facts: '—', avoid: 'Negotiating with the model.', where: '' },
@@ -276,13 +305,17 @@
    ]],
    ['Borrower-specific', [
     { p: 'n', t: 'sov', q: 'How does a loan affect our presence in the bond market?',
-      say: 'It complements a bond programme rather than replacing it. Decisions on supply, benchmarks and investor base remain yours; we can size the loan around them.',
+      say: 'It complements your issuance programme rather than replacing it, and it diversifies your investor base. Decisions on supply, benchmarks and investor base remain yours; we can size the loan around them.',
       facts: '—', avoid: 'Claims about investor reactions or index eligibility.', where: '' },
+    { p: 's', t: 'sov', q: 'How does this compare with our auction or syndication cost?',
+      say: 'The comparison uses your bonds at their secondary-market levels. Issuing new bonds usually adds a new-issue concession and, for syndications, fees; both are excluded, so the bond route\'s all-in cost would be higher than the bond-equivalent price shown. The loan\'s own fees are excluded too; the equivalent upfront fee is the yardstick for them.',
+      facts: `Equivalent upfront fee ${v('float.fee')} / ${v('fixed.fee')}.`, avoid: 'Quantifying their new-issue concession for them.', where: where([PX + '#faq', 'Pitch §10'], [PX + '#benefit', '§7']) },
     { p: 'n', t: 'sov', q: 'How is the loan treated in our debt statistics?',
       say: 'That depends on your statistical and accounting framework; your advisers and statistical office are the right source.',
       facts: '—', avoid: 'Giving an opinion.', where: '' },
-    { p: 'n', t: 'corp', q: 'How will rating agencies or auditors treat it?',
-      say: 'That is a question for your advisers; we do not give accounting or rating advice.', facts: '—', avoid: 'Giving an opinion.', where: '' },
+    { p: 'n', t: 'corp', q: 'How will rating agencies, auditors or our covenants treat it?',
+      say: 'The analysis is economic only. Accounting, tax, rating and covenant treatment depend on your circumstances and the final documentation; your advisers are the right source. What we can say is factual: the loan has no single maturity date, which rating agencies look at when they assess a maturity profile.',
+      facts: '—', avoid: 'Giving an opinion on treatment or ratings impact.', where: where([PX + '#faq', 'Pitch §10']) },
     { p: 'r', t: 'both', q: 'Can this be done in USD or GBP, or for an issuer outside Europe?',
       say: 'Yes: the analysis runs in EUR, USD and GBP, for sovereigns and corporates anywhere, using your bonds in the currency of the loan. It needs a reasonable set of quoted maturities; a fitted issuer curve helps where there are few bonds.',
       facts: `This case: ${v('ccy')}, against the ${v('swapName')}.`, avoid: 'Running it on bonds in a different currency from the loan.', where: '' },
@@ -292,7 +325,7 @@
   const list = document.getElementById('list'); let html = '';
   QA.forEach(([theme, items]) => {
     html += `<section class="theme"><h2>${theme}</h2>`;
-    items.forEach(x => {
+    items.forEach(x => { if (x.skip) return;
       html += `<article class="qa" data-p="${x.p}" data-t="${x.t}"><div class="tags"><span class="tag ${x.p}">${label[x.p]}</span><span class="tag t">${label[x.t]}</span></div>
         <h3>${x.q}</h3><div class="row say"><span>What to say</span><span>${x.say}</span></div>
         ${x.facts && x.facts !== '—' ? `<div class="row"><span>Facts</span><span>${x.facts}</span></div>` : ''}

@@ -1,6 +1,6 @@
 /* WAL Wedge client templates — THE CASE.
    This is the only file to edit to populate the client documents (walWedgePitch.html,
-   borrowerView.html, borrowerViewExpanded.html) and the internal Q&A guide (borrowerQA.html)
+   borrowerPitch.html) and the internal Meeting Playbook (borrowerQA.html)
    with a real case. Every figure and every case-dependent sentence in those pages is computed
    from the values below by clientKit.js.
 

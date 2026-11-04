@@ -1,5 +1,5 @@
 /* WAL Wedge client templates — shared engine, figures, charts and binding.
-   Used by walWedgePitch.html, borrowerView.html, borrowerViewExpanded.html and borrowerQA.html.
+   Used by walWedgePitch.html, borrowerPitch.html and borrowerQA.html.
    The engine is a port of WAL_Wedge_Loan_vs_Bond_Calculator.xlsx (Python mirror:
    wal_wedge_engine.py); keep the three in step. Rates are decimals inside the engine. */
 (function () {

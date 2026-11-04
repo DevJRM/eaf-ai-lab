@@ -1,16 +1,16 @@
 <!doctype html><html><head><link rel="stylesheet" href="../assets/auth.css"><script>try{if(sessionStorage.getItem('eaf_walwedge_authenticated')==='true'){document.documentElement.classList.add('eaf-authed');}}catch(e){}</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><div id="auth-overlay"><div id="auth-modal"><h2>🔒 EAF AI Lab — Restricted</h2><p>Please enter your password</p><input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password" autofocus/><button onclick="checkPassword()">Access</button><div id="auth-error">❌ Incorrect password. Please try again.</div></div></div><script>window.EAF_AUTH={hash:'2b35a0164970212745940305ae056f2708a43e93388be37a6bb04ccd123d4982',key:'eaf_walwedge_authenticated'};</script><script src="../assets/auth.js"></script>
 
-<title>WAL Wedge Client View — Expanded</title>
+<title>WAL Wedge Client Pitch</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="clientStyle.css?v=20261104">
+<link rel="stylesheet" href="clientStyle.css?v=20261104b">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23800020'/%3E%3Cg fill='%23fff' opacity='.9'%3E%3Crect x='11' y='16' width='5' height='36'/%3E%3Crect x='18' y='21' width='5' height='31'/%3E%3Crect x='25' y='26' width='5' height='26'/%3E%3Crect x='32' y='31' width='5' height='21'/%3E%3Crect x='39' y='36' width='5' height='16'/%3E%3Crect x='46' y='41' width='5' height='11'/%3E%3C/g%3E%3Cpolygon points='30.3,30 54,16 54,30' fill='%23E2A940' opacity='.85'/%3E%3Cline x1='9' y1='42' x2='54' y2='16' stroke='%23E2A940' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 
 <div class="bar"><div class="in">
   <div class="left">
-    <div class="nm">Amortising loan pricing <span>expanded analysis</span></div>
+    <div class="nm">Amortising loan pricing <span>client pitch</span></div>
   </div>
   <div class="tog" role="group" aria-label="Interest basis">
     <button type="button" id="m-float" aria-pressed="true">Floating rate</button>
@@ -29,7 +29,7 @@
 <!-- ============ COVER ============ -->
 <header id="top" class="hero">
   <div>
-    <div class="lab">For discussion · indicative · expanded edition</div>
+    <div class="lab">For discussion · indicative</div>
     <h1>A <span data-v="maturity"></span>-year amortising loan at your <span data-v="wal"></span>-year price</h1>
     <div class="meta"><span>Prepared for <b data-v="client"></b></span><span>Market data as of <b data-v="asOf"></b><span data-v="dataNote"></span></span></div>
     <p class="lead">Priced where your own <span data-v="wal"></span>-year bond is quoted, but repaid over <span data-v="maturity"></span> years. Measured against funding the same repayment profile through your own bonds, one maturing on each repayment date, that price works in your favour.</p>
@@ -126,7 +126,7 @@
   <p class="big">In other words: a <b><span data-v="maturity"></span>-year amortising profile at your <span data-v="wal"></span>-year price</b>, with the mini-bonds that count most charged the least relative to their bond price.</p>
 </section>
 
-<!-- ============ 4 (expanded) ============ -->
+<!-- ============ 4 ============ -->
 <section class="s" id="split">
   <div class="lab"><span class="n">4</span>Where the benefit comes from</div>
   <h2>Two effects: the loan's timing, and how your curve is quoted</h2>
@@ -266,14 +266,14 @@
   <p>Maturities without a quote are filled by straight lines between the nearest quotes, and the average-life price depends on that interpolation. A fitted issuer curve (Bloomberg BVAL or a curve-finder fit) describes par bonds at every whole-year maturity and is the cleanest input. With quotes taken bond by bond, bonds trading far from par can shift each level by a few basis points.</p>
 </section>
 
-<!-- ============ 9 (expanded) ============ -->
+<!-- ============ 10 ============ -->
 <section class="s" id="faq">
   <div class="lab"><span class="n">10</span>Questions you may have</div>
   <h2>The points we would challenge, if we were you</h2>
   <details><summary>Why not simply issue a <span data-v="wal"></span>-year bond at the same price?</summary><div><p>You can, and on price the two are level. The difference is the profile: the bond concentrates refinancing on one date, while the loan amortises over <span data-v="nInst"></span> instalments to year <span data-v="maturity"></span>. Replicating the loan's profile in your bond market, with a bond maturing on each repayment date, would cost <span data-v="fair"></span>, the bond-equivalent price, rather than <span data-v="charged"></span>.</p></div></details>
   <details><summary>If the price is below my bond-equivalent price, why would a lender offer it?</summary><div><p>Average-life pricing is a widely used, transparent convention for amortising loans, and a lender's economics are set by its own funding, capital and relationship considerations rather than by your bond curve. This analysis measures what the convention is worth to you on your own curve; it makes no statement about the lender's margin.</p></div></details>
   <details><summary>Is the benefit real money, or a modelling result?</summary><div><p>It is the present value of paying less than your own market price for the later periods of the loan, computed from your quoted bonds only. It is not a payment: it shows up as interest below the bond-equivalent level in the later years, offset in part by interest above it in the early years (section 6). The assumptions that cannot be observed in your bond prices move it by no more than <span data-v="maxMove"></span>.</p></div></details>
-  <details data-mode="float"><summary>A Z-spread is not my floating funding cost. Does the comparison hold?</summary><div><p>The analysis does not use the Z-spread as a margin. It infers from your Z-spreads the cost of lending to you in each period and prices the loan's margin on that basis. The only place where the Z-spread is used as a margin is the average-life price itself, and the cost of that convention, <span data-v="convention"></span>, is already netted in the benefit (section 4).</p></div></details>
+  <details data-mode="float"><summary>A Z-spread is not my floating funding cost. Does the comparison hold?</summary><div><p>The analysis does not use the Z-spread as a margin. A Z-spread is a measure of price: the spread that, added to the swap curve's zero rates, discounts your bonds' cash flows to their market prices. From your Z-spreads the analysis infers the cost of lending to you in each period, and prices the loan's margin on that basis. Only the average-life price charges the Z-spread itself as a margin; the cost of that convention, <span data-v="convention"></span>, is already netted in the benefit (section 4).</p></div></details>
   <details><summary>Why does the cost per period step up and down?</summary><div><p>Each year's cost is inferred from the difference between neighbouring quoted levels. With a limited number of quotes joined by straight lines, those differences jump where the slope of the interpolated curve changes. A fitted issuer curve gives a smoother profile. The bond-equivalent price is a weighted average over all of the loan's periods, so a step in any single year carries a small weight in it.</p></div></details>
   <details><summary>What if my curve flattens after signing?</summary><div><p>The price is fixed at signing, and the benefit shown is measured on the curve at signing. If your curve later flattened, new long-dated issuance would become cheaper for you, which would reduce, in hindsight, the value of having fixed the long end of this loan at today's levels. The analysis does not forecast your curve.</p></div></details>
   <details><summary>What if we prepay?</summary><div><p>The benefit is back-loaded: it is positive in present value only from about year <span data-v="breakEven"></span>. The table in section 6 shows the position at earlier dates. Prepayment terms should be read with this in mind.</p></div></details>
@@ -326,6 +326,6 @@
 </section>
 </div>
 
-<script src="clientCase.js?v=20261104"></script>
-<script src="clientKit.js?v=20261104"></script>
-<script src="clientView.js?v=20261104"></script>
+<script src="clientCase.js?v=20261104b"></script>
+<script src="clientKit.js?v=20261104b"></script>
+<script src="clientView.js?v=20261104b"></script>

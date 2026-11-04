@@ -1,7 +1,7 @@
 """WAL Wedge engine: Python mirror of WAL_Wedge_Loan_vs_Bond_Calculator.xlsx.
 
 Reference implementation for the workbook, the tutorial (tutorial.html) and the
-borrower view (borrowerView.html). Standard library only.
+borrower pitch (borrowerPitch.html). Standard library only.
 
     python3 wal_wedge_engine.py            # Results rows for the sample case + self-tests
     python3 wal_wedge_engine.py --figures  # every figure quoted in the tutorial
