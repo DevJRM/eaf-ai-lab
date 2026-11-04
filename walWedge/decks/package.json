@@ -1,0 +1,6 @@
+{
+  "name": "wal-wedge-decks",
+  "private": true,
+  "description": "Builds the WAL Wedge client pitch and teaser decks from clientCase.js: node buildDecks.js --rate fixed|float --aud sovereign|corporate",
+  "dependencies": { "pptxgenjs": "3.12.0" }
+}

@@ -104,12 +104,29 @@
         { t: 'line', p: pts.fixed, c: 'var(--slate)', w: 2.4, dash: '6 4' }, { t: 'dots', c: 'var(--slate)', p: pts.fixed.filter(p => [-1, 0, .5, 1, 2].includes(p[0])).map(p => [p[0], p[1], true]) }] });
   }
 
+  // PowerPoint download: the deck matching the current switches, if it has been built (decks/decks.json, written by decks/buildDecks.js)
+  let curMode = 'float', curAud = 'sovereign', DECKS = null;
+  function deckLink() {
+    const a = $('deck-dl'); if (!a) return;
+    const rate = curMode === 'float' ? 'floating' : 'fixed', tag = a.dataset.deck === 'Teaser' ? rate : `${rate}_${curAud}`;
+    const file = `WAL_Wedge_${a.dataset.deck}_${tag}.pptx`, ok = !DECKS || file in DECKS;   // no manifest (opened from disk): let the browser try
+    a.href = ok ? `decks/${file}` + (DECKS ? `?v=${DECKS[file]}` : '') : '#';
+    a.setAttribute('download', file); a.setAttribute('aria-disabled', ok ? 'false' : 'true');
+    a.title = ok ? `Download ${file}` : `Not built yet for ${tag.replace('_', ', ')}: run decks/buildDecks.js`;
+  }
+  const dl = $('deck-dl');
+  if (dl) {
+    dl.addEventListener('click', e => { if (dl.getAttribute('aria-disabled') === 'true') e.preventDefault(); });
+    fetch('decks/decks.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { DECKS = j; deckLink(); }).catch(() => { DECKS = null; deckLink(); });
+  }
   function setAudience(aud) {
+    curAud = aud; deckLink();
     ['sovereign', 'corporate'].forEach(k => { const b = $('a-' + k); if (b) b.setAttribute('aria-pressed', k === aud ? 'true' : 'false'); });
     document.querySelectorAll('[data-borrower]').forEach(el => { el.hidden = el.dataset.borrower !== aud; });
     try { if (cs.showAudienceToggle !== false) localStorage.setItem('ww-client-aud', aud); } catch (e) {}
   }
   function setMode(md) {
+    curMode = md; deckLink();
     ['float', 'fixed'].forEach(k => { const b = $('m-' + k); if (b) b.setAttribute('aria-pressed', k === md ? 'true' : 'false'); });
     Object.assign(F.common, texts(md));
     WW.bind(F, md);
