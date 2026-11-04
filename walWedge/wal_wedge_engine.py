@@ -27,6 +27,8 @@ section 10 of the tutorial is the formula catalog, section 11 the deep dives):
     bridge_coupon       Curves!AB        YAS Z-spread -> par coupon of its bond     02, 11.2
     ytm_gaps            Curves!AC:AD,E45 bridge coupon vs quoted YTM                11.3
     bootstrap           Calc_*!D:P,AH    λ per year so each par bond reprices       06, 11.4
+    schedule            Schedule!       drawings and repayments per half-year       02, 11.5
+                                         (linear, linear + balloon, custom)
     price_loan          Calc_*!Q:AG,E4:E28  balance (11.5), half-year cost (11.6),  05-08
                                          weights, fair price, PV (11.7), shortcut
                                          and splits (11.8, 11.9)
@@ -58,6 +60,10 @@ SAMPLE = {
     "amount": 1_000_000_000,
     "x": 1.0,             # drawdown period, years
     "y": 23.0,            # repayment period, years
+    # Schedule sheet. "linear" (default): equal drawings over x, equal semi-annual instalments over y.
+    # "balloon": as linear, with "balloon" (share of the amount) repaid with the last instalment.
+    # "custom": "draw" and "repay", the share of the amount drawn and repaid in half-years 1..60.
+    "profile": {"type": "linear"},
     "X_float_bp": 0.0,
     "X_fixed_bp": 0.0,
     "recovery": 0.40,
@@ -218,16 +224,62 @@ def interp_curve(values, t):
     return values[lo - 1] + (values[lo] - values[lo - 1]) * (tt - lo)
 
 
+def schedule(inp):
+    """Schedule!: share of the amount drawn and repaid in each half-year i = 1..60 (index 0 unused).
+
+    linear   equal drawings every 6 months over x years (one at signing if x = 0), then equal
+             instalments over y years, the first six months after the drawdown period ends.
+    balloon  as linear, but only (1 − b) is amortised; b is repaid with the last instalment.
+    custom   the lists given, as fractions of the amount; a drawing is made at the start of its
+             half-year and an instalment paid at its end.
+    """
+    p = inp.get("profile") or {"type": "linear"}
+    kind = p.get("type", "linear")
+    draw, repay = [0.0] * 61, [0.0] * 61
+    if kind in ("linear", "balloon"):
+        D, Rn = round(2 * inp["x"]), round(2 * inp["y"]); Dd = max(D, 1)
+        b = p.get("balloon", 0.0) if kind == "balloon" else 0.0
+        if Rn < 1 or D + Rn > 60:
+            raise ValueError("drawdown plus repayment period must fit in 30 years, with at least one instalment")
+        if not 0.0 <= b <= 1.0:
+            raise ValueError("the balloon must be between 0% and 100% of the amount")
+        for i in range(1, Dd + 1):
+            draw[i] = 1 / Dd
+        for i in range(D + 1, D + Rn + 1):
+            repay[i] = (1 - b) / Rn
+        repay[D + Rn] += b
+    elif kind == "custom":
+        dl, rl = list(p.get("draw", [])), list(p.get("repay", []))
+        if len(dl) > 60 or len(rl) > 60:
+            raise ValueError("a custom schedule has at most 60 half-years (30 years)")
+        draw[1:len(dl) + 1], repay[1:len(rl) + 1] = dl, rl
+    else:
+        raise ValueError(f"unknown profile type {kind!r}: use linear, balloon or custom")
+    if min(draw + repay) < 0:
+        raise ValueError("drawings and repayments cannot be negative")
+    if abs(sum(draw) - 1) > 1e-9 or abs(sum(repay) - 1) > 1e-9:
+        raise ValueError(f"drawings sum to {sum(draw):.6%} and repayments to {sum(repay):.6%}; both must be 100%")
+    bal = 0.0
+    for i in range(1, 61):
+        bal += draw[i] - repay[i]
+        if bal < -1e-12:
+            raise ValueError(f"half-year {i} repays more than is outstanding")
+    return draw, repay
+
+
 def price_loan(inp, grid, cal, kind):
     """Calc_*!Q:AG and E4:E28 — the loan grid, fair price, saving and its splits."""
     W, fa, R, S = grid["W"], grid["fa"], inp["recovery"], cal["S"]
     m = inp["coupon_freq"]
-    D = round(2 * inp["x"]); Rn = round(2 * inp["y"]); n = D + Rn; Dd = max(D, 1)
-    rows = []
+    draw, repay = schedule(inp)
+    n = max(i for i in range(1, 61) if repay[i] > 0)      # last instalment: final maturity n/2
+    rows = []; drawn = repaid = 0.0
     for i in range(1, 61):
-        O = (min(i, Dd) / Dd - max(0, min(i - 1, n) - D) / Rn) if i <= n else 0.0
-        P = 1 / Rn if D < i <= n else 0.0
-        DD = 1 / Dd if i <= Dd else 0.0
+        drawn += draw[i]
+        O = drawn - repaid if i <= n else 0.0              # drawn at the start of i, repaid at its end
+        O = 0.0 if abs(O) < 1e-12 else O
+        P, DD = repay[i], draw[i]
+        repaid += repay[i]
         p = S[i] / S[i - 1]
         credit = (1 - p) * (1 + fa[i] - R) / (p * A)
         f = fa[i] / A
@@ -394,6 +446,33 @@ def self_tests():
         check(f"a GBP case (coupon frequency {m}) reprices to par and shows no YTM gap",
               gr["float"]["reprice_err_bp"] < 1e-6 and gr["fixed"]["reprice_err_bp"] < 1e-6
               and max(abs(v) for v in gr["gaps"].values()) < 1e-6)
+    # Repayment profiles (Schedule sheet).
+    lin = res
+    b0 = run(dict(SAMPLE, profile={"type": "balloon", "balloon": 0.0}))
+    check("a 0% balloon equals the linear profile",
+          all(abs(b0[k]["net"] - lin[k]["net"]) < 1e-14 and abs(b0[k]["WAL"] - lin[k]["WAL"]) < 1e-12 for k in ("float", "fixed")))
+    dl, rl = schedule(SAMPLE)
+    cu = run(dict(SAMPLE, profile={"type": "custom", "draw": dl[1:], "repay": rl[1:]}))
+    check("a custom schedule fed the linear lists equals the linear profile",
+          all(abs(cu[k]["net"] - lin[k]["net"]) < 1e-14 for k in ("float", "fixed")))
+    bl = run(dict(SAMPLE, x=0.0, profile={"type": "balloon", "balloon": 1.0}))
+    check("a 100% balloon drawn at signing is a bullet: WAL = maturity, timing effect 0",
+          all(abs(bl[k]["WAL"] - bl[k]["maturity"]) < 1e-12 and abs(bl[k]["timing"]) < 1e-14 for k in ("float", "fixed")))
+    b3 = run(dict(SAMPLE, profile={"type": "balloon", "balloon": 0.30}))
+    d3, r3 = schedule(dict(SAMPLE, profile={"type": "balloon", "balloon": 0.30}))
+    wal3 = sum(i / 2 * r3[i] for i in range(61)) - sum((i - 1) / 2 * d3[i] for i in range(61))
+    check(f"a 30% balloon: WAL {b3['float']['WAL']:.4f}y = average repayment date − average drawdown date; PV identity holds",
+          abs(b3["float"]["WAL"] - wal3) < 1e-12 and abs(b3["float"]["WAL"] - b3["float"]["wal_check"]) < 1e-12
+          and all(abs(b3[k]["pv_identity"] - b3[k]["pv"]) < 1e-12 for k in ("float", "fixed")))
+    bad = 0
+    for prof in ({"type": "custom", "draw": [1.0], "repay": [0.5]},
+                 {"type": "custom", "draw": [0.5, 0.5], "repay": [0.8, 0.2]},
+                 {"type": "balloon", "balloon": 1.2}, {"type": "sculpted"}):
+        try:
+            schedule(dict(SAMPLE, profile=prof))
+        except ValueError:
+            bad += 1
+    check("invalid schedules are rejected (sums, negative balance, balloon range, unknown type)", bad == 4)
     check("the EUR sample is unchanged (7.12 / 7.51bp)",
           round(res["float"]["net"] * 1e4, 2) == 7.12 and round(res["fixed"]["net"] * 1e4, 2) == 7.51)
     return ok
@@ -407,7 +486,9 @@ def print_results(inp, res):
               34: "Component: risk-free effect (bp)", 35: "Component: credit effect (bp)",
               43: "Max repricing error (bp)", 54: "Max YTM gap (bp)", 55: "Gap check",
               56: "Cause: timing effect (bp)", 57: "Cause: quote-convention effect (bp)"}
-    print(f"{inp['name']} — Results")
+    p = inp.get("profile") or {"type": "linear"}
+    prof = {"linear": "linear", "balloon": f"linear + {p.get('balloon', 0):.0%} balloon", "custom": "custom schedule"}.get(p.get("type"), "?")
+    print(f"{inp['name']} — Results ({prof} profile)")
     for r, lab in labels.items():
         c, d = rows["C"].get(r), rows["D"].get(r)
         fmt = lambda v: "" if v is None else (v if isinstance(v, str) else f"{v:,.6f}")
