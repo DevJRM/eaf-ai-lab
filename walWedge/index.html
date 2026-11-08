@@ -48,7 +48,7 @@ body {
 }
 .card .enter.dl { background: #fff; color: #800020; border: 1.5px solid #800020; padding: 10.5px; }
 .card:hover .enter { background-color: #5a0015; color: #fff; }
-.corner-date { position: fixed; top: 16px; left: 20px; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 500; }
+.corner-date { position: absolute; top: 16px; left: 20px; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 500; }
 .back-top {
   position: fixed; top: 12px; right: 20px; z-index: 5; color: #fff; text-decoration: none; font-size: 13px; font-weight: 600;
   border: 1.5px solid rgba(255,255,255,.55); border-radius: 999px; padding: 7px 14px; transition: background-color .2s ease;
@@ -57,8 +57,9 @@ body {
 .notes { display: flex; justify-content: space-between; gap: 16px; margin-top: 40px; color: rgba(255,255,255,.6); font-size: 11.5px; line-height: 1.4; text-align: left; }
 .notes span { display: flex; gap: 8px; align-items: center; }
 @media (max-width: 860px) {
+  body { flex-direction: column; align-items: stretch; }   /* date and back button stack above the page instead of squeezing it */
   .corner-date { position: static; display: block; text-align: left; margin: 0 0 18px; }
-  .back-top { position: static; display: inline-block; margin: 0 0 22px; }
+  .back-top { position: static; display: inline-block; margin: 0 0 22px; align-self: flex-start; }
   .notes { flex-direction: column; }
 }
 </style>
@@ -94,7 +95,7 @@ body {
   </div>
 
   <div class="group">Analyse and understand</div>
-  <div class="cards four">
+  <div class="cards three">
     <a class="card" href="WAL_Wedge_Loan_vs_Bond_Calculator.xlsx" download>
       <div class="icon">🧮</div><span class="tag">Excel · no macros</span>
       <h2>Calculator</h2>
@@ -112,12 +113,6 @@ body {
       <h2>Tutorial</h2>
       <p>The method step by step, from the bond curve to the saving, with live charts, worked numbers and a formula catalog.</p>
       <span class="enter">Open &rarr;</span>
-    </a>
-    <a class="card" href="wal_wedge_engine.py" download="wal_wedge_engine.py" data-dl>
-      <div class="icon">💻</div><span class="tag">Python · plug-in ready</span>
-      <h2>Code</h2>
-      <p>The full calculation as plain Python functions, tested against the workbook and ready to drop into other projects.</p>
-      <span class="enter dl">Download code &darr;</span>
     </a>
   </div>
 
@@ -140,6 +135,17 @@ body {
       <h2>Meeting Playbook</h2>
       <p>Know the questions before the borrower asks them, and the answers that hold.</p>
       <span class="enter">Open &rarr;</span>
+    </a>
+  </div>
+
+  <div class="group">Plug it into your own tools</div>
+  <div class="cards one">
+    <a class="card feature" href="wal_wedge_engine.py" download="wal_wedge_engine.py" data-dl>
+      <div class="icon">💻</div>
+      <div class="fb"><span class="tag">Python · for ModelLM and other AI tools</span>
+        <h2>Code</h2>
+        <p>The full calculation as plain Python. Build new features, add in-house data, create new presentations or apply it to new cases.</p></div>
+      <span class="enter dl">Download code &darr;</span>
     </a>
   </div>
 
