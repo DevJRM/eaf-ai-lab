@@ -433,3 +433,91 @@ label.chk{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:8px 0 
 label.chk input{accent-color:var(--accent);width:16px;height:16px}
 .dgrid label.sel{margin:8px 0}
 .cb.fit{margin-top:4px}.cb.fit svg.ch{max-width:560px;min-width:420px}
+
+/* ===== The WAL Wedge in ten minutes (explainer.html): a short internal guide ===== */
+.bar .in.xp-in{max-width:1000px}
+.xp{max-width:1000px;margin:0 auto;padding-block:20px 56px}
+.xp h1{font-family:var(--f-display);font-size:clamp(28px,4.4vw,40px);line-height:1.12;margin:0}
+.xp .lead{max-width:none;font-size:17px}
+.xp p{line-height:1.6;text-wrap:pretty}
+.xp .route{display:flex;flex-wrap:wrap;gap:6px 8px;margin:16px 0 0;font-size:13px}
+.xp .route a{color:var(--ink);text-decoration:none;background:var(--panel);border:1px solid var(--rule);border-radius:999px;padding:4px 11px}
+.xp .route a:hover{border-color:var(--accent);color:var(--accent)}
+.xp .route b{font-family:var(--f-mono);color:var(--accent);margin-right:5px;font-weight:500}
+/* the answer: three numbers */
+.xp-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0 6px}
+.xp-tile{background:var(--panel);border:1px solid var(--rule);border-top:3px solid var(--slate);border-radius:10px;padding:12px 14px}
+.xp-tile.f{border-top-color:var(--ink);background:var(--brass-soft)}.xp-tile.b{border-top-color:var(--gain);background:var(--gain-soft)}.xp-tile.p{background:var(--slate-soft)}
+.xp-tile .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.xp-tile .v{font-family:var(--f-mono);font-size:26px;font-weight:500;margin-top:4px}
+.xp-tile .d{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.4}
+.xp-case{font-size:13px;color:var(--muted);margin:2px 0 0}
+/* sections */
+.xp section{margin-top:34px;scroll-margin-top:90px}
+.xp .sn{font-family:var(--f-mono);font-size:13px;color:var(--accent);letter-spacing:.06em}
+.xp h2{font-family:var(--f-display);font-size:clamp(22px,3vw,27px);margin:2px 0 8px;line-height:1.2}
+.xp h3{font-size:16px;margin:18px 0 4px}
+.xp .take{background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:8px;padding:10px 16px;margin:16px 0}
+.xp .take b:first-child{color:var(--accent)}
+.xp .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:stretch}
+.xp .two .ex{margin:0;display:flex;flex-direction:column}
+.xp .two .ex .cb{margin-top:auto}.xp .two svg.ch{min-width:330px}
+.xp .two .ex .xp-bars{margin-bottom:auto}
+/* what moves it */
+.xp-bars{display:grid;grid-template-columns:minmax(0,1fr) 7rem;gap:6px 12px;align-items:center;font-size:13.5px;margin-top:8px}
+.xp-bars .h{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.xp-bars .h:not(:first-child),.xp-bars .n{text-align:right;font-family:var(--f-mono)}
+.xp-bars .n.up{color:var(--gain)}.xp-bars .n.dn{color:var(--accent)}
+.xp-bars .lbl{display:flex;flex-direction:column;gap:3px}
+.xp-bars .bar2{height:6px;border-radius:3px;background:var(--rule);position:relative;overflow:hidden}
+.xp-bars .bar2 i{position:absolute;top:0;bottom:0;border-radius:3px}
+.xp-try{margin-top:14px;padding:12px 14px;background:var(--soft);border-radius:10px}
+.xp-try label{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;font-size:13.5px;font-weight:600}
+.xp-try input[type=range]{width:100%;accent-color:var(--accent);margin-top:6px}
+.xp-try .out{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:6px;font-size:14px}
+.xp-try .out b{font-family:var(--f-mono);font-weight:500}
+.xp-try .scale{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+/* two-column rows (at a glance; talking to a borrower): one row per point, columns sized to their content */
+.xp-pairs{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);margin:6px 0 4px;font-size:14px;line-height:1.5}
+.xp-pairs.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:18px}
+.xp-pairs .ph{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted);padding:6px 12px 6px 0;border-bottom:1px solid var(--rule)}
+.xp-pairs .ph.ok{color:var(--gain)}.xp-pairs .ph.no{color:var(--accent)}
+.xp-pairs .pc{padding:10px 14px 10px 0;border-bottom:1px solid var(--rule)}
+.xp-pairs .pc.k{font-weight:600}
+.xp-pairs .pc.ok,.xp-pairs .pc.no{padding-left:26px;position:relative}
+.xp-pairs .pc.ok::before,.xp-pairs .pc.no::before{position:absolute;left:4px;top:10px;font-weight:700}
+.xp-pairs .pc.ok::before{content:"✓";color:var(--gain)}.xp-pairs .pc.no::before{content:"✕";color:var(--accent)}
+@media (max-width:640px){
+  .xp-pairs{grid-template-columns:minmax(0,1fr)}.xp-pairs .ph{display:none}.xp-pairs .pc.k{border-bottom:0;padding-bottom:0}
+  .xp-pairs.even{display:flex;flex-direction:column}.xp-pairs.even .ph{display:block}
+  .xp-pairs.even .ph.ok{order:0}.xp-pairs.even .pc.ok{order:1}.xp-pairs.even .ph.no{order:2;margin-top:12px}.xp-pairs.even .pc.no{order:3}
+}
+/* talking to a borrower: three cards, each with its own number and colour */
+.xp-talk{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:12px}
+.xp-talk .tk{background:var(--panel);border:1px solid var(--rule);border-top:4px solid var(--accent);border-radius:12px;padding:14px 16px 8px}
+.xp-talk .tk.c1{border-top-color:var(--brass)}.xp-talk .tk.c2{border-top-color:var(--slate)}.xp-talk .tk.c3{border-top-color:var(--accent)}
+.xp-talk .tk-h{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-size:17px;font-weight:600;margin-bottom:6px;line-height:1.25}
+.xp-talk .tk-n{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;color:#fff;background:var(--accent)}
+.xp-talk .c1 .tk-n{background:var(--brass)}.xp-talk .c2 .tk-n{background:var(--slate)}
+.xp-talk .tk-i{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:4px 22px;padding:10px 0;border-top:1px solid var(--rule);font-size:14px;line-height:1.5}
+.xp-talk .tk-i b{color:var(--ink)}.xp-talk .tk-i>span{color:var(--muted)}
+/* use and avoid side by side, in matched pairs */
+.xp-talk .tk-uv{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);column-gap:22px}
+.xp-talk .tk-g{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;margin:6px 0 4px}
+.xp-talk .tk-g.ok{color:var(--gain)}.xp-talk .tk-g.no{color:var(--accent)}
+.xp-talk .tk-w{position:relative;padding:9px 0 9px 22px;border-top:1px solid var(--rule);font-size:14px;line-height:1.5}
+.xp-talk .tk-w::before{position:absolute;left:2px;top:6px;font-weight:700}
+.xp-talk .tk-w.ok::before{content:"✓";color:var(--gain)}.xp-talk .tk-w.no::before{content:"✕";color:var(--accent)}
+@media (max-width:640px){.xp-talk .tk-i{grid-template-columns:minmax(0,1fr)}.xp-talk .tk-uv{grid-template-columns:minmax(0,1fr)}.xp-talk .tk-uv .tk-g.no{display:none}.xp-talk .tk-uv .tk-g.ok{display:none}.xp-talk .tk-w.no{border-top:0;padding-top:0}}
+/* tool kit steps */
+.xp-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:10px;counter-reset:st}
+.xp-steps a{display:flex;flex-direction:column;gap:4px;background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:12px;text-decoration:none;color:var(--ink);position:relative}
+.xp-steps a:hover{border-color:var(--accent)}
+.xp-steps .s{font-family:var(--f-mono);font-size:12px;color:var(--accent)}
+.xp-steps .t{font-family:var(--f-display);font-size:16px;font-weight:600}
+.xp-steps .d{font-size:12.5px;color:var(--muted);line-height:1.4}
+.xp dl.gl{display:grid;grid-template-columns:minmax(0,13rem) minmax(0,1fr);gap:8px 18px;margin:10px 0 4px;font-size:14px;line-height:1.5}
+.xp dl.gl dt{font-weight:600}.xp dl.gl dd{margin:0}
+@media (max-width:760px){.xp-tiles,.xp .two{grid-template-columns:minmax(0,1fr)}.xp-steps{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.xp dl.gl{grid-template-columns:minmax(0,1fr)}.xp dl.gl dd{margin-bottom:6px}}
+@media (max-width:460px){.xp-steps{grid-template-columns:minmax(0,1fr)}.xp-bars{grid-template-columns:minmax(0,1fr) 6rem}}
+.xp-wal{color:var(--muted);font-size:12px;font-weight:400}

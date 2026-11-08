@@ -1,0 +1,165 @@
+<!doctype html><html><head><link rel="stylesheet" href="../assets/auth.css"><script>try{if(sessionStorage.getItem('eaf_walwedge_authenticated')==='true'){document.documentElement.classList.add('eaf-authed');}}catch(e){}</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><div id="auth-overlay"><div id="auth-modal"><h2>🔒 EAF AI Lab — Restricted</h2><p>Please enter your password</p><input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password" autofocus/><button onclick="checkPassword()">Access</button><div id="auth-error">❌ Incorrect password. Please try again.</div></div></div><script>window.EAF_AUTH={hash:'2b35a0164970212745940305ae056f2708a43e93388be37a6bb04ccd123d4982',key:'eaf_walwedge_authenticated'};</script><script src="../assets/auth.js"></script>
+
+<title>The WAL Wedge in ten minutes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="clientStyle.css?v=20261108w">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23800020'/%3E%3Cg fill='%23fff' opacity='.9'%3E%3Crect x='11' y='16' width='5' height='36'/%3E%3Crect x='18' y='21' width='5' height='31'/%3E%3Crect x='25' y='26' width='5' height='26'/%3E%3Crect x='32' y='31' width='5' height='21'/%3E%3Crect x='39' y='36' width='5' height='16'/%3E%3Crect x='46' y='41' width='5' height='11'/%3E%3C/g%3E%3Cpolygon points='30.3,30 54,16 54,30' fill='%23E2A940' opacity='.85'/%3E%3Cline x1='9' y1='42' x2='54' y2='16' stroke='%23E2A940' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<div class="bar"><div class="in xp-in">
+  <div class="left"><div class="nm">WAL Wedge <span>in ten minutes</span></div></div>
+  <div class="tog" role="group" aria-label="Loan type"><button type="button" data-xmode="float" aria-pressed="true">Floating rate</button><button type="button" data-xmode="fixed" aria-pressed="false">Fixed rate</button></div>
+  <a class="back-btn" href="index.html" title="Back to the WAL Wedge Tool Set">&larr; Tool Set</a>
+</div></div>
+
+<main class="xp">
+<header>
+  <div class="lab">Internal · for colleagues · about 10 minutes</div>
+  <h1>The WAL Wedge in ten minutes</h1>
+  <p class="lead">When we price an amortising loan off a borrower's bond curve, we read that curve at one point: the loan's average life. When the curve rises, that single reading is lower than what the borrower's own bonds say this loan is worth. The difference is the <b>WAL wedge</b>: a benefit to the borrower that we can measure, explain and use when we present the loan.</p>
+  <div class="xp-tiles" aria-label="The answer on the example case">
+    <div class="xp-tile p"><div class="k">Price we charge</div><div class="v" data-v="charged"></div><div class="d">the borrower's curve read at the average life, <span data-v="wal"></span> years</div></div>
+    <div class="xp-tile f"><div class="k">Bond-equivalent price</div><div class="v" data-v="fair"></div><div class="d">what the borrower's own bonds imply for this exact loan</div></div>
+    <div class="xp-tile b"><div class="k">Benefit to the borrower</div><div class="v" data-v="wedgeP"></div><div class="d">a year, worth <span data-v="pv"></span> in today's money</div></div>
+  </div>
+  <p class="xp-case">Example: a <span data-mode="float">floating-rate</span><span data-mode="fixed">fixed-rate</span> loan of <span data-v="amount"></span>, drawn over 1 year and repaid in <span data-v="nInst"></span> half-yearly instalments to year <span data-v="maturity"></span>; switch Floating / Fixed at the top for the other. Simulated market data shaped on a euro area sovereign, the same case as the tutorial; not market data.</p>
+  <nav class="route" aria-label="Contents">
+    <a href="#s1"><b>1</b>The habit</a><a href="#s2"><b>2</b>Why it misses</a><a href="#s3"><b>3</b>How we measure it</a><a href="#s4"><b>4</b>When it arrives</a>
+    <a href="#s5"><b>5</b>Spotting a case</a><a href="#s6"><b>6</b>Talking to a borrower</a><a href="#s7"><b>7</b>Your tool kit</a>
+  </nav>
+</header>
+
+<section id="s1">
+  <div class="sn">1 · THE HABIT</div>
+  <h2>One price, read at the loan's average life</h2>
+  <p>A borrower can raise money by issuing bonds or by taking an amortising loan. To price the loan we look at the borrower's own bonds, because their prices are the market's live view of its credit. A bond curve, though, gives a different <span data-mode="float">spread</span><span data-mode="fixed">yield</span> for every maturity, and our loan is not one maturity: here it is drawn in two halves over the first year and repaid in <span data-v="nInst"></span> equal instalments up to year <span data-v="maturity"></span>.</p>
+  <p>The usual habit is to summarise the loan by its weighted average life, <b><span data-v="wal"></span> years</b>, and charge the curve at that point: <b><span data-mode="float"><span data-v="charged"></span> over EURIBOR</span><span data-mode="fixed">a fixed rate of <span data-v="charged"></span></span></b><span data-mode="fixed"> (the bond yield at <span data-v="wal"></span> years, restated for half-yearly payments)</span>. It sounds neutral, since the loan behaves "on average" like a <span data-v="wal"></span>-year bond. It is not neutral, and the next section shows why.</p>
+  <div class="ex"><div class="et">The borrower's curve</div><div class="eh"><span data-mode="float">Z-spread over swaps (Bloomberg YAS)</span><span data-mode="fixed">Bond yield (Bloomberg YAS) and the swap curve</span>, read at the average life</div><div class="cb" id="c-curve"></div>
+    <div class="lg" id="lg-curve"></div>
+    <p class="cap">Filled dots are quoted maturities; hollow dots are filled in between. The dashed lines mark the one reading the loan is priced at.</p></div>
+</section>
+
+<section id="s2">
+  <div class="sn">2 · WHY IT MISSES</div>
+  <h2>Two ideas, both about time</h2>
+  <div class="two">
+    <div class="ex"><div class="et">Idea 1</div><div class="eh">A quoted <span data-mode="float">spread</span><span data-mode="fixed">yield</span> is an average</div>
+      <p>Drive ten hours at an average of 42 km/h and you may have crawled through traffic early and raced at the end. A bond's quote works the same way: the 10-year <span data-mode="float">spread</span><span data-mode="fixed">yield</span>, <b id="y10q"></b>, is the average <span data-mode="float">credit cost</span><span data-mode="fixed">rate</span> of years 1 to 10. Peeled apart, <b>year 10 on its own costs about <span id="y10c"></span></b>. On a rising curve each late year costs more than the quote suggests.</p>
+      <div class="cb" id="c-year"></div><div class="lg" id="lg-year"></div></div>
+    <div class="ex"><div class="et">Idea 2</div><div class="eh">The same average life is not the same timing</div>
+      <p>The average life measures how much money is lent and for how long, but not when. A <span data-v="wal"></span>-year bond keeps all the money out to year <span data-v="wal"></span>; our loan keeps less of it out for much longer. Both have the same average life, yet the bond's money sits on average <b><span data-v="bondCg"></span> years</b> out and the loan's <b><span data-v="cg"></span> years</b>. The loan reaches late years that a bond of the same average life never sees.</p>
+      <div class="cb" id="c-shape"></div><div class="lg" id="lg-shape"></div></div>
+  </div>
+  <p class="take"><b>Put together:</b> the loan's money sits later than a <span data-v="wal"></span>-year bond's, and on a rising curve later money is dearer. One reading at the average life therefore charges less than the borrower's own curve says this loan is worth. Before the average life the borrower pays a little too much; after it, a lot too little.</p>
+</section>
+
+<section id="s3">
+  <div class="sn">3 · HOW WE MEASURE IT</div>
+  <h2>The loan as a strip of mini-bonds</h2>
+  <p>To put a number on it we need a yardstick, and the borrower already has one: its own bonds. Picture the loan as <span data-v="miniN"></span> mini-bonds, one per instalment, each repaid on its own date and each priced on the borrower's curve at its own maturity. Funding the loan this way would cost the average of those prices, weighted by how much each mini-bond counts (its size, how long it runs, discounting and the chance of being repaid). That average is the <b>bond-equivalent price</b>, <span data-v="fair"></span>. The loan charges <span data-v="charged"></span> on every mini-bond; the gap, <b><span data-v="wedgeP"></span> a year</b> on the balance outstanding, is the benefit.</p>
+  <div class="ex"><div class="et">The comparison</div><div class="eh">Each mini-bond's own price against the one price the loan charges</div><div class="cb" id="c-strip"></div>
+    <p class="cap">Short mini-bonds (slate) cost less on the borrower's curve than the price charged; long ones (maroon) cost more. The long ones count most, so the average lands above the price charged.</p></div>
+  <div class="ex split-c"><div class="et">Where the benefit comes from</div><div class="eh">Two effects, separated by a stepping stone: a <span data-v="wal"></span>-year bond priced the same way</div>
+    <figure class="split3">
+      <div class="px f"><div class="k">Bond-equivalent price</div><div class="d">this loan, mini-bond by mini-bond</div><div class="v" data-v="fair2"></div></div>
+      <div class="px r"><div class="k">Reference bond</div><div class="d">a <span data-v="wal"></span>-year bond, valued the same way</div><div class="v" data-v="bullet"></div></div>
+      <div class="px s"><div class="k">Average-life price</div><div class="d">the curve read at <span data-v="wal"></span> years</div><div class="v" data-v="charged2"></div></div>
+      <div class="sp tm"><div class="u"></div><div class="t">Timing effect<small>only the repayment profile differs</small></div><div class="n pos" data-v="timing"></div></div>
+      <div class="sp qc"><div class="u"></div><div class="t">Quote-convention effect<small>only the way of quoting differs</small></div><div class="n neg" data-v="convention"></div></div>
+      <div class="sp w"><div class="u"></div><div class="t">Benefit</div><div class="n" data-v="wedgeP"></div></div>
+    </figure>
+    <p class="cap">The <b>timing effect</b> is the wedge proper: same average life, same valuation, only the shape of the loan differs. The <b>quote-convention effect</b> is small and would arise even for a bullet: <span data-mode="float">a Bloomberg Z-spread is quoted as a discount rate, while a loan pays a margin.</span><span data-mode="fixed">the bond's annual yield is restated for the loan's half-yearly payments. A fixed rate also contains the swap rate, so the same benefit can be split another way: a credit effect of <span data-v="fixed.creditEffect"></span> and an interest-rate effect of <span data-v="fixed.rfEffect"></span>, from the shape of the swap curve.</span></p></div>
+  <p>In money: <span data-v="wedgeP"></span> a year on <span data-v="amount"></span> is worth <b><span data-v="pv"></span> today</b>, or <span data-v="nominal"></span> added up over the life without discounting. Lead with the first; the second is only for reference.</p>
+</section>
+
+<section id="s4">
+  <div class="sn">4 · WHEN IT ARRIVES</div>
+  <h2>The benefit is back-loaded</h2>
+  <p>The gain comes from the late years, so it arrives late. Counted in today's money, the borrower is behind for the first years, furthest behind around year <span data-v="minYear"></span> (<span data-v="minPV"></span>), back to even in year <b><span data-v="breakEven"></span></b> and ahead from then on. The full benefit is collected only by keeping the loan; repaid early, it can leave the borrower worse off. Say this up front: it is the first thing a careful treasurer will find.</p>
+  <div class="ex"><div class="et">When it arrives</div><div class="eh">Running value of the benefit, in today's money</div><div class="cb" id="c-run"></div></div>
+</section>
+
+<section id="s5">
+  <div class="sn">5 · SPOTTING A CASE</div>
+  <h2>What makes it large, small or negative</h2>
+  <p>The answer depends on one thing above all: <b>how much the borrower's curve rises between the loan's average life and its final maturity</b>. Recovery rates and the level of the swap curve barely matter. Below, the same loan priced on reshaped versions of the curve, and the same curve with other repayment profiles, all computed by the engine.</p>
+  <div class="two">
+    <div class="ex"><div class="et">The curve's shape</div><div class="eh">Same loan, curve tilted around its average-life reading</div><div class="xp-bars" id="v-shape"></div>
+      <p class="cap">Flat: the benefit is about zero. Inverted, typical of a borrower under stress: the borrower pays more than its bonds imply.</p></div>
+    <div class="ex"><div class="et">The loan's profile</div><div class="eh">Same curve, other repayment profiles</div><div class="xp-bars" id="v-prof"></div>
+      <p class="cap">Longer is not automatically better: on this curve an 8-year amortiser gains more, because the curve climbs steepest between 5 and 10 years. A bullet has no timing effect at all.</p></div>
+  </div>
+  <div class="xp-try">
+    <label for="tilt"><span>Try it: steepness of the borrower's curve</span><span id="tilt-v"></span></label>
+    <input type="range" id="tilt" min="-1" max="2" step="0.25" value="1" aria-describedby="tilt-out">
+    <div class="scale"><span>inverted</span><span>flat</span><span>today</span><span>twice as steep</span></div>
+    <div class="out" id="tilt-out"></div>
+  </div>
+  <p>For a feel of the size: on a straight rising curve the benefit is roughly the curve's rise in bp per year × the average life ÷ 3. Real curves bend, so take the number from the Simulator, not from the rule.</p>
+  <div class="ex"><div class="et">At a glance</div><div class="eh">When to bring it up, and when to think twice</div>
+    <div class="xp-pairs even">
+      <div class="ph ok">Bring it up when</div><div class="ph no">Think twice when</div>
+      <div class="pc ok">The borrower's credit curve rises beyond the loan's average life.</div><div class="pc no">The curve is flat (benefit about zero) or inverted, as for a borrower under stress (the borrower pays more: do not pitch it).</div>
+      <div class="pc ok">The loan amortises; a drawdown period adds to it (here <span id="v-dd"></span>).</div><div class="pc no">The loan is a bullet, or very short: little or no timing effect.</div>
+      <div class="pc ok">The borrower has bonds across maturities, so one Bloomberg YAS snapshot gives a full curve.</div><div class="pc no">There is no bond curve, or only one or two bonds: the benefit can be asserted but not measured.</div>
+      <div class="pc ok">The borrower will hold the loan to maturity.</div><div class="pc no">The borrower is likely to repay early: the benefit may never arrive.</div>
+    </div></div>
+</section>
+
+<section id="s6">
+  <div class="sn">6 · TALKING TO A BORROWER</div>
+  <h2>Say it in their words, and say the catch first</h2>
+  <div class="xp-talk">
+    <div class="tk c1"><div class="tk-h"><span class="tk-n">1</span>Three things to say early</div>
+      <div class="tk-i"><b>"We compare this loan with your own bonds."</b><span>The yardstick is what the same money would cost the borrower if it issued its own bonds instead: one bond for each repayment, maturing on that repayment's date (the mini-bonds of section 3). Their average cost is the bond-equivalent price.</span></div>
+      <div class="tk-i"><b>"The benefit builds up late, and needs a rising curve."</b><span>It accrues after the average life, from about year <span data-v="breakEven"></span>, and shrinks or reverses if the curve flattens or inverts. Saying it first builds trust.</span></div>
+      <div class="tk-i"><b>"Worth <span data-v="pv"></span> today, <span data-v="wedgeP"></span> a year."</b><span>Lead with value today and bp a year; undiscounted totals add up money from different years.</span></div></div>
+    <div class="tk c2"><div class="tk-h"><span class="tk-n">2</span>Words to use, and to avoid</div>
+      <div class="tk-uv">
+        <div class="tk-g ok">Use</div><div class="tk-g no">Avoid, and why</div>
+        <div class="tk-w ok">Bond-equivalent price, average-life price, price you pay</div><div class="tk-w no">"Fair price": fair to whom? "Shortcut": it sounds like a criticism of our own pricing</div>
+        <div class="tk-w ok">Benefit; timing effect, quote-convention effect</div><div class="tk-w no">Discount, subsidy, "free money", or any promise of a saving</div>
+        <div class="tk-w ok">Your own bonds, read from one Bloomberg snapshot</div><div class="tk-w no">Implied default probabilities, our margin or our funding cost</div>
+      </div></div>
+    <div class="tk c3"><div class="tk-h"><span class="tk-n">3</span>Three questions you will hear</div>
+      <div class="tk-i"><b>"Where is the catch?"</b><span>There is none hidden, but there are conditions: the benefit needs a rising curve and arrives late, from about year <span data-v="breakEven"></span>. If the loan is repaid early it may not arrive at all.</span></div>
+      <div class="tk-i"><b>"What if our curve changes before signing?"</b><span>The benefit is measured on the curve at signing. Flatter makes it smaller, inverted reverses it; the Simulator shows how it moved in past market episodes.</span></div>
+      <div class="tk-i"><b>"Why not just issue bonds?"</b><span>It need not be either one or the other. The loan avoids a single large repayment date and is priced once for the whole profile, so it complements a bond programme rather than replacing it.</span></div></div>
+  </div>
+  <p class="cap">The Meeting Playbook has the full list, by type of borrower and by how sceptical they are.</p>
+</section>
+
+<section id="s7">
+  <div class="sn">7 · YOUR TOOL KIT</div>
+  <h2>What to open next, in order</h2>
+  <div class="xp-steps">
+    <a href="tutorial.html"><span class="s">1 · LEARN MORE</span><span class="t">Tutorial</span><span class="d">The full method, step by step, with worked numbers.</span></a>
+    <a href="simulator.html"><span class="s">2 · TRY</span><span class="t">Simulator</span><span class="d">Change tenor, profile and curve; replay past market episodes.</span></a>
+    <a href="WAL_Wedge_Loan_vs_Bond_Calculator.xlsx" download><span class="s">3 · CALCULATE</span><span class="t">Calculator</span><span class="d">The borrower's numbers, from one Bloomberg YAS snapshot.</span></a>
+    <a href="walWedgePitch.html"><span class="s">4 · PRESENT</span><span class="t">One-pager and Pitch</span><span class="d">Start with the one-pager; the pitch carries the full case.</span></a>
+    <a href="borrowerQA.html"><span class="s">5 · PREPARE</span><span class="t">Meeting Playbook</span><span class="d">The questions before the borrower asks them.</span></a>
+  </div>
+</section>
+
+<section>
+  <details class="about"><summary>Glossary: the words on this page, and their names in the tutorial</summary>
+    <dl class="gl">
+      <dt>Average life (WAL)</dt><dd>Average repayment date minus average drawing date: how much money is lent, and for how long. <span data-v="wal"></span> years here.</dd>
+      <dt>Average-life price</dt><dd>The borrower's curve read at the average life. The tutorial calls it the <i>shortcut</i>.</dd>
+      <dt>Price we charge</dt><dd>The average-life price plus any agreed margin above or below it (zero here). In client documents: <i>price you pay</i>.</dd>
+      <dt>Bond-equivalent price</dt><dd>What the borrower's own bonds imply for this exact loan, mini-bond by mini-bond. The tutorial calls it the <i>fair price</i>.</dd>
+      <dt>Reference bond</dt><dd>A bullet bond maturing at the average life, valued the same way as the loan. The tutorial calls it the <i>reference bullet</i>.</dd>
+      <dt>Benefit (the wedge)</dt><dd>Bond-equivalent price minus the price we charge. Positive: the borrower pays less than its bonds imply.</dd>
+      <dt>Timing / quote-convention effect</dt><dd>The benefit split by cause: the loan's shape against the bond's, and the way the bond is quoted against the way the loan pays.</dd>
+      <dt>Credit / interest-rate effect</dt><dd>For a fixed-rate loan, the benefit split into its credit part and its swap-curve part.</dd>
+      <dt>Z-spread and yield (YAS)</dt><dd>Bloomberg's quotes of the borrower's bonds, maturity by maturity: the spread over the swap curve (for a floating-rate loan) and the all-in yield (for a fixed-rate loan).</dd>
+      <dt>Value today</dt><dd>The yearly benefit over the loan's life, discounted and allowing for the chance of default.</dd>
+    </dl></details>
+</section>
+
+<div class="disc"><p>Internal use only. The example uses simulated market data shaped on a euro area sovereign and is not an indication of terms. Every figure on this page is computed by the same engine as the calculator workbook, the simulator and the client documents.</p></div>
+</main>
+
+<script src="clientKit.js?v=20261108w"></script>
+<script src="explainer.js?v=20261108w"></script>
