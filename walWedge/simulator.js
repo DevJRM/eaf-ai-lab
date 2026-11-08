@@ -60,17 +60,17 @@
     const ssw = {}; if (s.ssw && typeof s.ssw === 'object') Object.keys(s.ssw).forEach(k => { const v = num(s.ssw[k]); if (v) ssw[k] = v; });
     let sid = typeof s.id === 'string' ? s.id : 'none'; if (/^[qk]:/.test(sid) && !/_(3|6|12)$/.test(sid)) sid += '_6';   // ids saved before the horizons
     o.scenario = { id: sid, h: HZ.includes(+s.h) ? +s.h : 6, k: num(s.k) ?? 1, ref: typeof s.ref === 'string' ? s.ref : 'peer', rates: s.rates !== false, ssw,
-                   own: s.own ? { s: own5(s.own.s), p: num(s.own.p) || 0, c: own5(s.own.c) } : null,
+                   own: s.own ? { s: own5(s.own.s), ps: Math.max(-0.5, Math.min(0.5, num(s.own.ps) || 0)), p: num(s.own.p) || 0, c: own5(s.own.c) } : null,
                    replay: s.replay ? { name: String(s.replay.name || ''), from: String(s.replay.from || ''), to: String(s.replay.to || ''), z: pts(s.replay.z), s: pts(s.replay.s), raw: String(s.replay.raw || '') } : null };
     return o;
   }
   const sample = () => Object.assign(normalise(window.WW_CASE), { illustrative: true });
-  // your own scenario: moves at 2, 5, 10, 20 and 30 years, each within ±200bp
-  const OWN_T = [2, 5, 10, 20, 30], OWN_MAX = 200, cap = v => Math.max(-OWN_MAX, Math.min(OWN_MAX, v));
+  // your own scenario: moves at 2, 5, 10, 20 and 30 years, each within ±100bp, in 1bp steps
+  const OWN_T = [2, 5, 10, 20, 30], OWN_MAX = 100, cap = v => Math.max(-OWN_MAX, Math.min(OWN_MAX, v));
   function own5(a) {
     a = Array.isArray(a) ? a.map(v => num(v) || 0) : [];
     if (a.length === 3) a = [a[0], a[0] + (a[1] - a[0]) * 3 / 8, a[1], a[1] + (a[2] - a[1]) / 2, a[2]];   // saved with 2, 10, 30
-    return OWN_T.map((_, i) => cap(Math.round((a[i] || 0) / 5) * 5));   // on the sliders' 5bp steps
+    return OWN_T.map((_, i) => cap(Math.round(a[i] || 0)));   // on the sliders' 1bp steps
   }
 
   /* ---------------- scenarios ----------------
@@ -117,11 +117,13 @@
     if (id.startsWith('c:') && CRED[id.slice(2)]) return credit(CRED[id.slice(2)], 'credit', 15);
     if (id.startsWith('q:') && RR[id.slice(2)]) { const e = RR[id.slice(2)]; return { id, kind: 'rrate', e, name: e.name, when: routineWhen(e), swap: e.tenors.map((T, i) => [T, e.move[i]]), cr: null, p: 0 }; }
     if (id.startsWith('k:') && RC[id.slice(2)]) return Object.assign(credit(RC[id.slice(2)], 'rcredit', 5), { when: routineWhen(RC[id.slice(2)]) });
-    if (id === 'own' && cs.scenario.own) { const o = cs.scenario.own; return { id, kind: 'own', name: 'Your own scenario', when: '', swap: OWN_T.map((T, i) => [T, o.s[i]]), cr: OWN_T.map((T, i) => [T, o.c[i]]), p: o.p }; }
+    if (id === 'own' && cs.scenario.own) { const o = cs.scenario.own; return { id, kind: 'own', name: 'Your own scenario', when: '', swap: OWN_T.map((T, i) => [T, o.s[i]]), ps: o.ps || 0, cr: OWN_T.map((T, i) => [T, o.c[i]]), p: o.p }; }
     if (id === 'replay' && cs.scenario.replay) { const r = cs.scenario.replay; return { id, kind: 'replay', name: r.name || 'Your Bloomberg history', when: [r.from, r.to].filter(Boolean).join(' to '), swap: r.s.length ? r.s : null, cr: r.z.length ? r.z : null, p: 0 }; }
     return { id: 'none', kind: 'none', name: "Today's curve", when: '', swap: null, cr: null, p: 0 };
   }
-  const swapMove = (d, k, T) => d.swap ? k * interp(d.swap, T) : 0;
+  // swap move at maturity T, bp: a move by maturity plus, for your own scenario, a share of today's rate lvl (bp; positive rates only)
+  const swapMove = (d, k, T, lvl) => k * ((d.ps || 0) * Math.max(lvl || 0, 0) + (d.swap ? interp(d.swap, T) : 0));
+  const swapLvl = cs => WW.fill(arr30(cs.swapPct, 1)).out.map(v => v === null ? 0 : v * 100);   // today's swap curve, bp, years 1..30
   const creditMove = (d, k, T, z) => k * ((d.p || 0) * Math.max(z, 0) + (d.cr ? interp(d.cr, T) : 0));
   function dfgOf(cs) {
     const cv = WW.conventions(cs), r6 = cs.fixing6mPct === null ? null : cs.fixing6mPct / 100;
@@ -130,8 +132,8 @@
   function shocked(cs, d, k) {
     if (d.kind === 'none' || k === 0) return cs;
     const o = Object.assign({}, cs, { swapPct: {}, zspreadBp: {}, ytmPct: {} }), m = cs.couponFreq;
-    Object.keys(cs.swapPct).forEach(T => { o.swapPct[T] = cs.swapPct[T] + swapMove(d, k, +T) / 100; });
-    if (cs.fixing6mPct !== null) o.fixing6mPct = cs.fixing6mPct + swapMove(d, k, 0.5) / 100;
+    Object.keys(cs.swapPct).forEach(T => { o.swapPct[T] = cs.swapPct[T] + swapMove(d, k, +T, cs.swapPct[T] * 100) / 100; });
+    if (cs.fixing6mPct !== null) o.fixing6mPct = cs.fixing6mPct + swapMove(d, k, 0.5, cs.fixing6mPct * 100) / 100;
     Object.keys(cs.zspreadBp).forEach(T => { o.zspreadBp[T] = cs.zspreadBp[T] + creditMove(d, k, +T, cs.zspreadBp[T]); });
     // yields: today's quote plus the change in the bridge coupon, so any gap in today's data is carried, not created
     const g0 = dfgOf(cs), g1 = dfgOf(o), z0 = WW.fill(arr30(cs.zspreadBp, 1e4)).out, z1 = WW.fill(arr30(o.zspreadBp, 1e4)).out;
@@ -262,7 +264,8 @@
     const F = BASE, c = F.common, ck = CK, items = [], yl = a => a.length > 2 ? `${a[0]}–${a[a.length - 1]}y` : a.join(' and ') + 'y';
     if (SBAD) items.push(['bad', 'The scenario\'s curve cannot be priced; the checks below are for today\'s curve']);
     items.push([ck.reprice < 1e-6 ? 'ok' : 'bad', `Every bond reprices${ck.reprice < 1e-6 ? '' : `: error ${ck.reprice.toFixed(4)}bp`}`]);
-    items.push([ck.gap <= 1 ? 'ok' : 'bad', `Z-spread and yield agree, gap ${ck.gap.toFixed(2)}bp${ck.gap <= 1 ? '' : ' — more than 1bp: check the coupon frequency, or that all quotes come from one snapshot'}`]);
+    items.push(ck.gap <= 1 ? ['ok', `Z-spread and yield agree, gap ${ck.gap.toFixed(2)}bp`]
+      : ['bad', `Z-spread and yield do not agree: the yield implied by the Z-spread differs from the yield entered by ${ck.gap.toFixed(2)}bp. Check the currency, the coupon frequency, and that all quotes come from one snapshot`]);
     items.push(['ok', `Schedule OK · average life ${c.wal}y · final ${c.maturity}y`]);
     if (ck.negBelow.length) items.push(['note', `Curve below swaps at ${yl(ck.negBelow)}: negative default intensity there${PC.borrowerType === 'corporate' ? '; unusual for a company, check the data' : ', usual for a strong sovereign'}`]);
     if (ck.negOther.length) items.push(['bad', `Negative default intensity at ${yl(ck.negOther)}: the credit spread falls too steeply with maturity there for a consistent survival curve; read the result with care`]);
@@ -499,7 +502,7 @@
   }
   function headline(d) {   // the short effect tag of a row: what the scenario does to your curves at 2, 10 and 30 years
     const z = zCurve(cs), parts = [];
-    const sw = [2, 10, 30].map(T => swapMove(d, 1, T)), cr = [2, 10, 30].map(T => creditMove(d, 1, T, z[T - 1]));
+    const sl = swapLvl(cs), sw = [2, 10, 30].map(T => swapMove(d, 1, T, sl[T - 1])), cr = [2, 10, 30].map(T => creditMove(d, 1, T, z[T - 1]));
     if (d.swap) parts.push(`swaps ${sw.map(v => sg(v)).join(' / ')}`);
     if (d.cr || d.p) parts.push(`your spread ${cr.map(v => sg(v)).join(' / ')}`);
     return parts.length ? parts.join(' · ') : 'no move';
@@ -518,7 +521,9 @@
       return `<button type="button" class="srow${on ? ' on' : ''}" data-sc="${c.id}" aria-pressed="${on}"><span class="sr-n">${esc(dd.name)}<span class="sr-w">${esc(c.grp === 'routine' ? '' : dd.when || '')}</span></span>`
         + `<span class="sr-t">${headline(dd)}</span><span class="sr-v ${cls('float')}">${dv('float')}</span><span class="sr-v ${cls('fixed')}">${dv('fixed')}</span></button>`;
     };
-    const head = '<div class="srow hd"><span>Episode</span><span>Moves at 2 / 10 / 30 years, bp</span><span>Floating</span><span>Fixed</span></div>';
+    // the header says what the two number columns are (changes against today, not the benefit itself), so no caption is needed
+    const head = `<div class="srow hd"><span class="h-sc">Scenario · click to apply</span><span class="h-mv">Moves at 2 / 10 / 30 years, bp</span>`
+      + `<span class="h-ch">Change in benefit, bp a year${cs.scenario.k !== 1 ? ', at 100%' : ''} ${qi(TIPS.list)}</span><span class="h-f">Floating</span><span class="h-x">Fixed</span></div>`;
     const opened = g => { const el = document.querySelector(`.sgrp[data-g="${g}"]`); return el ? el.open : null; };
     const grp = (title, sub, list, open, key) => list.length ? `<details class="sgrp" data-g="${key}"${open ? ' open' : ''}><summary>${title} <span class="sg-n">${list.length}</span><span class="sg-s">${sub}</span></summary>${head}${list.map(row).join('')}</details>` : '';
     const rates = main.filter(c => c.grp === 'rates'), cred = main.filter(c => !['rates', 'own', 'routine'].includes(c.grp)), own = main.filter(c => c.grp === 'own'), rout = main.filter(c => c.grp === 'routine');
@@ -527,10 +532,11 @@
     let h = `<p class="cap set">${setText(true)} <button type="button" class="lnk" data-goto="inputs">Change in Inputs &amp; data</button></p>`
       + grp(`Ordinary moves ${qi(TIPS.routine)}`, `a normal ${HZW[cs.scenario.h]} period in the last ${LIB.routine.years} years: ${cs.currency} rates${pg ? `, ${peerName(cs.peer).toLowerCase()}` : ''}`, rout, opened('routine') ?? true, 'routine').replace('</summary>', '</summary>' + hz)
       + grp(`Interest-rate episodes · ${cs.currency}`, 'the swap curve moves; your credit spread stays', rates, opened('rates') ?? true, 'rates')
-      + (!pg ? `<p class="cap">No credit episodes for this region and borrower type. Use <b>Your own scenario</b> below.</p>`
-         : grp(`Credit episodes · ${peerName(cs.peer)}`, pg.ccy === cs.currency ? `your credit spread moves, and the ${pg.ccy} swap curve with it` : `your credit spread moves; the episodes' ${pg.ccy} rates are not applied to your ${cs.currency} loan`, cred, opened('cred') ?? true, 'cred'))
-      + grp('Your own', 'from the builder below', own, true, 'own');
-    $('slist').innerHTML = h + `<p class="cap">Floating and Fixed: change in the benefit, bp a year, if the loan were signed on that curve (full intensity) ${qi(TIPS.list)}. Click a row to price the loan on it and see where its numbers come from.</p>`;
+      + (!pg ? `<p class="cap">No credit episodes for this region and borrower type. Use <b>Your own</b> below.</p>`
+         : grp(`Credit episodes · ${peerName(cs.peer)}`, pg.ccy === cs.currency ? `your credit spread moves, and the ${pg.ccy} swap curve with it` : `your credit spread moves; the episodes' ${pg.ccy} rates are not applied to your ${cs.currency} loan`, cred, opened('cred') ?? true, 'cred'));
+    // "Your own" is the last group: its rows above the builder, which stays fixed HTML so the sliders keep their state
+    $('own-rows').innerHTML = own.length ? head + own.map(row).join('') : ''; $('own-n').textContent = own.length;
+    $('slist').innerHTML = h;
     renderDetail(d, k);
     drawCurves(d, k);
     if (SBAD) { $('scen-tab').innerHTML = ''; $('why').innerHTML = '<b>No result for this curve:</b> see the explanation above the scenario details.'; } else loanEffect(d, k);
@@ -577,15 +583,19 @@
     g10: `<b>10-year G-spread</b>, bp (optional): the borrower's spread to government bonds at 10 years, from Bloomberg YAS (G-spread, next to the Z-spread), against the Bund for euros and Treasuries for dollars.<br><b>What it is for:</b> the issuers' moves in a scenario are measured as spreads to government bonds, so the proportional move is applied to the borrower's G-spread, like for like. Left blank, the Z-spread stands in; the two differ by today's swap spread (swap rate minus government yield), which can be tens of bp, and the move by the fitted proportion of that difference.`,
     dates: `<b>The dates.</b> Each episode starts just before the event and ends at the peak (or low) of its headline series, so it shows the episode at its most severe; use Intensity for milder versions. Euro area country yields and German bond yields are monthly averages (the official ECB and Bundesbank series), which smooth the worst days.`,
     routine: `<b>Ordinary moves.</b> Every overlapping change over the horizon (3, 6 or 12 months) in the last ${LIB.routine.years} years is ranked: about 120 periods, from month-end readings (monthly averages for euro area country spreads and German bonds). "1 in 4" is the average of the periods ranked 70th to 80th percentile: roughly one period in four moved at least this much. "1 in 10" uses the 85th to 95th (or the 5th to 15th for falls). Rate scenarios rank periods by the average move across maturities, or by the change in steepness, and keep every maturity's move from those same periods, so the curve shape is one that happened. Credit scenarios rank each issuer's own changes, so they combine typical moves of each issuer, not one joint period; rate and credit scenarios are separate. Overlapping periods share months, so ten years hold only about ten independent twelve-month periods: read "1 in 10" as an order of magnitude.<br><b>Why:</b> this is historical simulation, the method banks use for market-risk measures such as value-at-risk: no distribution is assumed, only actual past changes are used.`,
-    list: `The change in the benefit, bp a year, if the loan were signed on that scenario's curve at full intensity. Green adds to today's benefit, red takes away. A dash: the curve cannot be priced at full intensity (click the row to see why and the most it can carry).`,
+    list: `<b>Change in benefit.</b> How many bp a year the benefit would gain (green) or lose (red) against today's curve if the loan were signed on that scenario's curve. Each figure uses the scenario at full size (100%), whatever the intensity slider shows, so the rows can be compared.<br>A dash: the curve cannot be priced at full size; click the row to see why and the most it can carry.<br>Click any row to apply the scenario: the bar at the top, the details below and the Results tab then show it.`,
     region: `<b>Region.</b> With the borrower type, picks the credit scenarios: ordinary moves and historical episodes measured on comparable issuers. Interest-rate scenarios follow the loan currency instead.<br><b>Sovereigns:</b> euro area (ECB country yields, 11 countries), Latin America (J.P. Morgan EMBI Global: Brazil, Mexico, Colombia, Peru, Chile and the regional index), other emerging markets (the J.P. Morgan EMBI Global index of all emerging markets: free data have no Asian or other regional split). <b>Companies:</b> Europe (Bundesbank: German companies' and banks' bonds), United States (Moody's Aaa and Baa); in emerging markets the region's sovereign spreads, which company spreads there usually follow.<br>Other advanced economies: no free spread series; use Replay from Bloomberg for credit.`,
     recovery: `<b>Recovery rate.</b> The share of the amount recovered on default. 40% is the market convention for senior unsecured debt (the standard assumption in credit default swaps). The result barely depends on it, because the curve already prices the expected loss.`,
     freq: `<b>Bond coupon frequency</b> of the borrower's bonds in this currency. It turns the Z-spread into a yield (the YAS bridge). A wrong frequency shows up as gaps above 1bp in the curve table.`,
     fixing: `<b>6-month fixing</b>, %: today's 6-month reference rate (EURIBOR, Term SOFR or 6M SONIA OIS). It sets the first half-year on the swap curve. Optional; blank uses the swap curve alone.`,
-    implied: `<b>Yield implied:</b> the coupon at which a par bond of this maturity, discounted at the swap curve plus your Z-spread, is worth 100: what Bloomberg's YAS does. <b>Gap:</b> implied minus quoted yield. Within 1bp means Z-spreads, yields and swaps belong to one consistent snapshot.`,
+    implied: `<b>Yield implied:</b> the coupon at which a par bond of this maturity, discounted at the swap curve plus your Z-spread, is worth 100: what Bloomberg's YAS does. <b>Gap:</b> implied minus quoted yield. Within 1bp means Z-spreads, yields and swaps belong to one consistent snapshot.<br><b>Why currency matters:</b> a swap rate is a quote under its market's day count, so the same number means a different discount curve in each currency. EUR swaps against 6-month EURIBOR count 30/360; USD SOFR and €STR swaps count actual days over 360, so 3.5% pays about 1.5% more a year (about 5bp at 10 years); GBP SONIA counts actual/365. Pasting one market's quotes under another's conventions shows up as a gap of that size.`,
     marginX: `<b>Agreed margin X</b>, bp: what is agreed above (+) or below (−) the average-life price, the curve read at the loan's average life. It moves the benefit one for one.`,
     profile: `<b>Repayment profile.</b> Linear: equal half-yearly instalments. Linear + balloon: the balloon is repaid with the last instalment, the rest in equal instalments. Custom: any schedule of drawings and repayments by half-year.<br><b>Drawdown period:</b> equal drawings at the start of each half-year of the period, the first at signing; instalments start six months after the period ends. So 0 and 0.5 years both mean one drawing at signing; 0.5 years only moves the first instalment from six to twelve months.`,
     sens: `<b>Sensitivity.</b> Every number is a full repricing: the loan is priced again, period by period, with the inputs shown changed and everything else as entered (scenario included). <b>One at a time</b> moves each input to a lower and a higher value and sorts the inputs by how much the benefit moves. <b>Two at a time</b> crosses two inputs on a grid. Curve inputs reshape today's curves like a scenario (yields rebuilt through the YAS bridge); the steepness moves are zero at 2 years and grow to the value shown at 30.<br><b>Why:</b> one-at-a-time ranges (a tornado chart) and two-way grids are the standard way to show which assumptions a result depends on. Margin X moves the benefit one for one, so its bar is the yardstick for the others.<br><b>Drawdown:</b> a drawing is made at the start of its half-year, so going from 0 to 0.5 years adds six months before the first instalment without spreading the drawings; from 1 year on each step also spreads them. On a flat curve the drawdown period does not change the benefit; with a curve that is low at the short end and steep beyond, the first step can lower it and later steps raise it.`,
+    lBen: `<b>Benefit, bp a year:</b> what the borrower saves each year, in bp of the amount outstanding, because the loan is priced at the average-life price rather than at the bond-equivalent price. Positive: the loan is cheaper than the borrower's bonds imply; negative: dearer.`,
+    lPv: `<b>Value today:</b> the yearly benefit over the life of the loan, half-year by half-year, discounted to today and weighted by the chance the borrower survives (the curve's default probabilities), in money.`,
+    lQuote: `<b>Curve at the average life:</b> the borrower's curve read at the loan's average life. Floating loan: the Z-spread there, in bp over the floating rate. Fixed loan: the bond yield there, in %. It is the starting point of the price; in a scenario it moves with the curve, which is why it can change while the benefit barely does.`,
+    lPay: `<b>Price you pay:</b> the curve at the average life plus any agreed margin X, converted to semi-annual payments: the margin over the floating rate, or the fixed rate. It is what the loan charges; the benefit compares it with the bond-equivalent price.`,
     pay: `<b>Price you pay:</b> the average-life price, the curve read at the loan's average life, plus any agreed margin X. The usual way such loans are priced.`,
     fair: `<b>Bond-equivalent price:</b> the price at which the loan is worth exactly what the borrower's bonds imply: every half-year valued on the borrower's curve, weighted by the balance outstanding, discounting and survival.`,
     pv: `<b>Value today:</b> the benefit in every half-year, discounted on the swap curve and weighted by survival, summed over the loan's life.`,
@@ -650,23 +660,46 @@
                : `<p class="cap">The episode's ${d.g.ccy} interest rates are not applied: your loan is in ${cs.currency}. To add ${cs.currency} rate moves, start <b>Your own scenario</b> from this episode.</p>`) + sswCtl() : '')
         + `<p class="cap">${kTxt}</p></div></div>`;
     }
-    if (d.kind === 'own') h += `<p>Set by hand in the builder below: swap curve ${mv(d.swap)}; credit spread ${d.p ? `${sg(d.p * 100)}% of today's spread, plus ` : ''}${mv(d.cr)}.${kTxt}</p>`;
+    if (d.kind === 'own') h += `<p>Set by hand under <b>Your own</b>, above: swap curve ${d.ps ? `${sg(d.ps * 100)}% of today's rate, plus ` : ''}${mv(d.swap)}; credit spread ${d.p ? `${sg(d.p * 100)}% of today's spread, plus ` : ''}${mv(d.cr)}.${kTxt}</p>`;
     if (d.kind === 'replay') h += `<p>Your own history, pasted from Bloomberg${d.when ? ` (${esc(d.when)})` : ''}: credit spread ${d.cr ? mv(d.cr) : 'unchanged'}; swap curve ${d.swap ? mv(d.swap) : 'unchanged'}. Moves are interpolated between the maturities given and held flat beyond.${kTxt}</p>`;
     el.innerHTML = h;
     if ($('c-fit')) drawFit(d);
   }
   // the transfer, drawn: each issuer's move against its starting spread, the fitted proportion, and your borrower on the line
+  // issuer labels: each tries above, below, right and left of its dot and keeps the first spot clear of the other labels,
+  // dots and the borrower; names that find no clear spot are listed under the chart instead of being drawn on top of each other
+  function placeLabels(items, X, Y, box, avoid) {
+    const taken = avoid.slice(), out = [], left = [], inside = b => b[0] >= box[0] && b[2] <= box[2] && b[1] >= box[1] && b[3] <= box[3];
+    const hit = b => taken.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
+    items.slice().sort((a, b) => b.x - a.x).forEach(it => {
+      const px = X(it.x), py = Y(it.y), w = it.s.length * 6.6 + 4, h = 13;
+      const cands = [[0, -8, 'middle'], [0, 16, 'middle'], [8, 4, 'start'], [-8, 4, 'end'], [7, -6, 'start'], [7, 15, 'start'], [-7, -6, 'end'], [-7, 15, 'end'], [0, -20, 'middle'], [0, 28, 'middle']];
+      for (const [dx, dy, an] of cands) {
+        const x0 = an === 'middle' ? px + dx - w / 2 : an === 'start' ? px + dx : px + dx - w, b = [x0, py + dy - h + 3, x0 + w, py + dy + 3];
+        if (inside(b) && !hit(b)) { taken.push(b); out.push({ ...it, dx, dy, an }); return; }
+      }
+      left.push(it);
+    });
+    return { out, left };
+  }
   function drawFit(d) {
     const pts = d.refs.map(q => [q.s0, q.m]), x = Math.max(d.x, 0), xs = pts.map(p => p[0]).concat([x]), ys = pts.map(p => p[1]).concat([d.t.d, 0]);
     const xmax = Math.max(...xs) * 1.08, stx = niceStep(xmax), sty = niceStep(Math.max(...ys) - Math.min(...ys) || 10);
     const lo = Math.floor(Math.min(...ys) / sty) * sty, hi = Math.ceil(Math.max(...ys) / sty) * sty;
-    WW.chart($('c-fit'), { label: 'Each issuer\'s move against its starting spread, with the fitted proportion', w: 560, h: 230, m: { l: 52, r: 14, t: 14, b: 38 },
+    const Wc = 560, Hc = 230, M = { l: 52, r: 14, t: 14, b: 38 }, PX = v => M.l + v / xmax * (Wc - M.l - M.r), PY = v => Hc - M.b - (v - lo) / (hi - lo) * (Hc - M.t - M.b);
+    const nm = q => q.name.replace(' (index)', '').replace('Latin America', 'LatAm').replace('Emerging markets', 'EM');
+    const bx = PX(x), by = PY(d.t.d), bLab = 'Your borrower', bw = bLab.length * 6.8;
+    const avoid = pts.map(p => [PX(p[0]) - 5, PY(p[1]) - 5, PX(p[0]) + 5, PY(p[1]) + 5]).concat([[bx - 6, by - 6, bx + 6, by + 6], [bx + 10, by - 9, bx + 14 + bw, by + 5]]);
+    const L = placeLabels(d.refs.map(q => ({ x: q.s0, y: q.m, s: nm(q) })), PX, PY, [M.l, M.t - 6, Wc - M.r, Hc - M.b + 2], avoid);
+    const toX = dx => dx / (Wc - M.l - M.r) * xmax;
+    WW.chart($('c-fit'), { label: 'Each issuer\'s move against its starting spread, with the fitted proportion', w: Wc, h: Hc, m: M,
       x: { min: 0, max: xmax, ticks: WW.ticks(0, xmax, stx), fmt: v => v + 'bp', label: d.kind === 'credit' ? 'Spread at the start' : 'Typical spread' },
       y: { min: lo, max: hi, ticks: WW.ticks(lo, hi, sty), fmt: v => sg(v) },
       layers: [{ t: 'h', y: 0, c: 'var(--muted)', w: 1 }, { t: 'line', p: [[0, 0], [xmax, d.t.b * xmax]], c: 'var(--slate)', w: 1.6, dash: '5 4' },
         { t: 'dots', p: pts.map(p => [p[0], p[1], false]), c: 'var(--slate)', r: 4 }]
-        .concat(d.refs.map(q => ({ t: 'txt', x: q.s0, y: q.m, dy: -8, s: q.name.replace(' (index)', '').replace('Latin America', 'LatAm'), c: 'var(--muted)' })))
-        .concat([{ t: 'dots', p: [[x, d.t.d, true]], c: 'var(--accent)', r: 5.5 }, { t: 'txt', x: x + xmax * 0.025, y: d.t.d, dy: 4, s: 'Your borrower', c: 'var(--accent)', anchor: 'start' }]) });
+        .concat(L.out.map(o => ({ t: 'txt', x: o.x + toX(o.dx), y: o.y, dy: o.dy, s: o.s, c: 'var(--muted)', anchor: o.an })))
+        .concat([{ t: 'dots', p: [[x, d.t.d, true]], c: 'var(--accent)', r: 5.5 }, { t: 'txt', x: x + toX(12), y: d.t.d, dy: 4, s: bLab, c: 'var(--accent)', anchor: 'start' }]) });
+    if (L.left.length) $('c-fit').insertAdjacentHTML('beforeend', `<p class="cap fit-n">Unlabelled, too close to other points: ${L.left.sort((a, b) => a.x - b.x).map(o => esc(o.s)).join(', ')}; their values are in the table.</p>`);
   }
   const niceStep = span => { const mg = Math.pow(10, Math.floor(Math.log10(Math.max(span, 1e-9)))), r = span / mg; return (r > 5 ? 2 : r > 2 ? 1 : 0.5) * mg; };
   const MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -706,15 +739,20 @@
   function loanEffect(d, k) {
     const b0 = BASE.R, s = F.R, N = cs.amount, sym = F.common.sym, same = d.kind === 'none' || k === 0;
     const rows = [
-      ['Benefit, bp a year', 'wedge', v => fmt.sbp(v * 1e4), (a, b) => fmt.sbp((b - a) * 1e4)],
-      ['Value today', 'pv', v => fmt.money(v * N, sym), (a, b) => fmt.smoney((b - a) * N, sym)],
-      ['Curve at the average life', 'quote', null, (a, b) => fmt.sbp((b - a) * 1e4)],
-      ['Price you pay', 'charged', null, (a, b) => fmt.sbp((b - a) * 1e4)],
+      [`Benefit, bp a year ${qi(TIPS.lBen)}`, 'wedge', v => fmt.sbp(v * 1e4), (a, b) => fmt.sbp((b - a) * 1e4)],
+      [`Value today ${qi(TIPS.lPv)}`, 'pv', v => fmt.money(v * N, sym), (a, b) => fmt.smoney((b - a) * N, sym)],
+      [`Curve at the average life ${qi(TIPS.lQuote)}`, 'quote', null, (a, b) => fmt.sbp((b - a) * 1e4)],
+      [`Price you pay ${qi(TIPS.lPay)}`, 'charged', null, (a, b) => fmt.sbp((b - a) * 1e4)],
     ];
     const val = (md, f, v) => f ? f(v) : md === 'float' ? fmt.bp(v * 1e4) : fmt.pct(v, 3);
-    $('scen-tab').innerHTML = '<thead><tr><th></th><th></th><th>Today</th><th>Scenario</th><th>Change</th></tr></thead><tbody>' + rows.map(([l, key, f, ch]) =>
-      ['float', 'fixed'].map((md, j) => `<tr${key === 'wedge' ? ' class="hl"' : ''}><td>${j ? '' : l}</td><td class="rw">${md === 'float' ? 'Floating' : 'Fixed'}</td><td>${val(md, f, b0[md][key])}</td><td>${val(md, f, s[md][key])}</td><td>${ch(b0[md][key], s[md][key])}</td></tr>`).join('')).join('') + '</tbody>';
+    // one row per measure; floating and fixed side by side, each with today, scenario and change (six equal number columns)
+    const sc = `Scenario${!same && k !== 1 ? ` at ${Math.round(k * 100)}%` : ''}`, sub = `<th>Today</th><th>${sc}</th><th>Change</th>`;
+    $('scen-tab').innerHTML = `<colgroup><col class="c-l">${'<col class="c-n">'.repeat(6)}</colgroup>`
+      + `<thead><tr class="gh"><th></th><th colspan="3">Floating</th><th colspan="3" class="g2">Fixed</th></tr><tr><th></th>${sub.replace('<th>Today', '<th>Today')}${sub.replace('<th>Today', '<th class="g2">Today')}</tr></thead><tbody>`
+      + rows.map(([l, key, f, ch]) => `<tr${key === 'wedge' ? ' class="hl"' : ''}><td>${l}</td>` + ['float', 'fixed'].map(md =>
+        `<td${md === 'fixed' ? ' class="g2"' : ''}>${val(md, f, b0[md][key])}</td><td>${val(md, f, s[md][key])}</td><td>${ch(b0[md][key], s[md][key])}</td>`).join('') + '</tr>').join('') + '</tbody>';
     if (same) { $('why').innerHTML = 'No scenario selected: the two columns are the same. Choose an episode above.'; return; }
+    const kNote = k !== 1 ? ` <span class="kn">At ${Math.round(k * 100)}% intensity, as set above; the list shows every scenario at 100%.</span>` : '';
     // the main driver: how much steeper or flatter the relevant curve gets between the average life and final maturity
     const why = md => {
       const r0 = b0[md], r1 = s[md], W = r0.WAL, M = Math.min(30, r0.maturity), q = (r, t) => interp(r.qfill.map((v, i) => [i + 1, v]), t);
@@ -724,7 +762,7 @@
       if (Math.abs(dS) >= 1 && Math.sign(dS) === Math.sign(dB)) return `<b>${lab}, ${fmt.sbp(dB)}.</b> The ${what} curve gets ${dS > 0 ? 'steeper' : 'flatter'} between the average life (${fmt.yrs(W)}y) and final maturity (${fmt.yrs(M)}y), by ${Math.abs(dS).toFixed(0)}bp, so the later periods cost ${dS > 0 ? 'more' : 'less'} against the single price.`;
       return `<b>${lab}, ${fmt.sbp(dB)}.</b> The ${what} curve's steepness beyond the average life changes little (${sbp(dS)}); the change comes mainly from the new level of rates and spreads, which reweights the periods through discounting and survival.`;
     };
-    $('why').innerHTML = why('float') + ' ' + why('fixed');
+    $('why').innerHTML = why('float') + ' ' + why('fixed') + kNote;
   }
   function drawDash(main) {
     const b0 = { float: BASE.R.float.wedge * 1e4, fixed: BASE.R.fixed.wedge * 1e4 };
@@ -756,16 +794,20 @@
     $('dash-tab').innerHTML = '<thead><tr><th>Scenario</th><th>Floating</th><th>Change</th><th>Fixed</th><th>Change</th></tr></thead><tbody>' + rows.map(r =>
       `<tr${r.id === cs.scenario.id ? ' class="hl"' : ''}><td>${esc(r.name)}</td><td>${f1(r.float)}</td><td>${r.id === 'none' ? '' : f1(r.float - b0.float)}</td><td>${f1(r.fixed)}</td><td>${r.id === 'none' ? '' : f1(r.fixed - b0.fixed)}</td></tr>`).join('') + '</tbody>';
   }
-  const BS = OWN_T.map((T, i) => [`b-s${T}`, 's', i]).concat([['b-cp', 'p']], OWN_T.map((T, i) => [`b-c${T}`, 'c', i]));
-  const ownFrom = d => ({ s: OWN_T.map(T => cap(Math.round(swapMove(d, 1, T) / 5) * 5)), p: d.p || 0, c: OWN_T.map(T => cap(Math.round((d.cr ? interp(d.cr, T) : 0) / 5) * 5)) });
+  const BS = [['b-sp', 'ps']].concat(OWN_T.map((T, i) => [`b-s${T}`, 's', i]), [['b-cp', 'p']], OWN_T.map((T, i) => [`b-c${T}`, 'c', i]));
+  const ownFrom = d => { const sl = swapLvl(cs); return { s: OWN_T.map(T => cap(Math.round(swapMove(Object.assign({}, d, { ps: 0 }), 1, T, sl[T - 1])))), ps: d.ps || 0, p: d.p || 0, c: OWN_T.map(T => cap(Math.round(d.cr ? interp(d.cr, T) : 0))) }; };
+  // the credit proportional slider runs -60%..+200% on a split scale, so its zero sits in the middle like the bp sliders
+  const toP = pos => Math.round((pos < 0 ? pos * 0.006 : pos * 0.02) * 20) / 20, fromP = p => p < 0 ? p / 0.006 : p / 0.02;
   function renderBuilder(d) {
     document.querySelectorAll('[data-bmode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.bmode === bmode)));
     $('b-hand').hidden = bmode !== 'hand'; $('b-replay').hidden = bmode !== 'replay';
-    const src = cs.scenario.own || { s: OWN_T.map(() => 0), p: 0, c: OWN_T.map(() => 0) };
+    const src = cs.scenario.own || { s: OWN_T.map(() => 0), ps: 0, p: 0, c: OWN_T.map(() => 0) }, sw10 = swapLvl(cs)[9];
     BS.forEach(([id, key, i]) => {
-      const v = key === 'p' ? src.p : src[key][i], el = $(id);
-      if (document.activeElement !== el) el.value = v;
-      $(id + '-v').textContent = key === 'p' ? sg(v * 100) + '%' : sbp(v);
+      const v = key === 'p' ? src.p : key === 'ps' ? src.ps || 0 : src[key][i], el = $(id);
+      if (document.activeElement !== el) el.value = key === 'p' ? fromP(v) : v;
+      // the proportional moves in % of today's level, with what that means in bp at 10 years for this case
+      const lvl10 = key === 'p' ? z10(cs) : sw10;
+      $(id + '-v').textContent = key === 'p' || key === 'ps' ? sg(v * 100) + '%' + (v ? ` = ${sbp(v * Math.max(lvl10, 0))} at 10y` : '') : sbp(v);
     });
     const bf = $('b-from'), key = cs.currency + cs.peer + cs.scenario.h;
     if (bf.dataset.for !== key) {
@@ -941,7 +983,12 @@ window.WW_CASE = {
     render(); autosave();
     if (user) window.scrollTo(0, 0);
   }
-  function setScenario(id) { if (id !== cs.scenario.id) { cs.scenario.ref = 'peer'; cs.scenario.rates = true; } cs.scenario.id = id; if (cs.scenario.k === 0) cs.scenario.k = 1; changed(); }
+  function setScenario(id) {
+    if (id !== cs.scenario.id) { cs.scenario.ref = 'peer'; cs.scenario.rates = true; }
+    cs.scenario.id = id; if (cs.scenario.k === 0) cs.scenario.k = 1;
+    if (id === 'none') { cs.scenario.k = 1; cs.scenario.own = null; }   // back to today's curve: full intensity, hand-adjust sliders at zero
+    changed();
+  }
   function wire() {
     document.addEventListener('click', e => {
       const q = e.target.closest('.qi'); if (q) { e.preventDefault(); e.stopPropagation(); if (tipFor === q) hideTip(); else showTip(q); return; }
@@ -1023,7 +1070,7 @@ window.WW_CASE = {
     // builder: by hand
     BS.forEach(([id, key, i]) => $(id).addEventListener('input', e => {
       const v = +e.target.value, own = cs.scenario.own ? clone(cs.scenario.own) : ownFrom(NONE);   // a new own scenario starts from no move; "Start from" copies an episode
-      if (key === 'p') own.p = v; else own[key][i] = v;
+      if (key === 'p') own.p = toP(v); else if (key === 'ps') own.ps = v; else own[key][i] = v;
       cs.scenario.own = own; cs.scenario.id = 'own'; if (cs.scenario.k === 0) cs.scenario.k = 1; changed();
     }));
     $('b-use').addEventListener('click', () => { cs.scenario.own = ownFrom(resolve(cs, $('b-from').value)); cs.scenario.id = 'own'; cs.scenario.k = 1; changed(); });

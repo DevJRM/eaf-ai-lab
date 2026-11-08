@@ -211,7 +211,7 @@ details li,details p{font-size:15px}
 .sim{max-width:1180px;margin:0 auto;padding-block:14px 64px}
 .sim h2{font-size:clamp(21px,2.4vw,25px)}
 .sim h3{font-size:15.5px;margin:0 0 4px}
-.sim .intro{font-size:14.5px;color:var(--muted);max-width:60rem;margin:8px 0 14px;line-height:1.55}
+.sim .intro{font-size:14.5px;color:var(--muted);margin:8px 0 14px;line-height:1.55}
 .sbtn{font:inherit;font-size:13px;font-weight:600;padding:6px 13px;border-radius:999px;border:1.5px solid var(--accent);background:var(--accent);color:var(--paper);cursor:pointer;white-space:nowrap;display:inline-block;line-height:1.35}
 .sbtn:hover{background:#5A0E1C;border-color:#5A0E1C}
 .sbtn.ghost{background:var(--panel);color:var(--accent)}
@@ -250,6 +250,7 @@ details li,details p{font-size:15px}
 .ribbon.warn b{color:var(--accent)}
 .ribbon.scen{background:var(--slate-soft);border-color:#C9D1DC;border-left-color:var(--slate)}
 .ribbon.scen b{color:var(--ink)}
+#tab-results>.tabhead{margin-bottom:14px}   /* whatever follows (scenario banner or the answer cards) stays clear of the Floating / Fixed switch */
 .sim .answer{margin-top:0}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
 .acard{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:12px 16px 10px;cursor:pointer;min-width:0;border-top:4px solid var(--rule)}
@@ -281,6 +282,11 @@ body.sim-sbad #tab-results>:not(.tabhead):not(#scen-banner){opacity:.25;pointer-
 .lg i.dl{width:18px}
 .rw{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
 #res-tab,#res-tab2,#scen-tab,#dash-tab{font-size:13.5px}
+/* the scenario's effect on the loan: full width, floating and fixed side by side, six equal number columns */
+.loan-t table.d{table-layout:fixed;width:100%}.loan-t col.c-l{width:22%}.loan-t col.c-n{width:13%}
+.loan-t tr.gh th{text-align:center;color:var(--ink);border-bottom:1px solid var(--rule);padding-bottom:4px}
+.loan-t th.g2,.loan-t td.g2{border-left:1px solid var(--rule)}
+@media (max-width:640px){.loan-t table.d{table-layout:auto}}
 #res-tab td,#res-tab th,#res-tab2 td,#res-tab2 th,#scen-tab td,#scen-tab th,#dash-tab td,#dash-tab th{padding:5px 10px}
 .tbl.tall{max-height:520px;overflow:auto;border:1px solid var(--rule);border-radius:6px;margin-top:10px}
 table.grid{border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;width:100%}
@@ -311,6 +317,7 @@ table.grid td.bad{color:var(--accent);font-weight:600}
 .bgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 28px;margin-top:12px}
 @media (max-width:760px){.bgrid{grid-template-columns:minmax(0,1fr)}}
 .bh{font-size:12.5px;color:var(--muted);margin:0 0 6px;line-height:1.4}
+.bgrid .bh{min-height:2.8em}   /* both columns' sliders start on the same line */
 .bs{display:flex;flex-direction:column;margin:6px 0}
 .bs label{font-size:12.5px;color:var(--ink);display:flex;justify-content:space-between;gap:6px}
 .bs label b{font-family:var(--f-mono);font-weight:500}
@@ -319,6 +326,10 @@ table.grid td.bad{color:var(--accent);font-weight:600}
 
 /* simulator, step 2: scenario list, detail, builder; step 3: full-width exhibits */
 .sub3{font-size:19px;margin:22px 0 0}
+.split-c{margin-top:18px}
+/* simulator only: each price box tinted with a light shade of its own top-edge colour (the client pitch keeps white boxes) */
+.split-c .split3 .px{border-left-color:transparent;border-right-color:transparent;border-bottom-color:transparent}
+.split-c .split3 .px.f{background:var(--brass-soft)}.split-c .split3 .px.r{background:var(--slate-soft)}.split-c .split3 .px.s{background:var(--accent-soft)}.split-c .split3{margin-bottom:0}.split-c .split3-x,.split-c .note{margin-bottom:0}
 .cb.wf svg.ch{max-width:900px;margin:0 auto}
 .grid2.nums{gap:0 24px}.grid2.nums .tbl{margin:8px 0 0}.grid2.nums td:first-child{white-space:nowrap}
 /* sensitivity: one grid, so the two halves mirror each other row by row (title, top, body); stacked on a phone */
@@ -342,7 +353,7 @@ table.hm tfoot td{padding:8px 0 0;background:none}
 @media (max-width:640px){.sens-g{grid-template-columns:minmax(0,1fr)}.sens-g .sg-l{order:1}.sens-g .sg-r{order:2}.sens-b.sg-l{margin-bottom:18px}}
 details.about{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:10px 16px;margin:6px 0 14px}
 details.about>summary{font-size:16px}
-details.about p{font-size:14px;line-height:1.55;margin:8px 0;max-width:62rem}
+details.about p{font-size:14px;line-height:1.55;margin:8px 0}
 details.about p.as{padding-left:14px;border-left:3px solid var(--rule)}
 details.about p.src,.detail p.src{font-size:12.5px;color:var(--muted)}
 .src a{color:var(--muted)}
@@ -352,7 +363,7 @@ details.about p.src,.detail p.src{font-size:12.5px;color:var(--muted)}
 .pick-k{width:min(260px,100%)}
 .pick-k.off{opacity:.45}
 ul.srcl{margin:2px 0 10px;padding-left:18px;font-size:12.5px;line-height:1.5;color:var(--muted);columns:2 22rem;column-gap:28px}ul.srcl li{break-inside:avoid}ul.srcl a{color:var(--muted)}
-#srcs-d{margin-top:18px}
+#srcs-d,#dash-d{margin-top:18px}#dash-d>summary .sg-s{font-size:12.5px;color:var(--muted);margin-left:8px}.fit-n{margin-top:4px}
 details.sgrp{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:8px 12px;margin:0 0 8px}
 /* what the inputs select (currency; borrower type and region), and the horizon of ordinary moves */
 .sim .set{background:var(--slate-soft);border-left:4px solid var(--slate);border-radius:6px;padding:8px 12px;font-size:13.5px;line-height:1.5;margin:12px 0 0;color:var(--ink)}
@@ -371,14 +382,17 @@ button.srow:hover{background:var(--soft)}
 .srow.on{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
 .srow.hd{cursor:default;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;border-top:0;margin-top:6px}
 .srow.hd span:nth-child(n+3){text-align:right}
+/* two-line header: "Change in benefit" spans the Floating and Fixed columns */
+.srow.hd .h-sc{grid-column:1;grid-row:2}.srow.hd .h-mv{grid-column:2;grid-row:2}
+.srow.hd .h-ch{grid-column:2/span 3;grid-row:1;letter-spacing:.04em;white-space:nowrap}.srow.hd .h-f{grid-column:3;grid-row:2}.srow.hd .h-x{grid-column:4;grid-row:2}
 .sr-n{font-weight:600}
 .sr-w{font-weight:400;color:var(--muted);margin-left:8px;font-size:12.5px}
 .sr-t{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
 .sr-v{font-family:var(--f-mono);text-align:right;font-weight:600}
 .sr-v.up{color:var(--gain)}.sr-v.dn{color:var(--accent)}
-@media (max-width:700px){.srow{grid-template-columns:minmax(0,1fr) 4.4rem 4.4rem}.srow .sr-t,.srow.hd span:nth-child(2){display:none}}
+@media (max-width:700px){.srow{grid-template-columns:minmax(0,1fr) 4.4rem 4.4rem}.srow .sr-t,.srow.hd span:nth-child(2){display:none}.srow.hd .h-ch{grid-column:1/span 3;white-space:normal}.srow.hd .h-f{grid-column:2}.srow.hd .h-x{grid-column:3}}
 .detail .eh .when{font-family:var(--f-body);font-size:14px;color:var(--muted);margin-left:10px}
-.detail>p{font-size:14.5px;max-width:62rem}
+.detail>p{font-size:14.5px}
 .dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 28px}
 @media (max-width:860px){.dgrid{grid-template-columns:minmax(0,1fr)}}
 .dgrid h4{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:10px 0 4px}
@@ -389,8 +403,9 @@ table.d.mini td,table.d.mini th{padding:4px 10px}
 label.sel{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600}
 .grid2.sym>.ex{display:flex;flex-direction:column}
 .grid2.sym .cap{margin-top:auto;padding-top:8px}
-.why{font-size:14.5px;line-height:1.6;max-width:62rem}
+.why{font-size:14.5px;line-height:1.6}.why .kn{color:var(--muted)}
 .builder>.tog{margin-top:10px}
+.own-g .builder{border-top:1px solid var(--rule);margin-top:8px;padding-top:4px}.own-g #own-rows:empty+.builder{border-top:0}
 label.ta{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted);font-weight:600;margin-top:10px}
 label.ta textarea{font-family:var(--f-mono);font-size:13px;border:1px solid var(--rule);border-radius:6px;padding:8px;background:var(--panel);color:var(--ink);resize:vertical}
 details.dash-t{border:0;padding:4px 0}

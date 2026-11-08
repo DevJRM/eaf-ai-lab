@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="clientStyle.css?v=20261108g">
+<link rel="stylesheet" href="clientStyle.css?v=20261108v">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23800020'/%3E%3Cg fill='%23fff' opacity='.9'%3E%3Crect x='11' y='16' width='5' height='36'/%3E%3Crect x='18' y='21' width='5' height='31'/%3E%3Crect x='25' y='26' width='5' height='26'/%3E%3Crect x='32' y='31' width='5' height='21'/%3E%3Crect x='39' y='36' width='5' height='16'/%3E%3Crect x='46' y='41' width='5' height='11'/%3E%3C/g%3E%3Cpolygon points='30.3,30 54,16 54,30' fill='%23E2A940' opacity='.85'/%3E%3Cline x1='9' y1='42' x2='54' y2='16' stroke='%23E2A940' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 
 
@@ -96,38 +96,29 @@
       <div class="lv pick-k"><label for="lv-k"><span>Intensity <span data-qi="intensity"></span></span> <b id="lv-k-v"></b></label><input type="range" id="lv-k" min="0" max="1.5" step="0.05"></div>
     </div>
     <div class="slist" id="slist"></div>
-
-    <div class="ex detail" id="detail"></div>
-    <div class="grid2 sym">
-      <div class="ex"><div class="et">Swap curve</div><div class="eh">Today's and in the scenario</div><div class="cb" id="c-sw"></div><p class="cap" id="cap-sw"></p></div>
-      <div class="ex"><div class="et">Credit spread</div><div class="eh">Your Z-spreads, today's and in the scenario</div><div class="cb" id="c-cr"></div><p class="cap" id="cap-cr"></p></div>
-    </div>
-    <div class="ex"><div class="et">The loan</div><div class="eh">What the scenario does to the benefit</div>
-      <p class="why" id="why"></p>
-      <div class="tbl"><table class="d" id="scen-tab"></table></div>
-    </div>
-
-    <div class="ex builder" id="builder">
-      <div class="et">Your own scenario</div><div class="eh">Adjust by hand, or replay your own Bloomberg history</div>
+    <details class="sgrp own-g" id="builder" open><summary>Your own <span class="sg-n" id="own-n">0</span><span class="sg-s">adjust by hand, or replay your own Bloomberg history</span></summary>
+      <div id="own-rows"></div>
+      <div class="builder">
       <div class="tog small" role="group" aria-label="Builder mode"><button type="button" data-bmode="hand" aria-pressed="true">Adjust by hand</button><button type="button" data-bmode="replay" aria-pressed="false">Replay from Bloomberg</button></div>
       <div id="b-hand">
         <div class="brow"><label for="b-from">Start from</label><select id="b-from"></select><button type="button" class="sbtn" id="b-use">Use this scenario</button><button type="button" class="sbtn ghost" id="b-reset">Reset to zero</button></div>
         <div class="bgrid">
-          <div class="bcol"><h3>Swap curve</h3><p class="bh">How much swap rates move, by maturity. In between, the move is interpolated.</p>
-            <div class="bs"><label for="b-s2">2 years <b id="b-s2-v"></b></label><input type="range" id="b-s2" min="-200" max="200" step="5"></div>
-            <div class="bs"><label for="b-s5">5 years <b id="b-s5-v"></b></label><input type="range" id="b-s5" min="-200" max="200" step="5"></div>
-            <div class="bs"><label for="b-s10">10 years <b id="b-s10-v"></b></label><input type="range" id="b-s10" min="-200" max="200" step="5"></div>
-            <div class="bs"><label for="b-s20">20 years <b id="b-s20-v"></b></label><input type="range" id="b-s20" min="-200" max="200" step="5"></div>
-            <div class="bs"><label for="b-s30">30 years <b id="b-s30-v"></b></label><input type="range" id="b-s30" min="-200" max="200" step="5"></div></div>
+          <div class="bcol"><h3>Swap curve</h3><p class="bh">How much swap rates move: in proportion to today's rate, plus a move by maturity. In between, the move is interpolated.</p>
+            <div class="bs"><label for="b-sp">In proportion to today's rate <b id="b-sp-v"></b></label><input type="range" id="b-sp" min="-0.5" max="0.5" step="0.05"></div>
+            <div class="bs"><label for="b-s2">2 years <b id="b-s2-v"></b></label><input type="range" id="b-s2" min="-100" max="100" step="1"></div>
+            <div class="bs"><label for="b-s5">5 years <b id="b-s5-v"></b></label><input type="range" id="b-s5" min="-100" max="100" step="1"></div>
+            <div class="bs"><label for="b-s10">10 years <b id="b-s10-v"></b></label><input type="range" id="b-s10" min="-100" max="100" step="1"></div>
+            <div class="bs"><label for="b-s20">20 years <b id="b-s20-v"></b></label><input type="range" id="b-s20" min="-100" max="100" step="1"></div>
+            <div class="bs"><label for="b-s30">30 years <b id="b-s30-v"></b></label><input type="range" id="b-s30" min="-100" max="100" step="1"></div></div>
           <div class="bcol"><h3>Credit spread of the borrower</h3><p class="bh">How much the borrower's spread over swaps moves: in proportion to today's spread, plus a move by maturity.</p>
-            <div class="bs"><label for="b-cp">In proportion <b id="b-cp-v"></b></label><input type="range" id="b-cp" min="-0.6" max="2" step="0.05"></div>
-            <div class="bs"><label for="b-c2">2 years <b id="b-c2-v"></b></label><input type="range" id="b-c2" min="-200" max="200" step="5"></div>
-            <div class="bs"><label for="b-c5">5 years <b id="b-c5-v"></b></label><input type="range" id="b-c5" min="-200" max="200" step="5"></div>
-            <div class="bs"><label for="b-c10">10 years <b id="b-c10-v"></b></label><input type="range" id="b-c10" min="-200" max="200" step="5"></div>
-            <div class="bs"><label for="b-c20">20 years <b id="b-c20-v"></b></label><input type="range" id="b-c20" min="-200" max="200" step="5"></div>
-            <div class="bs"><label for="b-c30">30 years <b id="b-c30-v"></b></label><input type="range" id="b-c30" min="-200" max="200" step="5"></div></div>
+            <div class="bs"><label for="b-cp">In proportion to today's spread <b id="b-cp-v"></b></label><input type="range" id="b-cp" min="-100" max="100" step="2.5" aria-describedby="b-cp-v"></div>
+            <div class="bs"><label for="b-c2">2 years <b id="b-c2-v"></b></label><input type="range" id="b-c2" min="-100" max="100" step="1"></div>
+            <div class="bs"><label for="b-c5">5 years <b id="b-c5-v"></b></label><input type="range" id="b-c5" min="-100" max="100" step="1"></div>
+            <div class="bs"><label for="b-c10">10 years <b id="b-c10-v"></b></label><input type="range" id="b-c10" min="-100" max="100" step="1"></div>
+            <div class="bs"><label for="b-c20">20 years <b id="b-c20-v"></b></label><input type="range" id="b-c20" min="-100" max="100" step="1"></div>
+            <div class="bs"><label for="b-c30">30 years <b id="b-c30-v"></b></label><input type="range" id="b-c30" min="-100" max="100" step="1"></div></div>
         </div>
-        <p class="cap">Each move can be set between −200 and +200bp. "Start from" copies an episode's moves as applied to your borrower, capped at ±200bp, so you can soften or sharpen a real episode rather than start from nothing. Moving any slider switches the curve at signing to <b>Your own scenario</b>. The proportional part applies to positive spreads only.</p>
+        <p class="cap">Each move can be set between −100 and +100bp, in 1bp steps. "Start from" copies an episode's moves as applied to your borrower, capped at ±100bp, so you can soften or sharpen a real episode rather than start from nothing. Moving any slider switches the curve at signing to <b>Your own scenario</b>. The proportional sliders apply to positive rates and spreads only; the credit one runs from −60% to +200%, so its left half is finer than its right.</p>
       </div>
       <div id="b-replay" hidden>
         <p class="bh">For a borrower the library covers only through a broad index or not at all (a specific South-East Asian sovereign, a European telecom, a US energy company), or for your borrower's own history: pull the issuer's curve on two dates from Bloomberg (for example YAS or the historical Z-spread curve) and paste it here. The moves between the two dates become the scenario.</p>
@@ -140,15 +131,25 @@
           <textarea id="r-data" rows="7" spellcheck="false" placeholder="2&#9;120&#9;210&#10;5&#9;160&#9;245&#10;10&#9;190&#9;270"></textarea></label>
         <div class="brow"><button type="button" class="sbtn" id="r-use">Use this history</button><span class="msg" id="r-msg"></span></div>
       </div>
+      </div>
+    </details>
+
+    <div class="ex detail" id="detail"></div>
+    <div class="grid2 sym">
+      <div class="ex"><div class="et">Swap curve</div><div class="eh">Today's and in the scenario</div><div class="cb" id="c-sw"></div><p class="cap" id="cap-sw"></p></div>
+      <div class="ex"><div class="et">Credit spread</div><div class="eh">Your Z-spreads, today's and in the scenario</div><div class="cb" id="c-cr"></div><p class="cap" id="cap-cr"></p></div>
+    </div>
+    <div class="ex"><div class="et">The loan</div><div class="eh">What the scenario does to the benefit</div>
+      <p class="why" id="why"></p>
+      <div class="tbl loan-t"><table class="d" id="scen-tab"></table></div>
     </div>
 
-    <div class="ex">
-      <div class="et">All scenarios</div><div class="eh">Every episode at full intensity, on the loan as set in Inputs &amp; data</div>
+    <details class="about dash-d" id="dash-d"><summary>All scenarios compared <span class="sg-s">every scenario at full intensity, on the loan as set in Inputs &amp; data</span></summary>
       <div class="lg" id="dash-lg"></div>
       <div class="cb" id="c-dash"></div>
       <p class="cap">Benefit a year, in bp, ranked by the loan selected above. The dashed lines mark today's curve. The benefit grows when the curve at signing rises more steeply beyond the average life, and shrinks or reverses when it is flatter or inverted there.</p>
       <details class="dash-t"><summary>As a table</summary><div class="tbl"><table class="d" id="dash-tab"></table></div></details>
-    </div>
+    </details>
 
     <details class="about" id="srcs-d"><summary>Sources, data rights and disclaimer</summary><div id="srcs"></div></details>
   </section>
@@ -165,7 +166,7 @@
       <div class="acard" id="ac-fixed"></div>
     </div>
     <div class="checks" id="checks"></div>
-    <h3 class="sub3">Where the benefit comes from</h3>
+    <div class="ex split-c"><div class="et">Where the benefit comes from</div><div class="eh">From the bond-equivalent price to the average-life price, in two steps</div>
     <figure class="split3" id="three">
       <div class="px f"><div class="k">Bond-equivalent price</div><div class="d">this loan, valued period by period</div><div class="v" id="t-fair"></div></div>
       <div class="px r"><div class="k">Reference bond</div><div class="d" id="t-refd"></div><div class="v" id="t-bul"></div></div>
@@ -176,6 +177,7 @@
     </figure>
     <p class="split3-x" id="t-x" hidden></p>
     <p class="note" id="t-comp" hidden></p>
+    </div>
     <div class="grid2">
       <div class="ex"><div class="et">The price</div><div class="eh" id="h-curve"></div><div class="cb" id="c-curve"></div></div>
       <div class="ex"><div class="et">The profile</div><div class="eh">Loan balance against a bond with the same average life</div><div class="cb" id="c-profile"></div></div>
@@ -202,7 +204,7 @@
   </div>
 </div>
 
-<script src="clientCase.js?v=20261108g"></script>
-<script src="clientKit.js?v=20261108g"></script>
-<script src="scenarioLibrary.js?v=20261108g"></script>
-<script src="simulator.js?v=20261108g"></script>
+<script src="clientCase.js?v=20261108v"></script>
+<script src="clientKit.js?v=20261108v"></script>
+<script src="scenarioLibrary.js?v=20261108v"></script>
+<script src="simulator.js?v=20261108v"></script>
