@@ -1,5 +1,5 @@
 /* WAL Wedge client templates — shared engine, figures, charts and binding.
-   Used by walWedgePitch.html, borrowerPitch.html and borrowerQA.html.
+   Used by walWedgePitch.html, borrowerPitch.html, borrowerQA.html and simulator.html.
    The engine is a port of WAL_Wedge_Loan_vs_Bond_Calculator.xlsx (Python mirror:
    wal_wedge_engine.py); keep the three in step. Rates are decimals inside the engine. */
 (function () {
@@ -33,8 +33,32 @@
     let s = 0; for (let j = 1; j <= Math.round(m * T); j++) s += dfz(j / m);
     return m * (1 - dfz(T)) / s;
   }
+  // Share of the amount drawn and repaid in each half-year i = 1..60 (index 0 unused); Schedule tab and
+  // wal_wedge_engine.schedule(). prof: {type: 'linear' | 'balloon' | 'custom', balloon, draw: [...], repay: [...]}.
+  function schedule(x, y, prof) {
+    const p = prof || { type: 'linear' }, kind = p.type || 'linear', draw = new Array(61).fill(0), repay = new Array(61).fill(0);
+    if (kind === 'linear' || kind === 'balloon') {
+      const D = Math.round(2 * x), Rn = Math.round(2 * y), Dd = Math.max(D, 1), b = kind === 'balloon' ? (p.balloon || 0) : 0;
+      if (Rn < 1 || D + Rn > 60) throw new Error('Drawdown plus repayment period must fit in 30 years, with at least one instalment.');
+      if (!(b >= 0 && b <= 1)) throw new Error('The balloon must be between 0% and 100% of the amount.');
+      for (let i = 1; i <= Dd; i++) draw[i] = 1 / Dd;
+      for (let i = D + 1; i <= D + Rn; i++) repay[i] = (1 - b) / Rn;
+      repay[D + Rn] += b;
+    } else if (kind === 'custom') {
+      const dl = p.draw || [], rl = p.repay || [];
+      if (dl.length > 60 || rl.length > 60) throw new Error('A custom schedule has at most 60 half-years (30 years).');
+      dl.forEach((v, i) => { draw[i + 1] = +v || 0; }); rl.forEach((v, i) => { repay[i + 1] = +v || 0; });
+    } else throw new Error(`Unknown profile type '${kind}': use linear, balloon or custom.`);
+    if (Math.min(...draw, ...repay) < 0) throw new Error('Drawings and repayments cannot be negative.');
+    const sd = draw.reduce((a, v) => a + v, 0), sr = repay.reduce((a, v) => a + v, 0);
+    if (Math.abs(sd - 1) > 1e-9 || Math.abs(sr - 1) > 1e-9)
+      throw new Error(`Drawings sum to ${(sd * 100).toFixed(4)}% and repayments to ${(sr * 100).toFixed(4)}%; both must be 100%.`);
+    let bal = 0;
+    for (let i = 1; i <= 60; i++) { bal += draw[i] - repay[i]; if (bal < -1e-12) throw new Error(`Half-year ${i} repays more than is outstanding.`); }
+    return { draw, repay };
+  }
   // kind 'float': curve = YAS Z-spreads; 'fixed': curve = YAS YTMs (decimals). m = bond coupon frequency.
-  function model(curve, kind, dfg, R, x, y, Xbp, m) {
+  function model(curve, kind, dfg, R, x, y, Xbp, m, prof) {
     const F = fill(curve); const last = F.last;
     const q = kind === 'float' ? F.out.map((v, i) => bridge(dfg, v, i + 1, m)) : F.out.slice();
     const a = 0.5; const fa = [null]; for (let i = 1; i <= 60; i++) fa.push(dfg[i - 1] / dfg[i] - 1);
@@ -55,13 +79,15 @@
         S.push(Si);
       }
     }
-    const D = Math.round(2 * x), Rn = Math.round(2 * y), n = D + Rn, DDc = Math.max(D, 1);
-    const per = []; let WAL = 0, B = 0, sk = 0, sf = 0, cg = 0;
+    const sch = schedule(x, y, prof); let n = 0; for (let i = 1; i <= 60; i++) if (sch.repay[i] > 0) n = i;
+    const per = []; let WAL = 0, B = 0, sk = 0, sf = 0, cg = 0, drawn = 0, repaid = 0;
     for (let i = 1; i <= 60; i++) {
-      const O = i <= n ? Math.min(i, DDc) / DDc - Math.max(0, Math.min(i - 1, n) - D) / Rn : 0;
+      drawn += sch.draw[i];
+      let O = i <= n ? drawn - repaid : 0; if (Math.abs(O) < 1e-12) O = 0;   // drawn at the start of i, repaid at its end
+      repaid += sch.repay[i];
       const w = dfg[i] * S[i] * a * O, p = S[i] / S[i - 1];
       const c = (1 - p) * (1 + fa[i] - R) / (p * a), f = fa[i] / a, k = kind === 'float' ? c : f + c;
-      per.push({ i, t: i / 2, O, DF: dfg[i], S: S[i], w, c, f, k });
+      per.push({ i, t: i / 2, O, P: sch.repay[i], DD: sch.draw[i], DF: dfg[i], S: S[i], w, c, f, k });
       WAL += O * a; B += w; sk += w * k; sf += w * f; cg += (i / 2 - 0.25) * O * a;
     }
     const fair = sk / B, wf = sf / B;
@@ -115,8 +141,8 @@
     const r6 = cs.fixing6mPct === null || cs.fixing6mPct === undefined ? null : cs.fixing6mPct / 100;
     const dfg = swapDfs(s, cv.alpha, r6, cv.basis);
     return {
-      float: model(z, 'float', dfg, cs.recovery, cs.drawdownYears, cs.repaymentYears, cs.marginFloatBp, m),
-      fixed: model(y, 'fixed', dfg, cs.recovery, cs.drawdownYears, cs.repaymentYears, cs.marginFixedBp, m),
+      float: model(z, 'float', dfg, cs.recovery, cs.drawdownYears, cs.repaymentYears, cs.marginFloatBp, m, cs.profile),
+      fixed: model(y, 'fixed', dfg, cs.recovery, cs.drawdownYears, cs.repaymentYears, cs.marginFixedBp, m, cs.profile),
       dfg, cv, inputs: { s, z, y }
     };
   }
@@ -389,6 +415,6 @@
         { t: 'txt', x: .5, y: a, dy: 18, s: fmt.money(a * 1e6, sym), c: C.slate }, { t: 'txt', x: 1.5, y: a + b, dy: -8, s: fmt.smoney(b * 1e6, sym), c: C.acc }, { t: 'txt', x: 2.5, y: n, dy: n >= 0 ? -8 : 18, s: fmt.money(n * 1e6, sym), c: C.ink }] });
   }
 
-  window.WW = { fill, swapDfs, bridge, model, conventions, runCase, scenarios, reshape, profiles, strip, figures, bind, ribbon, fmt,
+  window.WW = { fill, swapDfs, bridge, schedule, model, conventions, runCase, scenarios, reshape, profiles, strip, figures, bind, ribbon, fmt,
                 chart, ticks, drawStrip, drawSignature, drawProfile, drawCurve, drawCost, drawRunning, drawWaterfall };
 })();

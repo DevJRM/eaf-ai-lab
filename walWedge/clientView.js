@@ -117,7 +117,8 @@
   const dl = $('deck-dl');
   if (dl) {
     dl.addEventListener('click', e => { if (dl.getAttribute('aria-disabled') === 'true') e.preventDefault(); });
-    fetch('decks/decks.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { DECKS = j; deckLink(); }).catch(() => { DECKS = null; deckLink(); });
+    if (typeof fetch === 'function')   // without fetch (very old browsers, test harnesses) the link is simply offered
+      fetch('decks/decks.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { DECKS = j; deckLink(); }).catch(() => { DECKS = null; deckLink(); });
   }
   function setAudience(aud) {
     curAud = aud; deckLink();

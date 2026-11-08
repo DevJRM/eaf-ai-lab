@@ -1,0 +1,208 @@
+<!doctype html><html><head><link rel="stylesheet" href="../assets/auth.css"><script>try{if(sessionStorage.getItem('eaf_walwedge_authenticated')==='true'){document.documentElement.classList.add('eaf-authed');}}catch(e){}</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><div id="auth-overlay"><div id="auth-modal"><h2>🔒 EAF AI Lab — Restricted</h2><p>Please enter your password</p><input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password" autofocus/><button onclick="checkPassword()">Access</button><div id="auth-error">❌ Incorrect password. Please try again.</div></div></div><script>window.EAF_AUTH={hash:'2b35a0164970212745940305ae056f2708a43e93388be37a6bb04ccd123d4982',key:'eaf_walwedge_authenticated'};</script><script src="../assets/auth.js"></script>
+
+<title>WAL Wedge Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="clientStyle.css?v=20261108g">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23800020'/%3E%3Cg fill='%23fff' opacity='.9'%3E%3Crect x='11' y='16' width='5' height='36'/%3E%3Crect x='18' y='21' width='5' height='31'/%3E%3Crect x='25' y='26' width='5' height='26'/%3E%3Crect x='32' y='31' width='5' height='21'/%3E%3Crect x='39' y='36' width='5' height='16'/%3E%3Crect x='46' y='41' width='5' height='11'/%3E%3C/g%3E%3Cpolygon points='30.3,30 54,16 54,30' fill='%23E2A940' opacity='.85'/%3E%3Cline x1='9' y1='42' x2='54' y2='16' stroke='%23E2A940' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+
+
+<div class="bar"><div class="in sim-in">
+  <div class="left"><div class="nm">WAL Wedge <span>simulator</span></div></div>
+  <div class="tog" role="group" aria-label="Step">
+    <button type="button" data-tab="inputs" aria-pressed="true">1 · Inputs &amp; data</button>
+    <button type="button" data-tab="scen" aria-pressed="false">2 · Scenarios</button>
+    <button type="button" data-tab="results" aria-pressed="false">3 · Results</button>
+  </div>
+  <a class="back-btn" href="index.html" title="Back to the WAL Wedge Tool Set">&larr; Tool Set</a>
+</div>
+<div class="in sim-in strip" id="strip" role="status" aria-live="polite"></div>
+</div>
+
+<div class="sim">
+  <!-- case strip -->
+  <div class="casebar">
+    <span class="cs-k">Case</span>
+    <select id="case-sel" aria-label="Saved cases"></select>
+    <input id="case-name" type="text" placeholder="Case name" aria-label="Case name">
+    <button type="button" class="sbtn" id="case-save">Save</button>
+    <button type="button" class="sbtn ghost" id="case-del">Delete</button>
+    <span class="sep"></span>
+    <button type="button" class="sbtn ghost" id="case-export">Export</button>
+    <label class="sbtn ghost" for="case-import">Import</label><input type="file" id="case-import" accept=".json,application/json" hidden>
+    <button type="button" class="sbtn ghost" id="case-pitch" title="Download the case as clientCase.js, the file the client pitch, one-pager and decks read">For the pitch</button>
+    <span class="msg" id="case-msg" role="status"></span>
+  </div>
+  <div class="ribbon warn" id="err" hidden></div>
+  <div class="ribbon" id="illus" hidden><b>Sample case.</b> Simulated market data shaped on a euro-area sovereign; not market data and not an indication of terms.</div>
+
+  <!-- 1 INPUTS -->
+  <section class="tab" id="tab-inputs">
+    <div class="tabhead"><h2>Inputs and data</h2></div>
+    <p class="intro">The same inputs as the workbook. Market data come from one Bloomberg YAS snapshot: your borrower's Z-spreads and yields by maturity, and the swap curve YAS measures the Z-spreads against. Everything recalculates as you type; the result shows in the bar at the top.</p>
+    <div class="checks" id="checks-in"></div>
+
+    <div class="ex"><div class="et">1 · The loan</div><div class="eh">Tenor, profile and price</div>
+      <div class="levers" aria-label="Loan levers">
+        <div class="lv"><label for="lv-y">Repayment, years</label><div class="lvr"><input type="range" id="lv-y" min="0.5" max="29.5" step="0.5"><input type="text" class="nb" id="i-y" inputmode="decimal" aria-label="Repayment years"></div></div>
+        <div class="lv"><label for="lv-x">Drawdown, years</label><div class="lvr"><input type="range" id="lv-x" min="0" max="5" step="0.5"><input type="text" class="nb" id="i-x" inputmode="decimal" aria-label="Drawdown years"></div></div>
+        <div class="lv"><label for="lv-prof"><span>Repayment profile <span data-qi="profile"></span></span></label><select id="lv-prof"><option value="linear">Linear</option><option value="balloon">Linear + balloon</option><option value="custom">Custom schedule</option></select></div>
+        <div class="lv"><label for="lv-b">Balloon, % of amount</label><div class="lvr"><input type="range" id="lv-b" min="0" max="0.8" step="0.05"><input type="text" class="nb" id="i-b" inputmode="decimal" aria-label="Balloon, % of amount"></div></div>
+        <div class="lv" title="Agreed margin X: above (+) or below (−) the average-life price"><label for="lv-xf"><span>Floating: agreed margin X, bp <span data-qi="marginX"></span></span></label><div class="lvr"><input type="range" id="lv-xf" min="-30" max="30" step="0.5"><input type="text" class="nb" id="i-xf" inputmode="decimal" aria-label="Floating margin X, bp"></div></div>
+        <div class="lv" title="Agreed margin X on the fixed rate: above (+) or below (−) the average-life price"><label for="lv-xx"><span>Fixed: agreed margin X, bp <span data-qi="marginX"></span></span></label><div class="lvr"><input type="range" id="lv-xx" min="-30" max="30" step="0.5"><input type="text" class="nb" id="i-xx" inputmode="decimal" aria-label="Fixed margin X, bp"></div></div>
+      </div>
+      <div class="brow"><button type="button" class="sbtn ghost" id="lv-reset" title="Back to the saved case: tenor, profile and margins">Back to the saved loan</button></div>
+      <p class="cap">Drawdown and repayment in half-years, within 30 years in total. The balloon is repaid with the last instalment; the rest amortises in equal half-yearly instalments. Margin X is what is agreed above (+) or below (−) the average-life price.</p>
+      <div id="sched-box" hidden>
+        <div class="brow"><b>Custom schedule</b><button type="button" class="sbtn ghost" id="sch-fill">Start from linear / balloon</button><button type="button" class="sbtn ghost" id="sch-clear">Clear</button><span class="msg" id="sch-msg"></span></div>
+        <div class="tbl tall"><table class="grid" id="sch-tab"></table></div>
+      </div>
+    </div>
+
+    <div class="ex"><div class="et">2 · The case</div><div class="eh">Borrower, currency and conventions</div>
+      <div class="form">
+        <label>Client <input id="i-client" type="text" placeholder="e.g. Republic of X"></label>
+        <label>Borrower type <select id="i-btype"><option value="sovereign">Sovereign</option><option value="corporate">Corporate</option></select></label>
+        <label><span>Region <span data-qi="region"></span></span> <select id="i-region"></select></label>
+        <label>Currency <select id="i-ccy"><option>EUR</option><option>USD</option><option>GBP</option></select></label>
+        <label>Market data as of <input id="i-asof" type="text" placeholder="26 October 2026"></label>
+        <label id="i-basis-l">EUR swap curve against <select id="i-basis"><option value="EURIBOR6M">6M EURIBOR</option><option value="ESTR">€STR</option></select></label>
+        <label>Amount <input id="i-amt" type="text" inputmode="decimal"></label>
+        <label><span>Recovery rate <span data-qi="recovery"></span></span> <input id="i-rec" type="text" inputmode="decimal"></label>
+        <label><span>Bond coupon frequency <span data-qi="freq"></span></span> <select id="i-freq"><option value="1">Annual</option><option value="2">Semi-annual</option></select></label>
+        <label><span>6M fixing, % (optional) <span data-qi="fixing"></span></span> <input id="i-fix" type="text" inputmode="decimal"></label>
+        <label><span>10-year G-spread, bp (optional) <span data-qi="g10"></span></span> <input id="i-g10" type="text" inputmode="decimal" placeholder="from YAS"></label>
+      </div>
+      <p class="set" id="i-set"></p>
+      <p class="cap">Currency chooses the interest-rate scenarios; borrower type and region choose the credit scenarios. Recovery: 40% is the market convention for senior unsecured debt; the result is insensitive to it. The coupon frequency is that of the borrower's bonds in this currency.</p>
+    </div>
+
+    <div class="ex"><div class="et">3 · Curves</div><div class="eh">One row per year; leave blank where there is no quote</div>
+      <p class="cap">Paste a block straight from Excel or a Bloomberg export: Tenor, Z-spread, YTM and swap columns, or start in any cell. The last two columns check that the Z-spreads and yields belong to one snapshot: the yield implied by each Z-spread should match the quoted yield within 1bp <span data-qi="implied"></span>.</p>
+      <div class="brow"><button type="button" class="sbtn ghost" id="cv-clear">Clear curves</button><span class="msg" id="cv-msg"></span></div>
+      <div class="tbl tall"><table class="grid" id="cv-tab"></table></div>
+    </div>
+  </section>
+
+  <!-- 2 SCENARIOS -->
+  <section class="tab" id="tab-scen" hidden>
+    <div class="tabhead"><h2>What if the curve at signing looked different?</h2><div class="tog small" role="group" aria-label="Loan"><button type="button" data-loan="float" aria-pressed="true">Floating</button><button type="button" data-loan="fixed" aria-pressed="false">Fixed</button></div></div>
+    <p class="intro">Each scenario applies moves of the swap curve and of your borrower's credit spread, measured on official data, to today's curves; the loan is then priced as if it were signed on the result. <b>Ordinary moves</b> show what a normal 3, 6 or 12 months did over the last ten years; <b>episodes</b> replay dated market events at their most severe. They show which market conditions help or hurt the benefit: history, not forecasts. The <b>?</b> marks explain where each number comes from.</p>
+    <details class="about"><summary>Where the numbers come from, and how far to trust them</summary><div id="about"></div></details>
+
+    <div class="pick">
+      <div class="pick-now"><span class="cs-k">Curve at signing</span><b id="sc-now"></b><button type="button" class="sbtn ghost" id="sc-none">Back to today's curve</button></div>
+      <div class="lv pick-k"><label for="lv-k"><span>Intensity <span data-qi="intensity"></span></span> <b id="lv-k-v"></b></label><input type="range" id="lv-k" min="0" max="1.5" step="0.05"></div>
+    </div>
+    <div class="slist" id="slist"></div>
+
+    <div class="ex detail" id="detail"></div>
+    <div class="grid2 sym">
+      <div class="ex"><div class="et">Swap curve</div><div class="eh">Today's and in the scenario</div><div class="cb" id="c-sw"></div><p class="cap" id="cap-sw"></p></div>
+      <div class="ex"><div class="et">Credit spread</div><div class="eh">Your Z-spreads, today's and in the scenario</div><div class="cb" id="c-cr"></div><p class="cap" id="cap-cr"></p></div>
+    </div>
+    <div class="ex"><div class="et">The loan</div><div class="eh">What the scenario does to the benefit</div>
+      <p class="why" id="why"></p>
+      <div class="tbl"><table class="d" id="scen-tab"></table></div>
+    </div>
+
+    <div class="ex builder" id="builder">
+      <div class="et">Your own scenario</div><div class="eh">Adjust by hand, or replay your own Bloomberg history</div>
+      <div class="tog small" role="group" aria-label="Builder mode"><button type="button" data-bmode="hand" aria-pressed="true">Adjust by hand</button><button type="button" data-bmode="replay" aria-pressed="false">Replay from Bloomberg</button></div>
+      <div id="b-hand">
+        <div class="brow"><label for="b-from">Start from</label><select id="b-from"></select><button type="button" class="sbtn" id="b-use">Use this scenario</button><button type="button" class="sbtn ghost" id="b-reset">Reset to zero</button></div>
+        <div class="bgrid">
+          <div class="bcol"><h3>Swap curve</h3><p class="bh">How much swap rates move, by maturity. In between, the move is interpolated.</p>
+            <div class="bs"><label for="b-s2">2 years <b id="b-s2-v"></b></label><input type="range" id="b-s2" min="-200" max="200" step="5"></div>
+            <div class="bs"><label for="b-s5">5 years <b id="b-s5-v"></b></label><input type="range" id="b-s5" min="-200" max="200" step="5"></div>
+            <div class="bs"><label for="b-s10">10 years <b id="b-s10-v"></b></label><input type="range" id="b-s10" min="-200" max="200" step="5"></div>
+            <div class="bs"><label for="b-s20">20 years <b id="b-s20-v"></b></label><input type="range" id="b-s20" min="-200" max="200" step="5"></div>
+            <div class="bs"><label for="b-s30">30 years <b id="b-s30-v"></b></label><input type="range" id="b-s30" min="-200" max="200" step="5"></div></div>
+          <div class="bcol"><h3>Credit spread of the borrower</h3><p class="bh">How much the borrower's spread over swaps moves: in proportion to today's spread, plus a move by maturity.</p>
+            <div class="bs"><label for="b-cp">In proportion <b id="b-cp-v"></b></label><input type="range" id="b-cp" min="-0.6" max="2" step="0.05"></div>
+            <div class="bs"><label for="b-c2">2 years <b id="b-c2-v"></b></label><input type="range" id="b-c2" min="-200" max="200" step="5"></div>
+            <div class="bs"><label for="b-c5">5 years <b id="b-c5-v"></b></label><input type="range" id="b-c5" min="-200" max="200" step="5"></div>
+            <div class="bs"><label for="b-c10">10 years <b id="b-c10-v"></b></label><input type="range" id="b-c10" min="-200" max="200" step="5"></div>
+            <div class="bs"><label for="b-c20">20 years <b id="b-c20-v"></b></label><input type="range" id="b-c20" min="-200" max="200" step="5"></div>
+            <div class="bs"><label for="b-c30">30 years <b id="b-c30-v"></b></label><input type="range" id="b-c30" min="-200" max="200" step="5"></div></div>
+        </div>
+        <p class="cap">Each move can be set between −200 and +200bp. "Start from" copies an episode's moves as applied to your borrower, capped at ±200bp, so you can soften or sharpen a real episode rather than start from nothing. Moving any slider switches the curve at signing to <b>Your own scenario</b>. The proportional part applies to positive spreads only.</p>
+      </div>
+      <div id="b-replay" hidden>
+        <p class="bh">For a borrower the library covers only through a broad index or not at all (a specific South-East Asian sovereign, a European telecom, a US energy company), or for your borrower's own history: pull the issuer's curve on two dates from Bloomberg (for example YAS or the historical Z-spread curve) and paste it here. The moves between the two dates become the scenario.</p>
+        <div class="form">
+          <label>Name <input id="r-name" type="text" placeholder="e.g. Indonesia, taper tantrum 2013"></label>
+          <label>From <input id="r-from" type="text" placeholder="2 May 2013"></label>
+          <label>To <input id="r-to" type="text" placeholder="24 June 2013"></label>
+        </div>
+        <label class="ta">Columns: Tenor (years) · Z-spread on the first date, bp · Z-spread on the second date, bp · optional: swap rate on the first date, % · swap rate on the second date, %
+          <textarea id="r-data" rows="7" spellcheck="false" placeholder="2&#9;120&#9;210&#10;5&#9;160&#9;245&#10;10&#9;190&#9;270"></textarea></label>
+        <div class="brow"><button type="button" class="sbtn" id="r-use">Use this history</button><span class="msg" id="r-msg"></span></div>
+      </div>
+    </div>
+
+    <div class="ex">
+      <div class="et">All scenarios</div><div class="eh">Every episode at full intensity, on the loan as set in Inputs &amp; data</div>
+      <div class="lg" id="dash-lg"></div>
+      <div class="cb" id="c-dash"></div>
+      <p class="cap">Benefit a year, in bp, ranked by the loan selected above. The dashed lines mark today's curve. The benefit grows when the curve at signing rises more steeply beyond the average life, and shrinks or reverses when it is flatter or inverted there.</p>
+      <details class="dash-t"><summary>As a table</summary><div class="tbl"><table class="d" id="dash-tab"></table></div></details>
+    </div>
+
+    <details class="about" id="srcs-d"><summary>Sources, data rights and disclaimer</summary><div id="srcs"></div></details>
+  </section>
+
+  <!-- 3 RESULTS -->
+  <section class="tab" id="tab-results" hidden>
+    <div class="tabhead">
+      <h2>Results</h2>
+      <div class="tog small" role="group" aria-label="Loan"><button type="button" data-loan="float" aria-pressed="true">Floating</button><button type="button" data-loan="fixed" aria-pressed="false">Fixed</button></div>
+    </div>
+    <div class="ribbon scen" id="scen-banner" hidden></div>
+    <div class="cards">
+      <div class="acard" id="ac-float"></div>
+      <div class="acard" id="ac-fixed"></div>
+    </div>
+    <div class="checks" id="checks"></div>
+    <h3 class="sub3">Where the benefit comes from</h3>
+    <figure class="split3" id="three">
+      <div class="px f"><div class="k">Bond-equivalent price</div><div class="d">this loan, valued period by period</div><div class="v" id="t-fair"></div></div>
+      <div class="px r"><div class="k">Reference bond</div><div class="d" id="t-refd"></div><div class="v" id="t-bul"></div></div>
+      <div class="px s"><div class="k">Average-life price</div><div class="d" id="t-avgd"></div><div class="v" id="t-avg"></div></div>
+      <div class="sp tm"><div class="u"></div><div class="t">Timing effect<small>only the profile differs</small></div><div class="n pos" id="t-tim"></div></div>
+      <div class="sp qc"><div class="u"></div><div class="t">Quote-convention effect<small>only the valuation differs</small></div><div class="n neg" id="t-conv"></div></div>
+      <div class="sp w"><div class="u"></div><div class="t" id="t-benl">Benefit</div><div class="n" id="t-ben"></div></div>
+    </figure>
+    <p class="split3-x" id="t-x" hidden></p>
+    <p class="note" id="t-comp" hidden></p>
+    <div class="grid2">
+      <div class="ex"><div class="et">The price</div><div class="eh" id="h-curve"></div><div class="cb" id="c-curve"></div></div>
+      <div class="ex"><div class="et">The profile</div><div class="eh">Loan balance against a bond with the same average life</div><div class="cb" id="c-profile"></div></div>
+      <div class="ex"><div class="et">Why</div><div class="eh">What the curve implies for each half-year, against the price</div><div class="cb" id="c-cost"></div></div>
+      <div class="ex"><div class="et">When</div><div class="eh">Running present value of the benefit</div><div class="cb" id="c-run"></div></div>
+    </div>
+    <div class="ex"><div class="et">Net</div><div class="eh">Before and after the average life</div><div class="cb wf" id="c-wf"></div></div>
+    <div class="ex" id="sens"><div class="et">Sensitivity</div><div class="eh">How the benefit moves when the loan's terms or the curves change</div>
+      <p class="cap" id="sens-cap"></p>
+      <div class="sens-g">
+        <h4 class="sg-l">One at a time</h4><h4 class="sg-r">Two at a time</h4>
+        <p class="sens-top sg-l">Each input moved to a lower and a higher value, everything else as entered; sorted by how much the benefit moves.</p>
+        <div class="sens-ax sens-top sg-r"><label for="sx-r">Rows</label><select id="sx-r"></select><label for="sx-c">Columns</label><select id="sx-c"></select></div>
+        <div class="sens-b sg-l"><div class="cb" id="c-tor"></div><div class="lg" id="tor-lg"></div>
+          <details class="dash-t"><summary>As a table</summary><div class="tbl"><table class="d mini" id="tor-tab"></table></div></details></div>
+        <div class="sens-b sg-r"><div class="tbl"><table class="hm" id="hm"></table></div></div>
+      </div></div>
+    <div class="ex"><div class="et">All the numbers</div><div class="eh">Results, both loans; "Row" is the row of the workbook's Results sheet</div>
+      <div class="grid2 nums"><div class="tbl"><table class="d" id="res-tab"></table></div><div class="tbl"><table class="d" id="res-tab2"></table></div></div></div>
+  </section>
+
+  <div class="disc">
+    <p>Internal tool. Results follow the inputs entered and the model described in the tutorial; the same engine as the calculator workbook. Scenarios replay historical market episodes from official public data on today's curves; they are not forecasts. Indicative only; not an offer or advice.</p>
+  </div>
+</div>
+
+<script src="clientCase.js?v=20261108g"></script>
+<script src="clientKit.js?v=20261108g"></script>
+<script src="scenarioLibrary.js?v=20261108g"></script>
+<script src="simulator.js?v=20261108g"></script>
