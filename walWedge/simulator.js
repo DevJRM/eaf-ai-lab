@@ -554,9 +554,28 @@
   function sourcesHtml() {
     const byProv = {}; Object.entries(LIB.sources).forEach(([id, s]) => { (byProv[s.provider] = byProv[s.provider] || []).push(s); });
     Object.values(byProv).forEach(l => l.sort((x, y) => x.name.localeCompare(y.name, 'en', { numeric: true })));
-    return `<p><b>Disclaimer.</b> A pilot exercise for internal, non-commercial use. Scenarios are illustrations built from historical data, not forecasts, offers or advice; figures may contain errors and should be checked against the sources before they are relied on or shown outside the team. The data remain the property of their providers and are used here with attribution for this non-commercial pilot only; any wider or commercial use needs the providers' terms checked first.</p>
-      <p><b>How the library is built.</b> <code>scenarios/build_scenario_library.py</code> reads every series below directly from its provider and stores only the readings the scenarios use; last run ${esc(LIB.built)}.</p>`
+    const sources = `<p><b>How the library is built.</b> <code>scenarios/build_scenario_library.py</code> reads every series below directly from its provider and stores only the readings the scenarios use; last run ${esc(LIB.built)}.</p>`
       + Object.entries(byProv).map(([p, l]) => `<p class="src"><b>${esc(p)}</b> (${l.length} series)${RIGHTS[p] ? ` · ${esc(RIGHTS[p])}` : ''}</p><ul class="srcl">${l.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join('')}</ul>`).join('');
+    return `<p><b>Disclaimer.</b> A pilot exercise for internal, non-commercial use. Scenarios are illustrations built from historical data, not forecasts, offers or advice; figures may contain errors and should be checked against the sources before they are relied on or shown outside the team. The data remain the property of their providers and are used here with attribution for this non-commercial pilot only; any wider or commercial use needs the providers' terms checked first.</p>`
+      + `<details class="subf"><summary>Which scenarios move the curve at several maturities</summary>${coverageHtml()}</details>`
+      + `<details class="subf"><summary>How the library is built, and the sources</summary>${sources}</details>`;
+  }
+  // how many scenarios measure moves at several maturities, and how many apply one move to every maturity;
+  // counted from the library with the simulator's own rule (creditShape), so it stays right when the library is rebuilt
+  function coverageHtml() {
+    const R = {}; const rr = (e, k) => { const r = R[e.ccy] = R[e.ccy] || { tenors: e.tenors, ep: 0, ord: 0 }; r[k]++; };
+    LIB.rates.forEach(e => rr(e, 'ep')); LIB.routine.rates.forEach(e => rr(e, 'ord'));
+    const G = {}; const cg = (e, k, min) => { const g = G[e.group] = G[e.group] || { epS: 0, epU: 0, ordS: 0, ordU: 0 }; g[k + (creditShape(e, min) ? 'S' : 'U')]++; };
+    LIB.credit.forEach(e => cg(e, 'ep', 15)); LIB.routine.credit.forEach(e => cg(e, 'ord', 5));
+    const nR = Object.values(R).reduce((a, r) => a + r.ep + r.ord, 0), tot = k => Object.values(G).reduce((a, g) => a + g[k], 0);
+    const shaped = tot('epS') + tot('ordS'), uni = tot('epU') + tot('ordU'), cnt = (s, u) => s && u ? `${s} at five maturities, ${u} uniform` : s ? `${s} at five maturities` : `${u} uniform`;
+    const ccyName = { EUR: 'EUR, German government curve', USD: 'USD, US Treasuries', GBP: 'GBP, UK gilts' };
+    return `<p><b>Interest rates: all ${nR} scenarios are measured at several maturities.</b> Between measured maturities the move is interpolated in a straight line; beyond the first and last it is held flat (for sterling, the 5-year move also applies to years 1–4, the 20-year move to years 21–30).</p>`
+      + tbl(['Currency', 'Maturities measured', 'Episodes', 'Ordinary moves'], Object.entries(R).map(([c, r]) => `<tr><td>${esc(ccyName[c] || c)}</td><td>${r.tenors.join(', ')} years</td><td>${r.ep}</td><td>${r.ord}</td></tr>`))
+      + `<p><b>Credit spreads: ${shaped} of ${shaped + uni} scenarios move by maturity; ${uni} apply one move to every maturity.</b></p>`
+      + tbl(['Peer group', 'Episodes', 'Ordinary moves'], Object.entries(G).map(([g, x]) => `<tr><td>${esc(LIB.groups[g].name)}</td><td>${cnt(x.epS, x.epU)}</td><td>${cnt(x.ordS, x.ordU)}</td></tr>`))
+      + `<p>For euro area sovereigns only the 10-year move is the country's own (country yields are published at 10 years only); the shape across 2 to 30 years is official data for the euro area as a whole (the ECB's all-government curve against its AAA curve, same months), not the country's own curve. Where that shape barely moved, the move is applied uniformly. The other groups' series average the whole curve (J.P. Morgan EMBI indices; Moody's bonds of 20 years and more; Bundesbank averages over all maturities), so they carry no maturity information.</p>`
+      + `<p><b>What it means for the results.</b> Interest-rate effects rest on measured curve shapes in every scenario. A uniform credit move changes the level of the credit curve but not its steepness, and steepness beyond the average life is what drives the benefit most; those scenarios move the benefit mainly through the level of rates and spreads. Where a borrower's own curve shape matters, use <b>Replay from Bloomberg</b> with its Z-spread curve on two dates, or adjust by hand at five maturities.</p>`;
   }
   function aboutHtml() {
     return `<p><b>What a scenario is.</b> A set of moves of the swap curve and of your borrower's credit spread, by maturity. They are added to today's curves as you entered them, and the loan is priced as if it were signed on the result. Two kinds come from history: <b>ordinary six months</b>, what a normal half-year did over the last ${LIB.routine.years} years, and <b>episodes</b>, dated market events at their most severe. Every move is measured on official data; nothing is invented or random. Each scenario shows its dates, its measurements, its sources and how it is carried over to your borrower; the <b>?</b> marks explain each step and why it is sound practice.</p>

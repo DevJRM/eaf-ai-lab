@@ -363,7 +363,10 @@ details.about p.src,.detail p.src{font-size:12.5px;color:var(--muted)}
 .pick-k{width:min(260px,100%)}
 .pick-k.off{opacity:.45}
 ul.srcl{margin:2px 0 10px;padding-left:18px;font-size:12.5px;line-height:1.5;color:var(--muted);columns:2 22rem;column-gap:28px}ul.srcl li{break-inside:avoid}ul.srcl a{color:var(--muted)}
-#srcs-d,#dash-d{margin-top:18px}#dash-d>summary .sg-s{font-size:12.5px;color:var(--muted);margin-left:8px}.fit-n{margin-top:4px}
+#srcs-d,#dash-d{margin-top:18px}
+/* sub-folds inside a fold (sources): lighter, separated by a rule */
+details.subf{border-top:1px solid var(--rule);margin-top:10px;padding-top:8px}details.subf>summary{font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer}
+details.subf .tbl{margin:8px 0}#dash-d>summary .sg-s{font-size:12.5px;color:var(--muted);margin-left:8px}.fit-n{margin-top:4px}
 details.sgrp{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);padding:8px 12px;margin:0 0 8px}
 /* what the inputs select (currency; borrower type and region), and the horizon of ordinary moves */
 .sim .set{background:var(--slate-soft);border-left:4px solid var(--slate);border-radius:6px;padding:8px 12px;font-size:13.5px;line-height:1.5;margin:12px 0 0;color:var(--ink)}
