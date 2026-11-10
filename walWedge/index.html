@@ -22,6 +22,12 @@ body {
 .cards.three { grid-template-columns: repeat(3, 1fr); }
 .cards.four { grid-template-columns: repeat(4, 1fr); }
 .cards.one { grid-template-columns: 1fr; }
+.cards.two { grid-template-columns: repeat(2, 1fr); }
+.cards.two .card.feature { padding: 16px 22px; gap: 18px; }
+.cards.two .card.feature .tag { margin-bottom: 6px; }
+.cards.two .card.feature h2 { margin-bottom: 4px; }
+.cards.two .card.feature .icon { font-size: 34px; }
+.cards.two .card.feature .enter { padding: 10px 18px; }
 .card.feature { flex-direction: row; align-items: center; gap: 22px; text-align: left; padding: 22px 26px; }
 .card.feature .icon { margin: 0; font-size: 40px; }
 .card.feature .fb { flex: 1; min-width: 0; }
@@ -31,7 +37,7 @@ body {
 .card.feature .enter { width: auto; margin: 0; padding: 12px 24px; white-space: nowrap; text-align: center; }
 @media (max-width: 760px) { .card.feature { flex-direction: column; align-items: stretch; text-align: center; max-width: 440px; margin: 0 auto; } .card.feature .icon { text-align: center; } .card.feature .enter { width: 100%; } }
 @media (max-width: 1000px) { .cards.four { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 760px) { .cards.three, .cards.four { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; } }
+@media (max-width: 760px) { .cards.two, .cards.three, .cards.four { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; } .cards.two .card.feature { height: auto; } .cards.two .card.feature .icon { align-self: center; } }
 .card {
   background: #fff; border-radius: 16px; padding: 28px 24px 22px; box-shadow: 0 20px 60px rgba(0,0,0,.3);
   text-decoration: none; display: flex; flex-direction: column; height: 100%;
@@ -84,12 +90,19 @@ body {
   <p class="subtitle">Measure, explain and present what pricing an amortising loan at its average life is worth to the borrower, on the borrower's own bond curve.</p>
 
   <div class="group">Start here</div>
-  <div class="cards one">
+  <div class="cards two">
     <a class="card feature" href="explainer.html">
       <div class="icon">⏱️</div>
       <div class="fb"><span class="tag">Internal · 10-minute read</span>
         <h2>The WAL Wedge in ten minutes</h2>
         <p>What the WAL wedge is, why it exists, when it applies, and how to talk about it with a borrower. Read this first, then use the tools below.</p></div>
+      <span class="enter">Read &rarr;</span>
+    </a>
+    <a class="card feature" href="marketScan.html">
+      <div class="icon">🧭</div>
+      <div class="fb"><span class="tag">Internal · market scan · November 2026</span>
+        <h2>Where the wedge pays</h2>
+        <p>Which borrowers' curves suit the WAL wedge today, how this moment compares with the last ten years, and how the data were checked.</p></div>
       <span class="enter">Read &rarr;</span>
     </a>
   </div>
