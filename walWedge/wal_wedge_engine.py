@@ -193,10 +193,10 @@ def bootstrap(inp, grid, kind, calibration="bridge"):
                 else:
                     g1 = q / 2 if m == 2 else 0.0
                     g2 = q / m + 1
-                a2 = D2 * Sp * (g2 - R)
-                a1 = Sp * (D1 * (g1 - R) + D2 * R)
-                a0 = K + D1 * Sp * R - 1
-                lam = -2 * math.log((-a1 + math.sqrt(a1 * a1 - 4 * a2 * a0)) / (2 * a2))
+                q2 = D2 * Sp * (g2 - R)
+                q1 = Sp * (D1 * (g1 - R) + D2 * R)
+                q0 = K + D1 * Sp * R - 1
+                lam = -2 * math.log((-q1 + math.sqrt(q1 * q1 - 4 * q2 * q0)) / (2 * q2))
             else:
                 lam = L[i - 1]
         else:

@@ -68,8 +68,8 @@
       if (b <= last) {
         const c = q[b - 1], i1 = 2 * b - 1, i2 = 2 * b, Sp = S[S.length - 1];
         const K = cumC + c * cumAnn, g1 = m === 2 ? c / 2 : 0, g2 = c / m + 1, D1 = dfg[i1], D2 = dfg[i2];
-        const a2 = D2 * Sp * (g2 - R), a1 = Sp * (D1 * (g1 - R) + D2 * R), a0 = K + D1 * Sp * R - 1;
-        const u = (-a1 + Math.sqrt(a1 * a1 - 4 * a2 * a0)) / (2 * a2); l = -2 * Math.log(u);
+        const q2 = D2 * Sp * (g2 - R), q1 = Sp * (D1 * (g1 - R) + D2 * R), q0 = K + D1 * Sp * R - 1;
+        const u = (-q1 + Math.sqrt(q1 * q1 - 4 * q2 * q0)) / (2 * q2); l = -2 * Math.log(u);
       } else l = lam[lam.length - 1];
       lam.push(l);
       for (const i of [2 * b - 1, 2 * b]) {
