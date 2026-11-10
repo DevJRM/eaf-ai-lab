@@ -43,6 +43,10 @@ body {
   text-decoration: none; display: flex; flex-direction: column; height: 100%;
   transition: transform .2s ease, box-shadow .2s ease;
 }
+/* Work-in-progress watermark across a card: diagonal, semi-transparent, does not block clicks */
+.card.wip { position: relative; overflow: hidden; }
+.card.wip::after { content: "🚧 WORK IN PROGRESS"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-9deg);
+  font-size: 30px; font-weight: 800; letter-spacing: .14em; white-space: nowrap; color: rgba(128, 0, 32, .32); pointer-events: none; }
 .card:hover { transform: translateY(-4px); box-shadow: 0 24px 70px rgba(0,0,0,.4); }
 .card .icon { font-size: 32px; margin-bottom: 14px; }
 .card .tag { display: inline-block; align-self: center; font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #800020; background: #f6e3e7; border-radius: 999px; padding: 3px 10px; margin-bottom: 10px; }
@@ -98,7 +102,7 @@ body {
         <p>What the WAL wedge is, why it exists, when it applies, and how to talk about it with a borrower. Read this first, then use the tools below.</p></div>
       <span class="enter">Read &rarr;</span>
     </a>
-    <a class="card feature" href="marketScan.html">
+    <a class="card feature wip" href="marketScan.html">
       <div class="icon">🧭</div>
       <div class="fb"><span class="tag">Internal · market scan · November 2026</span>
         <h2>Where the wedge pays</h2>
