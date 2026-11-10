@@ -1,0 +1,522 @@
+<!doctype html><html><head><link rel="stylesheet" href="../assets/auth.css"><script>try{if(sessionStorage.getItem('eaf_walwedge_authenticated')==='true'){document.documentElement.classList.add('eaf-authed');}}catch(e){}</script><meta charset=utf8><meta name="color-scheme" content="light only"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><div id="auth-overlay"><div id="auth-modal"><h2>🔒 EAF AI Lab — Restricted</h2><p>Please enter your password</p><input type="password" id="password-input" placeholder="Enter password" autocomplete="current-password" autofocus/><button onclick="checkPassword()">Access</button><div id="auth-error">❌ Incorrect password. Please try again.</div></div></div><script>window.EAF_AUTH={hash:'2b35a0164970212745940305ae056f2708a43e93388be37a6bb04ccd123d4982',key:'eaf_walwedge_authenticated'};</script><script src="../assets/auth.js"></script>
+
+<title>Where the Wedge Pays</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="clientStyle.css?v=20261108w">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23800020'/%3E%3Cg fill='%23fff' opacity='.9'%3E%3Crect x='11' y='16' width='5' height='36'/%3E%3Crect x='18' y='21' width='5' height='31'/%3E%3Crect x='25' y='26' width='5' height='26'/%3E%3Crect x='32' y='31' width='5' height='21'/%3E%3Crect x='39' y='36' width='5' height='16'/%3E%3Crect x='46' y='41' width='5' height='11'/%3E%3C/g%3E%3Cpolygon points='30.3,30 54,16 54,30' fill='%23E2A940' opacity='.85'/%3E%3Cline x1='9' y1='42' x2='54' y2='16' stroke='%23E2A940' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+/* Market scan page: chart series colours (validated for colour vision deficiency on the white panel), grade chips, tables. */
+.ms{--s-float:#A8324F;--s-fixed:#2F6DB5;--grid:#EEE6E5;--g-pri:#0E7F56;--g-sel:#A86A12;--g-low:#5F6F83;--g-na:#8C7B7F}
+.ms .cb{position:relative;margin-top:8px}
+.ms svg.ch{display:block;width:100%;height:auto;overflow:visible;font-family:var(--f-body)}
+.ms svg.ch text{fill:var(--muted);font-size:11.5px}
+.ms svg.ch text.lb{fill:var(--ink);font-size:12.5px}
+.ms svg.ch text.vl{fill:var(--ink);font-family:var(--f-mono);font-size:12px}
+.ms .tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--rule);border-radius:8px;box-shadow:0 4px 14px rgba(38,21,26,.12);padding:8px 10px;font-size:12.5px;line-height:1.45;min-width:150px;max-width:280px;z-index:3}
+.ms .tip .t{font-weight:600;margin-bottom:3px}
+.ms .tip .r{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.ms .tip .r i{display:inline-block;width:14px;height:2px;border-radius:1px;margin-right:6px;vertical-align:middle}
+.ms .tip .r b{font-family:var(--f-mono);font-weight:500}
+.ms .tip .s{color:var(--muted);font-size:11.5px;margin-top:4px}
+.ms .chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:2px 9px 2px 7px;border:1px solid;white-space:nowrap}
+.ms .chip::before{font-size:11px;line-height:1}
+.ms .chip.pri{color:var(--g-pri);border-color:#A9D9C4;background:var(--gain-soft)}.ms .chip.pri::before{content:"▲"}
+.ms .chip.sel{color:var(--g-sel);border-color:#EBCF9C;background:var(--brass-soft)}.ms .chip.sel::before{content:"◆"}
+.ms .chip.low{color:var(--g-low);border-color:#C9D1DC;background:var(--slate-soft)}.ms .chip.low::before{content:"▼"}
+.ms .chip.na{color:var(--g-na);border-color:var(--rule);background:var(--soft)}.ms .chip.na::before{content:"○"}
+.ms-short{list-style:none;padding:0;margin:16px 0 4px;display:grid;gap:8px}
+.ms-short li{display:grid;grid-template-columns:2rem minmax(0,1fr) auto;gap:4px 12px;align-items:baseline;background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:10px 14px}
+.ms-short .rk{font-family:var(--f-mono);color:var(--accent);font-size:15px}
+.ms-short .nm{font-weight:600}
+.ms-short .why{grid-column:2/4;font-size:14px;color:var(--muted);line-height:1.5}
+.ms-short .num{font-family:var(--f-mono);font-size:13px;color:var(--ink);white-space:nowrap}
+.ms .tbl{overflow-x:auto;margin:10px 0 4px}
+.ms table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+.ms th,.ms td{padding:7px 10px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+.ms th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;vertical-align:bottom;white-space:normal;line-height:1.3}
+.ms td.n{text-align:right;font-family:var(--f-mono);white-space:nowrap}
+.ms th.n{text-align:right}
+.ms td.nm{font-weight:600;min-width:11rem}
+.ms #t-score td{font-size:13px}
+.ms #t-score td:nth-child(5){min-width:8rem}
+.ms #t-score td.nm{min-width:9.5rem}
+.ms p a,.ms li a{color:var(--accent)}
+
+.ms td.nm small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.ms tr.tot td{font-weight:600;border-top:2px solid var(--ink)}
+.ms .dots{letter-spacing:2px;font-size:13px;color:var(--ink);white-space:nowrap}
+.ms .dots .o{color:#D8CCCC}
+.ms-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px;align-items:start}
+.ms-card{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:12px 16px 10px;display:flex;flex-direction:column;min-width:0}
+.ms-card .chip{align-self:flex-start}
+.ms-card h3{font-family:var(--f-display);font-size:19px;font-weight:500;margin:6px 0 2px;line-height:1.25}
+.ms-card .who{font-size:12.5px;color:var(--muted);margin:0 0 6px}
+.ms-card .kv{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;margin:2px 0 8px;padding:7px 10px;background:var(--soft);border-radius:8px}
+.ms-card .kv b{font-family:var(--f-mono);font-weight:500}
+.ms-card p{font-size:14px;line-height:1.55;margin:4px 0}
+.ms-card p b:first-child{color:var(--ink)}
+.ms-card .ex2{font-size:12.5px;color:var(--muted);margin-top:auto;padding-top:6px}
+.ms .verdict{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0 6px}
+.ms .verdict>div{background:var(--panel);border:1px solid var(--rule);border-top:3px solid var(--slate);border-radius:10px;padding:10px 14px}
+.ms .verdict .ccy{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+.ms .verdict .call{font-family:var(--f-display);font-size:18px;margin:2px 0 4px;line-height:1.25}
+.ms .verdict p{font-size:13.5px;line-height:1.5;margin:0;color:var(--ink)}
+.ms .verdict .up{border-top-color:var(--g-pri)}.ms .verdict .risk{border-top-color:var(--g-sel)}
+.ms .tests{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:12px 0 4px}
+.ms .tests>div{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.45}
+.ms .tests b{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.ms .verdict.msck .bad{border-top-color:var(--accent)}
+.ms .st{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;border-radius:999px;padding:1px 8px;border:1px solid}
+.ms .st.OK{color:var(--g-pri);border-color:#A9D9C4;background:var(--gain-soft)}.ms .st.CHECK{color:var(--g-sel);border-color:#EBCF9C;background:var(--brass-soft)}.ms .st.FAIL{color:var(--accent);border-color:#E6B7C1;background:var(--accent-soft)}
+.ms table.ckt td{font-size:13px}.ms table.ckt td:nth-child(3){min-width:9rem}.ms table.ckt td:last-child{min-width:16rem;color:var(--muted)}
+.ms table.st-t td:last-child{color:var(--muted);min-width:14rem}
+.ms .src li{font-size:13px;line-height:1.5;margin:3px 0;color:var(--muted)}
+.ms .src a{color:var(--accent)}
+.ms .src h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);margin:14px 0 4px}
+@media (max-width:760px){.ms-cards,.ms .verdict{grid-template-columns:minmax(0,1fr)}.ms .tests{grid-template-columns:repeat(2,minmax(0,1fr))}.ms-short li{grid-template-columns:1.6rem minmax(0,1fr)}.ms-short .num{grid-column:2}.ms-short .why{grid-column:2}}
+@media (max-width:420px){.ms .tests{grid-template-columns:minmax(0,1fr)}}
+</style>
+<div class="bar"><div class="in xp-in">
+  <div class="left"><div class="nm">WAL Wedge <span>market scan</span></div></div>
+  <div class="tog" role="group" aria-label="Loan type"><button type="button" data-xmode="float" aria-pressed="true">Floating rate</button><button type="button" data-xmode="fixed" aria-pressed="false">Fixed rate</button></div>
+  <a class="back-btn" href="index.html" title="Back to the WAL Wedge Tool Set">&larr; Tool Set</a>
+</div></div>
+
+<main class="xp ms">
+<header>
+  <div class="lab">Internal · market scan as of 9 November 2026 · about 12 minutes</div>
+  <h1>Where the wedge pays: which borrowers to call first</h1>
+  <p class="lead">The WAL wedge is worth most to a borrower whose own bond curve keeps rising past the loan's average life. We read the curves of sovereigns and investment-grade companies around the world, as they stand in November 2026, to find where that is true today and how long it is likely to last. <b>In short: the broad market is an ordinary moment for the wedge, but a handful of borrowers have curves as steep as anything seen in ten years. Most of them are in central and eastern Europe, Indonesia, the Philippines and Mexico.</b></p>
+  <div class="xp-tiles" aria-label="The scan in three numbers">
+    <div class="xp-tile p"><div class="k">Against the last ten years</div><div class="v"><span data-mode="float">{{ez_f_pct}}%</span><span data-mode="fixed">{{ez_x_pct}}%</span></div><div class="d"><span data-mode="float">of months since 2016 had a flatter euro government credit curve than today (US high-grade companies: {{hq_f_pct}}%)</span><span data-mode="fixed">of months since 2016 had a flatter euro government all-in yield curve than today (US high-grade companies: {{hq_x_pct}}%)</span></div></div>
+    <div class="xp-tile f"><div class="k">The steepest curves today</div><div class="v"><span data-mode="float">{{top_f_lo}}–{{top_f_hi}}bp</span><span data-mode="fixed">{{top_x_lo}}–{{top_x_hi}}bp</span></div><div class="d">a year on the same loan, curves measured over swaps: {{top_names}}</div></div>
+    <div class="xp-tile b"><div class="k">Euro governments: a year ago → today</div><div class="v"><span data-mode="float">{{ez_f_1y}} → {{ez_f_sw}}bp</span><span data-mode="fixed">{{ez_x_1y}} → {{ez_x_sw}}bp</span></div><div class="d">same loan, measured over EURIBOR swaps: <span data-mode="float">credit curves a little steeper</span><span data-mode="fixed">the 2026 hikes turned the swap curve from steep to flat</span></div></div>
+  </div>
+  <p class="xp-case">Every wedge on this page is <b>indicative</b>: the WAL Wedge engine run on a stylised curve built from public data, for a standard loan (drawn over 1 year, repaid in equal half-yearly instalments over 12 years, average life 7 years; 40% recovery). It is not a borrower quote. Before any client conversation, confirm on the borrower's own Bloomberg YAS snapshot in the Calculator. Switch Floating / Fixed at the top.</p>
+  <nav class="route" aria-label="Contents">
+    <a href="#s1"><b>1</b>The answer</a><a href="#s2"><b>2</b>What we look for</a><a href="#s3"><b>3</b>Is now a good moment?</a><a href="#s4"><b>4</b>Rates backdrop</a>
+    <a href="#s5"><b>5</b>Scorecard</a><a href="#s6"><b>6</b>Segment notes</a><a href="#s7"><b>7</b>Financing needs</a><a href="#s8"><b>8</b>What would change the call</a><a href="#s9"><b>9</b>Data checks</a><a href="#s10"><b>10</b>How to use this</a>
+  </nav>
+</header>
+
+<section id="s1">
+  <div class="sn">1 · THE ANSWER</div>
+  <h2>Five places to start, in order</h2>
+  <p>Ranked on the five tests of section 2 together: how steep the borrower's curve is past the average life, whether the curve can be measured and is free of stress, and how winnable the argument is (borrowers for whom a matching bond is hard to issue, rather than treasuries that already hold a competitor's quote).</p>
+  <ol class="ms-short" id="shortlist"></ol>
+  <p class="take"><b>Hold back</b> on US and European investment-grade companies: their credit curves flatten past 7–10 years, and their treasuries compare loans with their own bond curves daily, so the playbook (§9) says price to clear rather than argue. Euro area governments now show steep curves against swaps, but mostly because long government yields sit above swaps, and they fund in bonds anyway: their agencies, regions and state companies are the way in. France is steep because it is under stress, which can turn quickly.</p>
+</section>
+
+<section id="s2">
+  <div class="sn">2 · WHAT WE LOOK FOR</div>
+  <h2>Five tests, taken from the explainer and the playbook</h2>
+  <div class="tests">
+    <div><b>1 · Rise</b>The borrower's curve climbs between the loan's average life and its final maturity. The more it climbs, the larger the wedge: roughly the rise in bp per year × the average life ÷ 3.</div>
+    <div><b>2 · Direction</b>Is the curve getting steeper or flatter? A wedge measured at signing is fixed, but a curve that is flattening may not be there by the time the loan is signed.</div>
+    <div><b>3 · No stress</b>When a borrower is in trouble its short bonds can yield more than its long ones (an inverted curve). Then the borrower pays more than its bonds imply: do not pitch.</div>
+    <div><b>4 · Measurable</b>The borrower has bonds across several maturities, so one Bloomberg snapshot gives a full curve. Without one, the benefit can be asserted but not shown.</div>
+    <div><b>5 · Winnable</b>Our playbook: the argument wins where a long amortising bond is hard to issue, and loses against a liquid-curve treasury with a competitor's quote in hand.</div>
+  </div>
+  <p class="cap">Floating-rate loans depend only on the credit curve (spread over swaps). Fixed-rate loans also pick up the slope of the swap curve itself between the average life and the final maturity; today that adds only {{rf_lo}}–{{rf_hi}}bp a year to a 13-year loan (section 4).</p>
+</section>
+
+<section id="s3">
+  <div class="sn">3 · IS NOW A GOOD MOMENT?</div>
+  <h2>An ordinary moment for the market, an unusual one for a few borrowers</h2>
+  <p>Each line is the WAL Wedge engine (the Python copy of the Calculator) run once a month since January 2016 on real curves, for the two borrower groups with a full public curve history at every maturity: euro area governments (ECB par curve of all euro area governments) and US high-grade companies (US Treasury HQM corporate curve, rated AA to A). No single tenor is used: each month the whole curve from 1 to 30 years goes in, the price we charge is read at the loan's average life (7 years), and the bond-equivalent price uses every half-year out to the final maturity (13 years). The loan is the same every month, so the lines show only how the curves changed.</p>
+  <p><b>One limit: there is no free ten-year history of swap curves.</b> The history therefore measures against government curves (ECB AAA curve, Treasuries). The fixed-rate line is reliable on that basis, because a fixed-rate loan is priced off the borrower's all-in yields, which are real (today 12.8bp against government curves, {{ez_x_sw}}bp against EURIBOR swaps). The floating-rate line is the credit spread over government curves; against swaps, as YAS measures, it reads higher today ({{ez_f_sw}}bp instead of {{ez_f_now}}bp for euro governments) because long government yields now sit above swaps. Everything on this page outside these two charts uses real swap curves.</p>
+  <div class="two">
+    <div class="ex"><div class="et">Euro area governments</div><div class="eh"><span data-mode="float">Floating-rate</span><span data-mode="fixed">Fixed-rate</span> wedge, bp a year, monthly since 2016</div><div class="cb" id="c-ez"></div><div class="lg" id="lg-ez"></div></div>
+    <div class="ex"><div class="et">US high-grade companies</div><div class="eh"><span data-mode="float">Floating-rate</span><span data-mode="fixed">Fixed-rate</span> wedge, bp a year, monthly since 2016</div><div class="cb" id="c-hq"></div><div class="lg" id="lg-hq"></div></div>
+  </div>
+  <p class="cap">Hover for each month. The grey line is the other loan type, for comparison; switch Floating / Fixed at the top. Floating rate here: credit spread over the AAA government curve or Treasuries. HQM is a monthly fitted curve, so the US line ends in October 2026.</p>
+  <p><b>Why the fixed-rate figures are higher, and why that is not a rates story.</b> A fixed-rate wedge has two parts: a credit part, close to the floating-rate wedge, and an interest-rate part from the slope of the swap curve between the average life and the final maturity. The EURIBOR swap curve rises only from {{sw7}}% at 7 years to {{sw13}}% at 13 years, so for euro governments the fixed-rate wedge of {{ez_x_sw}}bp is {{ez_cr_sw}}bp of credit and {{ez_rf_sw}}bp of interest rate; across the segments the interest-rate part is {{rf_lo}}–{{rf_hi}}bp. The rest of the gap between fixed and floating is a quoting effect: a YAS Z-spread compounds annually for euro bonds, and turning it into a half-yearly margin costs the floating-rate loan {{conv_lo}}–{{conv_hi}}bp on euro curves (most for wide spreads such as Romania's). In the Portugal example the swap curve falls slightly beyond its 12.5-year average life ({{pt7}}% to {{pt24}}% at 24 years), so the interest-rate part is {{pt_rf}}bp and the two wedges are nearly the same ({{pt_f}} and {{pt_x}}bp).</p>
+  <p><b>Against the last ten years, November 2026 is middling to low.</b> For euro area governments the credit spread over the AAA curve gives a floating-rate wedge of {{ez_f_now}}bp, steeper than in only {{ez_f_pct}}% of months since 2016; the all-in curve gives a fixed-rate wedge of 12.8bp, steeper than in {{ez_x_pct}}%. For US high-grade companies the credit wedge, {{hq_f_now}}bp, is near the bottom of its range ({{hq_f_pct}}th percentile; median {{hq_f_med}}bp). Two things explain it:</p>
+  <ul>
+    <li><b>Credit spreads are near their tightest in decades, and tight credit curves are flat curves.</b> For US high-grade companies the two move together: across the ten years, months with wider spreads had a median wedge of {{hq_wide}}bp, months with tight spreads {{hq_tight}}bp. EMBI spreads for Mexico, Chile, Peru and Brazil sit around the 10th percentile of their range since 2016.</li>
+    <li><b>The 2026 hikes flattened the rates curves.</b> The Fed raised rates in September and markets price a further hike in December; the ECB hiked in June and September. Short rates rose about a point in a year while long rates rose less: the 2s30s slope roughly halved on Treasuries and euro government curves, and on EURIBOR swaps it went from {{eursw_230_y}}bp to {{eursw_230}}bp. That took about a third off every fixed-rate wedge: euro area governments from {{ez_x_12m}} to {{ez_x_now}}bp a year, US high-grade companies from {{hq_x_12m}} to {{hq_x_now}}bp.</li>
+  </ul>
+  <p><b>But it is a far better moment than 2023–24 for fixed-rate loans.</b> Then the rates curves were inverted at the short end and flat further out, and the all-in fixed-rate wedge was much smaller (2023 medians: {{ez_x_2023}}bp for euro area governments, {{hq_x_2023}}bp for US high-grade companies, against 12.8 and {{hq_x_now}}bp today).</p>
+  <p><b>And the dispersion is wide.</b> Measured over swaps, as YAS does, {{top_names}} give {{top_f_lo}}–{{top_f_hi}}bp a year on the same floating-rate loan, against {{ez_f_sw}}bp for the euro government aggregate and {{usig_lo}}–{{usig_hi}}bp for US investment-grade companies. A pitch today should pick borrowers rather than wait for the market.</p>
+
+  <h3>The view to end-2027: five scenarios on today's curves</h3>
+  <p>Each scenario moves today's curves in one way and runs the engine again. The dot is today; the ring is the base case; the bar spans the five scenarios.</p>
+  <div class="ex"><div class="et">Scenarios to end-2027</div><div class="eh">Indicative <span data-mode="float">floating-rate</span><span data-mode="fixed">fixed-rate</span> wedge, bp a year, standard loan</div><div class="cb" id="c-scen"></div><div class="lg" id="lg-scen"></div>
+    <p class="cap" id="scen-notes"></p></div>
+  <div class="verdict">
+    <div class="up"><div class="ccy">EUR</div><div class="call">Steady; better for long loans</div><p>The EURIBOR swap curve adds only about {{rf_eur}}bp to a 13-year fixed-rate loan. The Dutch pension switch on 1 January 2027 (about €900bn–1tn, led by ABP) is expected to steepen 10–30-year swaps by 10–20bp (ING): about +0.5bp on a 13-year loan, +2–3bp on a 20-year one. The risk is more ECB hikes: in the "hikes and oil" scenario EUR fixed-rate wedges fall {{eur_bf_lo}}–{{eur_bf_hi}}%.</p></div>
+    <div class="risk"><div class="ccy">USD</div><div class="call">Good, but at risk</div><p>The SOFR swap curve adds about {{rf_usd}}bp to a 13-year fixed-rate loan. Markets price a Fed hike in December (CME FedWatch about 80%); in the "hikes and oil" scenario USD fixed-rate wedges fall {{usd_bf_lo}}–{{usd_bf_hi}}%. For fixed-rate USD loans, sooner is better.</p></div>
+    <div class="risk"><div class="ccy">Floating rate, everywhere</div><div class="call">Steady, with one tail risk</div><p>A gradual widening of spreads steepens credit curves and lifts the wedge by a quarter to a third. A sudden shock does the opposite: short spreads jump most, curves flatten or invert, and most floating-rate wedges fall to zero or below. The IMF (GFSR, October 2026) names a disorderly rise in sovereign yields and an AI-led correction among its top risks.</p></div>
+  </div>
+  <p><b>Fixed or floating?</b> Let the borrower's needs decide, not the rates curve. Today the swap curves add {{rf_lo}}–{{rf_hi}}bp a year to a fixed-rate wedge, about the size of the uncertainty in the swap data themselves (section 4). The credit curve does the work in both cases, and it is the credit curve that ranks the borrowers.</p>
+</section>
+
+<section id="s4">
+  <div class="sn">4 · THE RATES BACKDROP</div>
+  <h2>A year of hikes: higher, flatter curves</h2>
+  <p>Fixed-rate loans inherit the slope of the swap curve between the loan's average life (7 years) and its final maturity (13 years). Floating-rate loans do not. Swap curves are what the loans are priced against; government curves are shown for comparison, and the gap between the two is why government borrowers' curves look steep against swaps today.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Curve</th><th class="n">7 years</th><th class="n">13 years</th><th class="n">Rise</th><th class="n">2s30s</th><th class="n">A year ago: rise</th><th class="n">2s30s</th><th>What moved it</th></tr></thead>
+    <tbody id="t-rates"></tbody></table></div>
+  <p class="cap">Swaps: EURIBOR 6M and SOFR par swap rates, 6 November 2026 close (BlueGamma, indicative); a year ago: 7 and 5 November 2025. Governments: ECB AAA-rated euro area curve (par), Treasury constant-maturity yields (FRED), Bank of England gilt par yields (stop at 20 years); a year ago: November 2025 averages. Policy rates: Fed 3.75–4.00% after a September hike, two dissents for a hike in October; ECB deposit rate 2.50% after hikes in June and September; euro area headline inflation 3.8% in September, energy 18.9%.</p>
+  <h3>How much do the swap curves matter? A stress test</h3>
+  <p>The swap data were checked against a second source (EURIBOR swaps 1–5 years within 1.5bp of Raiffeisen, the 10-year within 2bp of Investing.com) and against the official €STR and SOFR fixings (within 1bp). Beyond 10 years they rest on one indicative source. To see how much that matters, each segment was re-run with the borrower's yields held fixed and the swap curve changed: the €STR curve instead of EURIBOR, the government curve instead of swaps, and the swap curve 10bp steeper or flatter between 7 and 13 years. A second test lets an error in the swap data also move the yields that are quoted over mid-swaps.</p>
+  <div class="tbl"><table class="st-t"><thead><tr><th>Segment</th><th class="n">Floating<br>today</th><th class="n">Floating<br>range</th><th class="n">Fixed<br>today</th><th class="n">Fixed<br>range</th><th class="n">of which<br>rates curve</th><th>How the yields are built</th></tr></thead><tbody id="t-stress"></tbody></table></div>
+  <ul>
+    <li><b>The rates curves add little.</b> The interest-rate part of a fixed-rate wedge is {{rf_lo}}–{{rf_hi}}bp; the credit part is everything else.</li>
+    <li><b>Fixed-rate wedges are robust</b> where the borrower's yields are measured directly (governments, HQM, dollar deals): the swap curve only decides how they split into credit and rates. Where yields are built as mid-swap plus spread (CEE, Morocco, Indonesia), a 10bp error in the swap slope moves the fixed-rate wedge by about 3.5bp.</li>
+    <li><b>Floating-rate wedges are the sensitive ones:</b> about 3.4bp for every 10bp of swap slope between 7 and 13 years. The top group (CEE, Asia, Mexico) stays well above the broad US investment-grade index (ICE) in every test. Against US high-grade companies (HQM) its lead is 3bp today, shrinks to under 1bp on government curves and reverses in one swap-error test: those companies are low priority because the argument is hard to win with their treasuries, not because their curves are flat. The order within the top group is not robust either.</li>
+  </ul>
+</section>
+
+<section id="s5">
+  <div class="sn">5 · SCORECARD</div>
+  <h2>Every segment, measured the same way</h2>
+  <div class="ex"><div class="et">Indicative wedge by borrower curve</div><div class="eh"><span data-mode="float">Floating-rate</span><span data-mode="fixed">Fixed-rate</span> loan, bp a year: standard 13-year and long 20-year amortiser</div><div class="cb" id="c-seg"></div><div class="lg" id="lg-seg"></div>
+    <p class="cap">Hover a bar for the curve points and their source. "Measured" curves come from official data; "new issue" curves from the spreads of the borrower's 2026 bond deals; "stylised" curves borrow a shape from a related curve and are the least reliable. Where a curve stops rising (the Philippines beyond 10 years), the longer loan gains less; where it keeps rising (Mexico, Bulgaria, Morocco), the longer loan gains more: match the loan's tenor to where the curve climbs.</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Segment</th><th>Grade</th><th class="n">Wedge<br>13y loan</th><th class="n">Wedge<br>20y loan</th><th>Direction, 12 months</th><th>Stress</th><th>Curve</th><th>Winnable</th></tr></thead>
+    <tbody id="t-score"></tbody></table></div>
+  <p class="cap">Wedge columns follow the Floating / Fixed switch; where a segment has several curves, the range is shown. Curve and winnability are scored ●●● (best) to ●○○. Grades combine the five tests; stress is a veto.</p>
+</section>
+
+<section id="s6">
+  <div class="sn">6 · SEGMENT NOTES</div>
+  <h2>What happened, where it stands, what to watch</h2>
+  <div class="ms-cards" id="cards"></div>
+</section>
+
+<section id="s7">
+  <div class="sn">7 · FINANCING NEEDS AHEAD</div>
+  <h2>Who will need long money in 2027</h2>
+  <p>The segments graded best are also borrowing heavily, from public reports of their budgets and issuance plans:</p>
+  <ul>
+    <li><b>Central and eastern Europe:</b> defence, grids and the coal exit, nuclear in Poland and Czechia, and EU co-financing. Romania planned about €10bn of euro bonds in 2026; Bulgaria came twice to fill its budget gap.</li>
+    <li><b>Morocco:</b> 2030 World Cup infrastructure, high-speed rail, desalination, renewables and phosphates.</li>
+    <li><b>Latin America:</b> copper and lithium in Chile and Peru; Mexico's state power and energy companies.</li>
+    <li><b>Asia:</b> power, transport and energy-transition programmes in Indonesia and the Philippines, with oil adding to fiscal pressure.</li>
+    <li><b>Gulf:</b> giga-projects at a time when lower oil revenue has widened deficits (Qatar's is near a decade high).</li>
+    <li><b>Everywhere:</b> data centres. Hyperscalers are now about 10% of global investment-grade bond issuance (IMF).</li>
+  </ul>
+</section>
+
+<section id="s8">
+  <div class="sn">8 · WHAT WOULD CHANGE THE CALL</div>
+  <h2>Five things to watch</h2>
+  <div class="xp-pairs even">
+    <div class="ph ok">Would make it better</div><div class="ph no">Would make it worse</div>
+    <div class="pc ok"><b>The Dutch pension switch</b> (1 January 2027) steepening the EUR 10–30-year swap curve: +2–3bp on 20-year fixed-rate EUR loans, little on 13-year ones.</div><div class="pc no"><b>More Fed and ECB hikes</b> while oil stays above $100: short rates up, curves flatter, fixed-rate wedges a fifth to a half lower.</div>
+    <div class="pc ok"><b>A gradual widening of credit spreads</b> from today's tights (heavy hyperscaler and sovereign supply): credit curves steepen in proportion.</div><div class="pc no"><b>A sudden risk-off</b> (an AI-led correction, a sovereign event): short spreads jump most and curves flatten or invert.</div>
+    <div class="pc ok"><b>Oil falling back</b> and cuts returning in 2027: short rates fall faster than long ones, the best case for fixed-rate loans.</div><div class="pc no"><b>Romania, France or Indonesia losing a rating notch.</b> A curve that is steep because of stress can invert quickly. Recheck before every meeting.</div>
+  </div>
+</section>
+
+<section id="s9">
+  <div class="sn">9 · DATA CHECKS</div>
+  <h2>Do yields, spreads and rates curves agree?</h2>
+  <p>Every input was checked before it went into the engine, in three layers. <b>Against independent data:</b> a new bond's yield should equal its benchmark (a Treasury, or the mid-swap rate) plus its spread on the pricing date; the swap curves should start where the official overnight and 6-month fixings are. <b>Inside the engine:</b> the Calculator's own flags, applied to every curve: the bridge coupon must reproduce the yield (Results rows 54–55) and the default intensity must not turn negative (row 52). <b>Provenance:</b> a curve resting on one press source, on guidance rather than final pricing, or on an assumed shape is marked.</p>
+  <div class="verdict msck"><div class="up"><div class="ccy">OK</div><div class="call">{{n_ok}} checks</div><p>Inputs agree within tolerance: 5bp for yields against benchmark plus spread, 1bp for the engine's bridge.</p></div>
+    <div class="risk"><div class="ccy">CHECK</div><div class="call">{{n_check}} to watch</div><p>Small gaps, single sources, assumed shapes or engine flags: usable, with the caveat stated.</p></div>
+    <div class="bad"><div class="ccy">FAIL</div><div class="call">{{n_fail}} failed, resolved</div><p>Coupons that do not match the published spread: the spread was used and the coupon ignored.</p></div></div>
+  <div class="tbl"><table class="ckt"><thead><tr><th>Status</th><th>Segment</th><th>Check</th><th class="n">Gap, bp</th><th>What it means</th></tr></thead><tbody id="t-checks"></tbody></table></div>
+  <details class="about"><summary>All {{n_ok}} checks that passed</summary><div class="tbl"><table class="ckt"><tbody id="t-checks-ok"></tbody></table></div></details>
+  <p><b>How the inputs are prepared.</b></p>
+  <ul>
+    <li><b>Interpolation.</b> Yields enter the engine at every year up to the last quoted maturity, with the Z-spread over swaps solved from each yield, so a fixed-rate loan sees the true shape of the swap curve between quoted maturities. Beyond the last quoted maturity the engine's own rule applies: the default intensity is held flat.</li>
+    <li><b>First fixing.</b> The engine uses the official 6-month EURIBOR fixing (ECB, October average) and a 6-month SOFR rate for the first period.</li>
+    <li><b>Benchmarks.</b> Dollar new issues are quoted over the nearest on-the-run Treasury; spreads are re-measured over a Treasury of the same maturity (Mexico's 12-year bond: T+200 over the 10-year, about +185bp over a 12-year Treasury).</li>
+    <li><b>Final pricing.</b> Final pricing is used wherever it is published; where only guidance exists, the point is flagged (Chile's 20-year).</li>
+    <li><b>Re-levelling.</b> Older Latin American deals are moved to today's level with the country's EMBI spread (Chile +12bp since July, Mexico +2bp since January).</li>
+  </ul>
+  <p>Open questions, not resolved here: the engine's closed-form bootstrap has no solution for some very high fixed coupons (for example a flat 9.6% half-yearly curve given only at 2 and 30 years), and the 1-year EURIBOR swap from the indicative source sits 15bp above what the fixing and the €STR curve imply.</p>
+</section>
+
+<section id="s10">
+  <div class="sn">10 · HOW TO USE THIS</div>
+  <h2>A starting list, not a quote</h2>
+  <p>Each grade says where to look first. It does not say what a borrower will gain. The borrower's own bonds can sit above or below the segment curve, and a single new bond or a rating change can reshape it. Before a meeting:</p>
+  <ol>
+    <li>Take one Bloomberg YAS snapshot of the borrower's own bonds (Z-spread and YTM by maturity) in the loan's currency, and enter it in the <a href="WAL_Wedge_Loan_vs_Bond_Calculator.xlsx" download>Calculator</a>.</li>
+    <li>Try the loan's real profile and two or three tenors in the <a href="simulator.html">Simulator</a>; replay the market episodes that worry the borrower.</li>
+    <li>If the curve is flat or inverted, drop the wedge argument and lead with tenor and certainty of funding (playbook §9).</li>
+    <li>Present with the <a href="walWedgePitch.html">one-pager and pitch</a>; prepare with the <a href="borrowerQA.html">Meeting Playbook</a>.</li>
+  </ol>
+  <details class="about"><summary>Method and data: how the numbers on this page were made</summary>
+    <p><b>Engine.</b> Every wedge is computed by <code>wal_wedge_engine.py</code>, the Python mirror of the Calculator workbook: survival is bootstrapped from the borrower curve, the loan is priced mini-bond by mini-bond, and the result is compared with the curve read at the average life. Standard loan: 1-year drawdown, 24 half-yearly instalments, final maturity 13 years, average life 7.0 years. Long loan: 2-year drawdown, 36 instalments, final maturity 20 years, average life 10.5 years. Recovery 40%. EUR bonds pay annual coupons, USD bonds half-yearly.</p>
+    <p><b>Rates curves.</b> Today's figures use real swap curves: EURIBOR 6M for EUR loans (the Calculator's default basis, as in the Portugal example) and SOFR for USD loans, both 6 November 2026 closes from BlueGamma (indicative quotes). Spreads quoted over mid-swaps are used as they are; spreads quoted over Treasuries, and the euro government and corporate spreads measured over government curves, are re-based to swaps by adding the gap between the government curve and the swap curve at each maturity. The ten-year history uses government curves only (see section 3).</p>
+    <p><b>Credit curves.</b> Each segment is an all-in yield curve: a reference curve plus the borrower's spread over it. Measured: ECB all-government curve over the AAA curve (daily); ICE BofA US corporate option-adjusted spreads by maturity band and by rating (FRED); US Treasury HQM corporate curve (AA–A), converted from spot to par. New issue: the spreads and yields at which the borrower's 2026 bonds priced, re-measured over a reference of the same maturity and checked against the benchmark on the pricing date (section 9). Stylised: France and Italy use the shape of the ECB aggregate scaled to their 10-year spread; European companies and the high-yield ratings use the US investment-grade shape scaled to their measured level (single-B flat, CCC inverted). The Z-spread over swaps is then solved from each yield by inverting the engine's bridge, at every year up to the last quoted maturity; beyond it the engine holds the default intensity flat.</p>
+    <p><b>History.</b> Monthly averages from January 2016, built the same way as today's figures but with the government curve as the reference and discount curve, since no free swap history exists. The euro line ends on the latest daily reading (6 November). Percentiles compare today's reading with every month since then. The fixed-rate wedge is split as in the Calculator (Results rows 34–35): interest-rate part = forward rates weighted like the loan minus the risk-free par rate at the average life; credit part = the rest.</p>
+    <p><b>Scenarios.</b> Shifts applied to today's curves, then the engine is run again. Rate shifts move the swap curve and the government curve together, so the gap between them is kept; spread changes apply to the credit spread only. Base: US long rates 10bp lower, EUR 30-year 15bp higher (pension switch), credit spreads 10% wider. Hikes and oil: short rates +75bp, 10-year +25bp, credit +30bp short, +15bp long. Oil normalises: short rates −75 to −100bp, long rates −20bp or unchanged, credit 10% tighter. Gradual widening: credit 40% wider in proportion. Acute shock: credit +140bp at 2 years to +55bp at 30 years, government yields lower. Sizes follow published outlooks and the 2020 and 2022 episodes; they are illustrations, not forecasts.</p>
+    <p class="src">Every figure was computed on 9–10 November 2026 from the sources listed below; a refresh means downloading the series again and rerunning the engine.</p>
+  </details>
+  <details class="about src"><summary>Sources</summary><div id="sources"></div></details>
+</section>
+
+<div class="disc"><p>Internal use only. Market data are official public series and press reports of new bond issues, read on the dates stated; some press figures conflict and are shown as ranges. Every wedge is indicative, computed on stylised curves, and is not an indication of terms for any borrower. Built 10 November 2026.</p></div>
+</main>
+
+<script>window.MS = {{DATA}};</script>
+<script>
+(function () {
+  'use strict';
+  const D = window.MS, NS = 'http://www.w3.org/2000/svg';
+  const $ = id => document.getElementById(id);
+  const col = { float: 'var(--s-float)', fixed: 'var(--s-fixed)' };
+  const lbl = { float: 'Floating rate', fixed: 'Fixed rate' };
+  let mode = 'float';
+  try { const m = localStorage.getItem('ww_ms_mode'); if (m === 'float' || m === 'fixed') mode = m; } catch (e) { /* default */ }
+
+  function el(tag, attrs, parent, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function h(tag, cls, text, parent) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  const f1 = v => (v < 0 ? '−' : '') + Math.abs(v).toFixed(1);
+  function legend(id, items) {
+    const g = $(id); g.textContent = '';
+    items.forEach(([kind, c, t]) => { const s = h('span', null, null, g); const i = h('i', kind === 'b' ? 'b' : '', null, s); i.style.background = c; s.appendChild(document.createTextNode(t)); });
+  }
+  function tipBox(host) {
+    let t = host.querySelector('.tip');
+    if (!t) { t = h('div', 'tip', null, host); t.hidden = true; }
+    return t;
+  }
+  function place(t, host, x, y) {
+    const w = host.clientWidth, tw = t.offsetWidth;
+    t.style.left = Math.max(0, Math.min(w - tw, x + 14)) + 'px';
+    t.style.top = Math.max(0, y - 10) + 'px';
+  }
+  function niceTicks(lo, hi, n) {
+    const span = hi - lo, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+    const step = [1, 2, 5, 10].map(m => m * mag).find(s => s >= step0);
+    const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6));
+    return out;
+  }
+
+  // ---------- 3 · history: two lines per panel, crosshair tooltip ----------
+  function climate(id, lgid, g, events) {
+    const host = $(id); host.textContent = '';
+    const other = mode === 'float' ? 'fixed' : 'float';
+    const S = D.hist[g], ms = Object.keys(S).sort();
+    const W = 460, H = 250, L = 34, R = 56, T = 18, B = 26;
+    const vals = ms.flatMap(m => [S[m].float, S[m].fixed]);
+    const lo = Math.min(0, Math.floor(Math.min(...vals) / 5) * 5), hi = Math.ceil(Math.max(...vals) / 5) * 5;
+    const x = i => L + (W - L - R) * i / (ms.length - 1), y = v => T + (H - T - B) * (hi - v) / (hi - lo);
+    const svg = el('svg', { class: 'ch', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Indicative wedge by month, floating and fixed rate' }, host);
+    niceTicks(lo, hi, 5).forEach(v => { el('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: v === 0 ? '#CDBDBE' : 'var(--grid)', 'stroke-width': 1 }, svg); el('text', { x: L - 6, y: y(v) + 4, 'text-anchor': 'end' }, svg, v); });
+    ms.forEach((m, i) => { if (m.endsWith('-01') && +m.slice(0, 4) % 2 === 0) el('text', { x: x(i), y: H - 8, 'text-anchor': 'middle' }, svg, m.slice(0, 4)); });
+    events.forEach(([m, t]) => { const i = ms.indexOf(m); if (i < 0) return; el('line', { x1: x(i), x2: x(i), y1: T - 4, y2: H - B, stroke: '#E2D6D6', 'stroke-width': 1 }, svg); el('text', { x: x(i) + 3, y: T + 4, 'font-size': 10.5 }, svg, t); });
+    const shade = { [mode]: col[mode], [other]: '#C9BDBF' };
+    [other, mode].forEach(k => {
+      el('path', { d: ms.map((m, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(S[m][k]).toFixed(1)).join(''), fill: 'none', stroke: shade[k], 'stroke-width': k === mode ? 2 : 1.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, svg);
+    });
+    const i9 = ms.length - 1, a = S[ms[i9]];
+    el('circle', { cx: x(i9), cy: y(a[mode]), r: 4.5, fill: col[mode], stroke: 'var(--panel)', 'stroke-width': 2 }, svg);
+    el('text', { class: 'vl', x: W - R + 8, y: y(a[mode]) + 4 }, svg, f1(a[mode]) + 'bp');
+    const cross = el('line', { y1: T, y2: H - B, stroke: 'var(--muted)', 'stroke-width': 1, visibility: 'hidden' }, svg);
+    const hit = el('rect', { x: L, y: T, width: W - L - R, height: H - T - B, fill: 'transparent', tabindex: 0 }, svg);
+    const tip = tipBox(host);
+    function show(i, px, py) {
+      const m = ms[i], r = S[m]; cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('visibility', 'visible');
+      tip.textContent = ''; h('div', 't', new Date(m + '-15').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }), tip);
+      [mode, other].forEach(k => { const row = h('div', 'r', null, tip); const s = h('span', null, null, row); const i2 = h('i', null, null, s); i2.style.background = shade[k]; s.appendChild(document.createTextNode(lbl[k])); h('b', null, f1(r[k]) + 'bp', row); });
+      tip.hidden = false; place(tip, host, px, py);
+    }
+    hit.addEventListener('pointermove', e => { const b = svg.getBoundingClientRect(), sx = (e.clientX - b.left) * W / b.width; const i = Math.max(0, Math.min(ms.length - 1, Math.round((sx - L) / (W - L - R) * (ms.length - 1)))); show(i, e.clientX - host.getBoundingClientRect().left, e.clientY - host.getBoundingClientRect().top); });
+    hit.addEventListener('pointerleave', () => { tip.hidden = true; cross.setAttribute('visibility', 'hidden'); });
+    hit.addEventListener('focus', () => show(ms.length - 1, host.clientWidth * 0.6, 20));
+    hit.addEventListener('blur', () => { tip.hidden = true; cross.setAttribute('visibility', 'hidden'); });
+    legend(lgid, mode === 'float' ? [['l', col.float, 'Floating rate (credit over government curves)'], ['l', shade.fixed, 'Fixed rate, for comparison']]
+      : [['l', col.fixed, 'Fixed rate (all-in yields)'], ['l', shade.float, 'Floating rate, for comparison']]);
+  }
+
+  // ---------- 5 · segment bars: 13y bar, 20y tick ----------
+  function segBars() {
+    const host = $('c-seg'); host.textContent = '';
+    const rows = D.order.map(k => ({ k, s: D.seg[k] })).sort((a, b) => b.s.res.std[mode].net - a.s.res.std[mode].net);
+    const W = 760, rowH = 26, T = 8, L = 230, R = 50, H = T + rows.length * rowH + 22;
+    const vals = rows.flatMap(r => [r.s.res.std[mode].net, r.s.res.long[mode].net]);
+    const lo = Math.min(0, Math.floor(Math.min(...vals) / 5) * 5), hi = Math.ceil(Math.max(...vals) / 5) * 5;
+    const x = v => L + (W - L - R) * (v - lo) / (hi - lo);
+    const svg = el('svg', { class: 'ch', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Indicative wedge by segment' }, host);
+    niceTicks(lo, hi, 6).forEach(v => { el('line', { x1: x(v), x2: x(v), y1: T, y2: H - 20, stroke: v === 0 ? '#CDBDBE' : 'var(--grid)' }, svg); el('text', { x: x(v), y: H - 6, 'text-anchor': 'middle' }, svg, v); });
+    const tip = tipBox(host);
+    rows.forEach((r, i) => {
+      const y0 = T + i * rowH, v = r.s.res.std[mode].net, vl = r.s.res.long[mode].net, c = col[mode];
+      const tl = el('text', { class: 'lb', x: L - 10, y: y0 + 16, 'text-anchor': 'end' }, svg);
+      el('tspan', {}, tl, r.s.label);
+      el('tspan', { fill: 'var(--muted)', 'font-size': 10.5 }, tl, '  ' + r.s.kind);
+      const x0 = x(0), x1 = x(v), w = Math.abs(x1 - x0), bx = Math.min(x0, x1), bh = 12, by = y0 + 7;
+      const rad = Math.min(4, w / 2);
+      const p = v >= 0 ? `M${bx},${by}h${w - rad}a${rad},${rad} 0 0 1 ${rad},${rad}v${bh - 2 * rad}a${rad},${rad} 0 0 1 ${-rad},${rad}h${-(w - rad)}z`
+                       : `M${bx + w},${by}h${-(w - rad)}a${rad},${rad} 0 0 0 ${-rad},${rad}v${bh - 2 * rad}a${rad},${rad} 0 0 0 ${rad},${rad}h${w - rad}z`;
+      el('path', { d: p, fill: c }, svg);
+      el('line', { x1: x(vl), x2: x(vl), y1: by - 3, y2: by + bh + 3, stroke: 'var(--ink)', 'stroke-width': 2, 'stroke-linecap': 'round' }, svg);
+      const end = Math.max(x1, x0), tk = x(vl), lx = (tk > end - 2 && tk < end + 40) ? tk + 8 : end + 8;
+      el('text', { class: 'vl', x: lx, y: y0 + 17 }, svg, f1(v));
+      const hit = el('rect', { x: 0, y: y0, width: W, height: rowH, fill: 'transparent', tabindex: 0 }, svg);
+      const show = (px, py) => {
+        tip.textContent = ''; h('div', 't', r.s.label, tip);
+        [['13-year loan', v], ['20-year loan', vl]].forEach(([n, val]) => { const row = h('div', 'r', null, tip); h('span', null, n, row); h('b', null, f1(val) + 'bp', row); });
+        h('div', 's', 'Curve, bp: ' + Object.entries(r.s.curve).map(([t, b]) => t + 'y ' + Math.round(b)).join(' · '), tip);
+        h('div', 's', r.s.src, tip);
+        tip.hidden = false; place(tip, host, px, py);
+      };
+      hit.addEventListener('pointermove', e => { const b = host.getBoundingClientRect(); show(e.clientX - b.left, e.clientY - b.top); });
+      hit.addEventListener('pointerleave', () => { tip.hidden = true; });
+      hit.addEventListener('focus', () => show(host.clientWidth * 0.5, (y0 + rowH) * host.clientWidth / W));
+      hit.addEventListener('blur', () => { tip.hidden = true; });
+    });
+    legend('lg-seg', [['b', col[mode], 'Standard loan: 13 years, average life 7'], ['l', 'var(--ink)', 'Long loan: 20 years, average life 10.5 (tick)']]);
+  }
+
+  // ---------- 3 · scenario ranges ----------
+  function scen() {
+    const host = $('c-scen'); host.textContent = '';
+    const keys = D.scenOrder, SC = D.scen;
+    const rows = D.order.map(k => ({ k, s: D.seg[k] })).sort((a, b) => b.s.res.std[mode].net - a.s.res.std[mode].net);
+    const W = 760, rowH = 24, T = 8, L = 170, R = 30, H = T + rows.length * rowH + 22;
+    const all = rows.flatMap(r => keys.filter(s => r.s.scen[s]).map(s => r.s.scen[s].std[mode]).concat([r.s.res.std[mode].net]));
+    const lo = Math.min(0, Math.floor(Math.min(...all) / 5) * 5), hi = Math.ceil(Math.max(...all) / 5) * 5;
+    const x = v => L + (W - L - R) * (v - lo) / (hi - lo);
+    const svg = el('svg', { class: 'ch', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Indicative wedge under five scenarios' }, host);
+    niceTicks(lo, hi, 6).forEach(v => { el('line', { x1: x(v), x2: x(v), y1: T, y2: H - 20, stroke: v === 0 ? '#CDBDBE' : 'var(--grid)' }, svg); el('text', { x: x(v), y: H - 6, 'text-anchor': 'middle' }, svg, v); });
+    const tip = tipBox(host);
+    rows.forEach((r, i) => {
+      const y0 = T + i * rowH, cy = y0 + 12, vs = keys.filter(s => r.s.scen[s]).map(s => r.s.scen[s].std[mode]), now = r.s.res.std[mode].net, base = r.s.scen.base ? r.s.scen.base.std[mode] : null;
+      el('text', { class: 'lb', x: L - 10, y: cy + 4, 'text-anchor': 'end' }, svg, r.s.label);
+      el('line', { x1: x(Math.min(...vs)), x2: x(Math.max(...vs)), y1: cy, y2: cy, stroke: col[mode], 'stroke-opacity': .3, 'stroke-width': 8, 'stroke-linecap': 'round' }, svg);
+      if (base != null) el('circle', { cx: x(base), cy, r: 5, fill: 'var(--panel)', stroke: col[mode], 'stroke-width': 2 }, svg);
+      el('circle', { cx: x(now), cy, r: 4.5, fill: 'var(--ink)', stroke: 'var(--panel)', 'stroke-width': 2 }, svg);
+      const hit = el('rect', { x: 0, y: y0, width: W, height: rowH, fill: 'transparent', tabindex: 0 }, svg);
+      const show = (px, py) => {
+        tip.textContent = ''; h('div', 't', r.s.label, tip);
+        const row0 = h('div', 'r', null, tip); h('span', null, 'Today', row0); h('b', null, f1(now) + 'bp', row0);
+        keys.forEach(s => { const row = h('div', 'r', null, tip); h('span', null, SC[s].name, row); h('b', null, r.s.scen[s] ? f1(r.s.scen[s].std[mode]) + 'bp' : 'n/a', row); });
+        tip.hidden = false; place(tip, host, px, py);
+      };
+      hit.addEventListener('pointermove', e => { const b = host.getBoundingClientRect(); show(e.clientX - b.left, e.clientY - b.top); });
+      hit.addEventListener('pointerleave', () => { tip.hidden = true; });
+      hit.addEventListener('focus', () => show(host.clientWidth * 0.5, (y0 + rowH) * host.clientWidth / W));
+      hit.addEventListener('blur', () => { tip.hidden = true; });
+    });
+    legend('lg-scen', [['d', 'var(--ink)', 'Today'], ['d', col[mode], 'Base case, end-2027 (ring)'], ['b', 'color-mix(in srgb, ' + col[mode] + ' 30%, white)', 'Range across the five scenarios']]);
+    const n = $('scen-notes'); n.textContent = '';
+    keys.forEach((s, j) => { const b = h('b', null, SC[s].name + ': ', n); n.appendChild(document.createTextNode(SC[s].note + (j < keys.length - 1 ? '. ' : '.'))); });
+  }
+
+  // ---------- tables and cards ----------
+  const chip = g => { const s = document.createElement('span'); s.className = 'chip ' + g; s.textContent = D.gradeName[g]; return s; };
+  const dots = n => { const s = document.createElement('span'); s.className = 'dots'; s.appendChild(document.createTextNode('●'.repeat(n))); const o = h('span', 'o', '●'.repeat(3 - n), s); return s; };
+  function wedgeRange(c, loan) {
+    if (!c.keys.length) return '–';
+    const v = c.keys.map(k => D.seg[k].res[loan][mode].net), a = Math.min(...v), b = Math.max(...v);
+    return v.length === 1 || Math.abs(a - b) < 0.05 ? f1(a) : a < 0 ? f1(a) + ' to ' + f1(b) : f1(a) + '–' + f1(b);
+  }
+  function wedgeShort(c, loan) {
+    if (!c.keys.length) return '–';
+    const v = c.keys.map(k => D.seg[k].res[loan][mode].net), a = Math.min(...v), b = Math.max(...v);
+    return v.length === 1 || Math.abs(a - b) < 0.05 ? f1(a) : a < 0 ? f1(a) + ' to ' + f1(b) : f1(a) + '–' + f1(b);
+  }
+  function score() {
+    const tb = $('t-score'); tb.textContent = '';
+    D.cards.forEach(c => {
+      const tr = h('tr', null, null, tb);
+      h('td', 'nm', c.name, tr);
+      h('td', null, null, tr).appendChild(chip(c.grade));
+      h('td', 'n', wedgeShort(c, 'std'), tr); h('td', 'n', wedgeShort(c, 'long'), tr);
+      h('td', null, c.dir, tr); h('td', null, c.stress, tr);
+      h('td', null, null, tr).appendChild(dots(c.meas)); h('td', null, null, tr).appendChild(dots(c.win));
+    });
+  }
+  function shortlist() {
+    const ol = $('shortlist'); ol.textContent = '';
+    D.cards.filter(c => c.rank).sort((a, b) => a.rank - b.rank).forEach(c => {
+      const li = h('li', null, null, ol);
+      h('span', 'rk', String(c.rank), li);
+      const nm = h('span', 'nm', c.name + ' ', li); nm.appendChild(chip(c.grade));
+      h('span', 'num', (mode === 'float' ? 'floating ' : 'fixed ') + wedgeRange(c, 'std') + 'bp', li);
+      h('span', 'why', c.short, li);
+    });
+  }
+  function cards() {
+    const box = $('cards'); box.textContent = '';
+    D.cards.forEach(c => {
+      const a = h('article', 'ms-card', null, box);
+      a.appendChild(chip(c.grade));
+      h('h3', null, c.name, a); h('p', 'who', c.who, a);
+      const kv = h('div', 'kv', null, a);
+      const add = (k, v) => { const s = h('span', null, k + ' ', kv); h('b', null, v, s); };
+      add(mode === 'float' ? 'Floating, 13y:' : 'Fixed, 13y:', wedgeRange(c, 'std') + (c.keys.length ? 'bp' : ''));
+      add('20y:', wedgeRange(c, 'long') + (c.keys.length ? 'bp' : ''));
+      [['What happened', c.happened], ['Where it stands', c.now], ['Outlook', c.outlook], ['Why pitch, or hold back', c.why]].forEach(([k, t]) => { if (!t) return; const p = h('p', null, null, a); h('b', null, k + '. ', p); p.appendChild(document.createTextNode(t)); });
+      if (c.examples) h('div', 'ex2', 'Examples to start with: ' + c.examples, a);
+    });
+  }
+  function rates() {
+    const tb = $('t-rates'); tb.textContent = '';
+    D.rates.forEach(r => {
+      const tr = h('tr', null, null, tb);
+      h('td', 'nm', r.name, tr);
+      const sg = v => v == null ? '–' : (Math.round(v) < 0 ? '−' : '+') + Math.abs(Math.round(v)) + 'bp';
+      [r.r7.toFixed(2) + '%', r.r13.toFixed(2) + '%', sg(r.rise), sg(r.s230), sg(r.rise_y), sg(r.s230_y)].forEach(t => h('td', 'n', t, tr));
+      h('td', null, r.why, tr);
+    });
+  }
+  function stressT() {
+    const tb = $('t-stress'); tb.textContent = '';
+    D.stress.forEach(r => {
+      const tr = h('tr', null, null, tb); h('td', 'nm', r.label, tr);
+      [f1(r.fl), f1(r.fl_lo) + ' to ' + f1(r.fl_hi), f1(r.fx), f1(r.fx_lo) + ' to ' + f1(r.fx_hi), f1(r.rate)].forEach(t => h('td', 'n', t, tr));
+      h('td', null, r.how, tr);
+    });
+  }
+  function checks() {
+    const order = { FAIL: 0, CHECK: 1, OK: 2 };
+    const rows = D.checks.slice().sort((a, b) => order[a[3]] - order[b[3]]);
+    [['t-checks', r => r[3] !== 'OK'], ['t-checks-ok', r => r[3] === 'OK']].forEach(([id, keep]) => {
+      const tb = $(id); tb.textContent = '';
+      rows.filter(keep).forEach(r => {
+        const tr = h('tr', null, null, tb);
+        h('td', null, null, tr).appendChild((() => { const sp = document.createElement('span'); sp.className = 'st ' + r[3]; sp.textContent = r[3]; return sp; })());
+        h('td', 'nm', r[0], tr); h('td', null, r[1], tr); h('td', 'n', r[2] == null ? '' : f1(r[2]), tr); h('td', null, r[4], tr);
+      });
+    });
+  }
+  function sources() {
+    const box = $('sources'); box.textContent = '';
+    D.sources.forEach(([grp, items]) => {
+      h('h3', null, grp, box); const ul = h('ul', 'src', null, box);
+      items.forEach(([t, u]) => { const li = h('li', null, null, ul); const a = h('a', null, t, li); a.href = u; a.target = '_blank'; a.rel = 'noopener'; });
+    });
+    box.parentElement.classList.add('ms');
+  }
+
+  function render() {
+    document.querySelectorAll('[data-xmode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.xmode === mode)));
+    document.querySelectorAll('[data-mode]').forEach(e => { e.hidden = e.dataset.mode !== mode; });
+    segBars(); scen(); score(); shortlist(); cards(); history();
+  }
+  function history() {
+    climate('c-ez', 'lg-ez', 'ezsov', [['2020-03', 'Covid'], ['2022-07', 'ECB hikes'], ['2024-06', 'Cuts'], ['2026-06', 'Hikes']]);
+    climate('c-hq', 'lg-hq', 'ushq', [['2020-03', 'Covid'], ['2022-03', 'Fed hikes'], ['2024-09', 'Cuts'], ['2026-09', 'Hike']]);
+  }
+  document.querySelectorAll('[data-xmode]').forEach(b => b.addEventListener('click', () => {
+    mode = b.dataset.xmode; try { localStorage.setItem('ww_ms_mode', mode); } catch (e) { /* not remembered */ }
+    render();
+  }));
+  rates(); stressT(); checks(); sources(); render();
+})();
+</script>
