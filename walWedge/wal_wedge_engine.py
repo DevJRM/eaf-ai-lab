@@ -53,6 +53,7 @@ import math
 import sys
 
 A = 0.5  # length of a loan period in years
+TAIL_YEARS = 5  # beyond the last quote, λ = the average of the last 5 quoted years, held flat (Calc_*!B12)
 
 SAMPLE = {
     "name": "Portugal (simulated sample, not market data)",
@@ -175,11 +176,13 @@ def bootstrap(inp, grid, kind, calibration="bridge"):
     Year b: 1 = K + D1·Sp·[u·g1 + R(1−u)] + D2·Sp·[u²·g2 + R(u−u²)], u = e^(−λ/2).
     Bond paying c at frequency m: g1 = c/2 if m = 2 else 0; g2 = c/m + 1.
     K = recovery so far + c·(coupon annuity so far).
+    Beyond the last quoted tenor, λ is held flat at the average of the last TAIL_YEARS quoted years,
+    so one noisy last quote cannot set the price of the whole tail (legacy mode keeps the last λ).
     """
     W, fa, R, m = grid["W"], grid["fa"], inp["recovery"], inp["coupon_freq"]
     c = coupons(inp, grid, kind, calibration)
     last = max(inp["z_bp"] if kind == "float" else inp["ytm"])
-    M = [1.0]; L = [None]; N = [0.0]; O = [0.0]; err = []
+    M = [1.0]; L = [None]; N = [0.0]; O = [0.0]; err = []; tail = None
     legacy_float = calibration == "legacy" and kind == "float"
     for i in range(1, 61):
         b = (i + 1) // 2; q = c[b - 1]
@@ -197,8 +200,12 @@ def bootstrap(inp, grid, kind, calibration="bridge"):
                 q1 = Sp * (D1 * (g1 - R) + D2 * R)
                 q0 = K + D1 * Sp * R - 1
                 lam = -2 * math.log((-q1 + math.sqrt(q1 * q1 - 4 * q2 * q0)) / (2 * q2))
-            else:
+            elif calibration == "legacy":
                 lam = L[i - 1]
+            else:
+                if tail is None:   # Calc_*!L at b = last + 1: −ln(S(last) / S(last − k)) / k
+                    k = min(TAIL_YEARS, last); tail = -math.log(M[2 * last] / M[2 * (last - k)]) / k
+                lam = tail
         else:
             lam = L[i - 1]
         L.append(lam); M.append(M[i - 1] * math.exp(-lam * A))
@@ -473,6 +480,11 @@ def self_tests():
         except ValueError:
             bad += 1
     check("invalid schedules are rejected (sums, negative balance, balloon range, unknown type)", bad == 4)
+    cut = dict(SAMPLE, z_bp={k: v for k, v in SAMPLE["z_bp"].items() if k <= 15},
+               ytm={k: v for k, v in SAMPLE["ytm"].items() if k <= 15})
+    cl = run(cut)["float"]["cal"]["lam"]; avg = sum(cl[2 * b - 1] for b in range(11, 16)) / 5
+    check(f"beyond the last quote (15Y), λ = the average of years 11–15 ({avg * 1e4:.1f}bp), held flat to 30Y",
+          all(abs(cl[i] - avg) < 1e-12 for i in range(31, 61)))
     check("the EUR sample is unchanged (7.12 / 7.51bp)",
           round(res["float"]["net"] * 1e4, 2) == 7.12 and round(res["fixed"]["net"] * 1e4, 2) == 7.51)
     return ok

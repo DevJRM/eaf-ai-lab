@@ -1948,7 +1948,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
       <dt>q<sub>0</sub></dt><dd>K + DF(b−½)S<sub>p</sub>R − 1 — everything with no u in it, including the price moved across from the left.</dd>
       <dt>which root</dt><dd>The <b>+</b> root. q<sub>0</sub> is negative whenever the bond's earlier cash flows are worth less than par, so the two roots straddle zero and only the positive one can be a survival ratio.</dd>
       <dt>λ<sub>b</sub> = −2 ln u</dt><dd>The definition of u read backwards. u = e<sup>−λ<sub>b</sub>/2</sup> is the half-year survival factor of section 06, so taking logs gives ln u = −λ<sub>b</sub>/2, and multiplying by −2 isolates λ<sub>b</sub>. The 2 appears because λ is quoted per year while u spans half a year. Solving in u rather than in λ directly is what keeps this closed form: survival enters the bond's price only as u and u², which is a quadratic, whereas the same equation written in λ would carry e<sup>−λ/2</sup> and e<sup>−λ</sup> and need iterating. The log at the end converts back. For year 10, u = 0.992232 gives λ = 156.0 bp, and u² = 0.984525 is that year's full-year survival, exp(−λ).</dd>
-      <dt>check</dt><dd>Every quoted bond reprices to its input; the workbook shows the maximum error (about 10<sup>−12</sup> bp). Beyond the last quote, the last λ is extended, not the last spread.</dd>
+      <dt>check</dt><dd>Every quoted bond reprices to its input; the workbook shows the maximum error (about 10<sup>−12</sup> bp). Beyond the last quote, the average λ of the last five quoted years is held flat, not the last spread: a single noisy last quote cannot then set the price of the whole tail. The ISDA CDS model does the same in effect: it holds the hazard rate of its last quoted segment flat, and its quotes are years apart.</dd>
     </dl></div>
 
   <details class="sub">
@@ -2323,7 +2323,7 @@ footer{margin-top:60px;font-size:14px;color:var(--muted);border-top:1px solid va
     <li><b>Fixed rate basis.</b> The charged fixed rate is the YTM at the WAL restated on a semi-annual basis, plus X. If the term sheet uses the annual number as a half-yearly coupon, add the difference through X.</li>
     <li><b>Single curve.</b> The same swap curve gives the forward rates and discounts the cash flows. The model allows for no difference in funding cost between loans and bonds, and for no new-issue premium on the bonds unless one is entered (Inputs rows 22–24).</li>
     <li><b>One intensity per year.</b> λ is held flat within each year and steps at year boundaries, because the curve supplies one quote per maturity and so identifies one intensity per year. A side effect: because λ can change only once a year, even a curve that is flat in par floating spreads <a class="fid in k-price" href="#f-8a">8a · Par-float</a> gives half-year costs that are not perfectly flat, so its timing effect is tiny rather than exactly zero.</li>
-    <li><b>Beyond the data.</b> Inside the quotes, years are interpolated linearly; beyond the last bond quote the last λ is extended and flagged. Maximum life 30 years.</li>
+    <li><b>Beyond the data.</b> Inside the quotes, years are interpolated linearly; beyond the last bond quote the average λ of the last five quoted years is held flat, and flagged. Maximum life 30 years.</li>
     <li><b>Validation.</b> Four implementations agree on this case to every digit shown: the workbook, its Python mirror (wal_wedge_engine.py, in the same folder), and the engines inside this page and the borrower view. On every run the workbook checks that each quoted bond reprices to its quote (to about 10<sup>−12</sup>bp), that the PV identity holds (to about 10<sup>−7</sup> euros) and that the two WAL formulas agree (Results rows 43–46). The engine was first validated against the original reference specification, before the YAS bridge was introduced; the workbook's Instructions tab records both stages.</li>
   </ul>
   <h3>Glossary</h3>
@@ -2391,7 +2391,7 @@ const ENG = (() => {
     const F = fill(curve); const last = F.last;
     const q = kind === 'float' ? F.out.map((v, i) => bridge(dfg, v, i + 1, m)) : F.out.slice();
     const a = 0.5; const fa = [null]; for (let i = 1; i <= 60; i++) fa.push(dfg[i - 1] / dfg[i] - 1);
-    const S = [1]; const lam = []; let cumC = 0, cumAnn = 0;
+    const S = [1]; const lam = []; let cumC = 0, cumAnn = 0, tail;
     for (let b = 1; b <= 30; b++) {
       let l;
       if (b <= last) {
@@ -2401,7 +2401,10 @@ const ENG = (() => {
         const D1 = dfg[i1], D2 = dfg[i2];
         const q2 = D2 * Sp * (g2 - R), q1 = Sp * (D1 * (g1 - R) + D2 * R), q0 = K + D1 * Sp * R - 1;
         const u = (-q1 + Math.sqrt(q1 * q1 - 4 * q2 * q0)) / (2 * q2); l = -2 * Math.log(u);
-      } else l = lam[lam.length - 1];
+      } else {   // beyond the last quote: the average λ of the last 5 quoted years, held flat
+        if (tail === undefined) { const k = Math.min(5, last); tail = -Math.log(S[2 * last] / S[2 * (last - k)]) / k; }
+        l = tail;
+      }
       lam.push(l);
       for (const i of [2 * b - 1, 2 * b]) {
         const Sprev = S[S.length - 1], Si = Sprev * Math.exp(-l * a);
@@ -2643,7 +2646,7 @@ function lab(){
    <div><div class="k">Nominal saving</div><div class="v">${money(r.wedge_bp/1e4*N*1e9*r.WAL)}</div></div>
    <div><div class="k">Risky annuity</div><div class="v">${r.B.toFixed(3)}</div></div>`;
   drawCost(r,LK,$('ch-lab'),$('ch-lab2'),$('lg-lab'),null,N*1e9);
-  const w=[];if(neg)w.push('negative λ somewhere in the loan\'s life (short bonds yielding less than swaps)');if(beyond)w.push('loan maturity beyond the last bond quote, last λ extended');
+  const w=[];if(neg)w.push('negative λ somewhere in the loan\'s life (short bonds yielding less than swaps)');if(beyond)w.push('loan maturity beyond the last bond quote, average λ of the last five quoted years extended');
   $('cap-lab').textContent=(w.length?'Flags: '+w.join('; ')+'. ':'No flags. ')+'Bottom panel: running PV total of the saving.';
 }
 segBind(['lb-f','lb-x'],id=>{LK=id==='lb-f'?'float':'fixed';lab();});

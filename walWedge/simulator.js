@@ -269,7 +269,11 @@
     items.push(['ok', `Schedule OK · average life ${c.wal}y · final ${c.maturity}y`]);
     if (ck.negBelow.length) items.push(['note', `Curve below swaps at ${yl(ck.negBelow)}: negative default intensity there${PC.borrowerType === 'corporate' ? '; unusual for a company, check the data' : ', usual for a strong sovereign'}`]);
     if (ck.negOther.length) items.push(['bad', `Negative default intensity at ${yl(ck.negOther)}: the credit spread falls too steeply with maturity there for a consistent survival curve; read the result with care`]);
-    if (F.R.float.maturity > ck.zLast) items.push(['note', `The loan runs to ${c.maturity}y, beyond the last Z-spread quote at ${ck.zLast}y: the curve is held flat after it`]);
+    if (F.R.float.maturity > ck.zLast) {
+      // λ is how likely default is; the credit cost of a half-year in the tail is what the margin must cover
+      const tl = F.R.float.lam[ck.zLast] * 1e4, tc = F.R.float.per[2 * ck.zLast].c * 1e4, k = Math.min(5, ck.zLast);
+      items.push([tl < 0 ? 'bad' : 'note', `The loan runs to ${c.maturity}y, beyond the last Z-spread quote at ${ck.zLast}y: each later year is priced at the average default intensity of the last ${k} quoted years, ${tl.toFixed(0)}bp, a credit cost of about ${tc.toFixed(0)}bp a year${tl < 0 ? '. Below zero: check the long end of the curve' : ''}`]);
+    }
     const h = items.map(([s, t]) => `<span class="ck ${s}"><i aria-hidden="true">${s === 'ok' ? '✓' : s === 'bad' ? '!' : 'i'}</i>${t}</span>`).join('');
     $('checks').innerHTML = h; $('checks-in').innerHTML = h;
   }

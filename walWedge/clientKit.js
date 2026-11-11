@@ -62,7 +62,7 @@
     const F = fill(curve); const last = F.last;
     const q = kind === 'float' ? F.out.map((v, i) => bridge(dfg, v, i + 1, m)) : F.out.slice();
     const a = 0.5; const fa = [null]; for (let i = 1; i <= 60; i++) fa.push(dfg[i - 1] / dfg[i] - 1);
-    const S = [1]; const lam = []; let cumC = 0, cumAnn = 0;
+    const S = [1]; const lam = []; let cumC = 0, cumAnn = 0, tail;
     for (let b = 1; b <= 30; b++) {
       let l;
       if (b <= last) {
@@ -70,7 +70,10 @@
         const K = cumC + c * cumAnn, g1 = m === 2 ? c / 2 : 0, g2 = c / m + 1, D1 = dfg[i1], D2 = dfg[i2];
         const q2 = D2 * Sp * (g2 - R), q1 = Sp * (D1 * (g1 - R) + D2 * R), q0 = K + D1 * Sp * R - 1;
         const u = (-q1 + Math.sqrt(q1 * q1 - 4 * q2 * q0)) / (2 * q2); l = -2 * Math.log(u);
-      } else l = lam[lam.length - 1];
+      } else {   // beyond the last quote: the average λ of the last 5 quoted years, held flat
+        if (tail === undefined) { const k = Math.min(5, last); tail = -Math.log(S[2 * last] / S[2 * (last - k)]) / k; }
+        l = tail;
+      }
       lam.push(l);
       for (const i of [2 * b - 1, 2 * b]) {
         const Sprev = S[S.length - 1], Si = Sprev * Math.exp(-l * a);
