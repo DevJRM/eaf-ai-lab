@@ -50,6 +50,13 @@
       marginFloatBp: num(c.marginFloatBp) ?? 0, marginFixedBp: num(c.marginFixedBp) ?? 0, recovery: num(c.recovery) ?? 0.4,
       couponFreq: +c.couponFreq === 2 ? 2 : 1, fixing6mPct: num(c.fixing6mPct), gSpread10Bp: num(c.gSpread10Bp),
       zspreadBp: curveObj(c.zspreadBp), ytmPct: curveObj(c.ytmPct), swapPct: curveObj(c.swapPct),
+      // the borrower's quotes: a fitted curve by year or individual bonds; which quote type drives (the other derived)
+      quoteSource: c.quoteSource === 'bonds' ? 'bonds' : 'curve', quoteBasis: c.quoteBasis === 'z' || c.quoteBasis === 'y' ? c.quoteBasis : 'both',
+      bonds: Array.isArray(c.bonds) ? c.bonds.slice(0, 60).map(b => ({ name: String((b && b.name) || '').slice(0, 40), mat: b && b.mat !== null && b.mat !== undefined ? String(b.mat).trim().slice(0, 24) : '',
+        cpn: b && String(b.cpn === null || b.cpn === undefined ? '' : b.cpn).trim().toLowerCase() === 'par' ? 'par' : num(b && b.cpn), z: num(b && b.z), y: num(b && b.y) })) : [],
+      // model choices: the tail rule beyond the last quote, curve smoothing, and the quote error the reliability analysis assumes
+      tailRule: WW.RULE_IDS.includes(c.tailRule) ? c.tailRule : 'avg5', smooth: c.smooth === 'ns' ? 'ns' : 'off',
+      noiseBp: num(c.noiseBp) > 0 ? Math.min(20, num(c.noiseBp)) : null,
     };
     o.region = REGIONS[o.borrowerType].some(r => r[0] === c.region) ? c.region : defaultRegion(o, c.peer);
     o.peer = regionRow(o)[2];
@@ -109,7 +116,7 @@
     const credit = (e, kind, minShape) => {
       // the issuers' proportion is measured on spreads to government bonds, so it applies to the borrower's G-spread
       // when entered; otherwise its Z-spread stands in (they differ by today's swap spread)
-      const g = LIB.groups[e.group], refs = refsOf(e), gIn = cs.gSpread10Bp !== null, x = gIn ? cs.gSpread10Bp : z10(cs), t = creditTransfer(refs, x, ref), sh = creditShape(e, minShape);
+      const g = LIB.groups[e.group], refs = refsOf(e), gIn = cs.gSpread10Bp !== null, x = gIn ? cs.gSpread10Bp : z10(WW.effective(cs)), t = creditTransfer(refs, x, ref), sh = creditShape(e, minShape);
       const cr = addPts(sh ? sh.map(([T, f]) => [T, t.d * f]) : [[10, t.d]], -ssw), sameCcy = g.ccy === cs.currency, hasRates = !!e.rates && sameCcy;
       return { id, kind, e, g, name: e.name, when: e.when, swap: hasRates && withRates ? addPts(ratePts(e.rates), ssw) : null, cr, p: 0, t, x, gIn, sh, refs, sameCcy, hasRates, withRates, ssw };
     };
@@ -138,13 +145,15 @@
     // yields: today's quote plus the change in the bridge coupon, so any gap in today's data is carried, not created
     const g0 = dfgOf(cs), g1 = dfgOf(o), z0 = WW.fill(arr30(cs.zspreadBp, 1e4)).out, z1 = WW.fill(arr30(o.zspreadBp, 1e4)).out;
     Object.keys(cs.ytmPct).forEach(T => { const t = +T; o.ytmPct[T] = cs.ytmPct[T] + (WW.bridge(g1, z1[t - 1], t, m) - WW.bridge(g0, z0[t - 1], t, m)) * 100; });
+    // individual bonds: the points a Nelson–Siegel fit uses move with the curve, at their own maturities
+    if (cs.nsPts) o.nsPts = cs.nsPts.map(([t, v]) => [t, v + creditMove(d, k, t, v)]);
     return o;
   }
 
   /* ---------------- pricing the case ---------------- */
   const NONE = { id: 'none', kind: 'none', name: "Today's curve", swap: null, cr: null, p: 0 };
   function engineCase(cs, d, k) {
-    const p = cs.profile, c = Object.assign({}, cs);
+    const p = cs.profile, c = Object.assign({}, WW.effective(cs));   // individual bonds and derived quotes → the whole-year case
     if (p.type === 'custom') {
       c.profile = { type: 'custom', draw: p.draw || [], repay: p.repay || [] };
       const s = WW.schedule(0, 1, c.profile); let n = 0, f = 0;
@@ -175,16 +184,17 @@
   }
 
   /* ---------------- state ---------------- */
-  let cs, saved, curName = null, mode = 'float', tab = 'inputs', F = null, BASE = null, CK = null, PC = null, SBAD = null, bmode = 'hand';
+  let cs, saved, curName = null, mode = 'float', tab = 'inputs', view = 'mkt', F = null, BASE = null, CK = null, PC = null, SBAD = null, bmode = 'hand';
   function initState() {
     const cur = store.get(LS_CUR);
     if (cur && cur.case) { cs = normalise(cur.case); curName = cur.name || null; saved = normalise(cur.saved || cur.case); }
     else { cs = sample(); saved = clone(cs); curName = null; }
     if (cur && cur.mode) mode = cur.mode === 'fixed' ? 'fixed' : 'float';
     if (cur && ['results', 'scen', 'inputs'].includes(cur.tab)) tab = cur.tab;
+    if (cur && cur.view === 'rel') view = 'rel';
   }
   let autoT = null;
-  function autosave() { clearTimeout(autoT); autoT = setTimeout(() => store.set(LS_CUR, { case: cs, saved, name: curName, mode, tab }), 250); }
+  function autosave() { clearTimeout(autoT); autoT = setTimeout(() => store.set(LS_CUR, { case: cs, saved, name: curName, mode, tab, view }), 250); }
   function changed(opts) { if (opts && opts.data) cs.illustrative = false; render(); autosave(); caseStatus(); }
 
   /* ---------------- render ---------------- */
@@ -195,6 +205,7 @@
     const d = resolve(cs), k = cs.scenario.k, scen = d.kind !== 'none' && k !== 0;
     let bc;
     try {
+      missing(cs);
       bc = engineCase(cs, NONE, 1); BASE = WW.figures(bc); CK = checksOf(bc, BASE.R);
       if (!CK.finite) throw new Error('The curve cannot be bootstrapped: at some maturity the quotes imply a default probability outside 0–100%. Check the Z-spreads, yields and swap rates for a typing error.');
     } catch (e) {
@@ -211,11 +222,27 @@
     }
     document.body.classList.toggle('sim-sbad', !!SBAD);
     $('illus').hidden = !cs.illustrative;
+    scheduleRel();
     renderStrip(d, k); renderChecks();
     syncToggles();
     if (tab === 'inputs') renderInputs(); else renderInputs(true);
-    if (tab === 'scen') renderScen(d, k);
+    $('v-mkt').hidden = view !== 'mkt'; $('v-rel').hidden = view !== 'rel';
+    $('scen-h').textContent = view === 'rel' ? 'How far to trust the result' : 'What if the curve at signing looked different?';
+    document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+    if (tab === 'scen') { if (view === 'rel') { if (F) renderRel(); } else renderScen(d, k); }
     if (tab === 'results') renderResults(d, k);
+  }
+  // what the case lacks, in words, before the engine is asked to price it
+  function missing(c) {
+    if (!Object.keys(c.swapPct).length) throw new Error('The swap curve is empty: enter swap rates in card 3.');
+    const E = WW.effective(c), nZ = Object.keys(E.zspreadBp).length, nY = Object.keys(E.ytmPct).length, src = E._src;
+    if (src && src.err === 'swaps') throw new Error('The swap curve cannot be read: check the swap rates in card 3.');
+    if (c.quoteSource === 'bonds' && !(src && src.rows && src.rows.length))
+      throw new Error('No bond can be used yet: enter at least one bond with a maturity, a coupon and a ' + { both: 'Z-spread or yield', z: 'Z-spread', y: 'yield' }[c.quoteBasis] + ' in card 3' + (src && src.left && src.left.length ? ` (left out: ${src.left.slice(0, 4).map(r => `${r.name}, ${LEFTW[r.why] || r.why}`).join('; ')}${src.left.length > 4 ? `; and ${src.left.length - 4} more` : ''})` : '') + '.');
+    const what = c.quoteSource === 'bonds' ? 'bonds' : 'curve table';
+    if (!nZ && !nY) throw new Error(`No Z-spreads or yields entered: enter them in the ${what} of card 3.`);
+    if (!nZ) throw new Error(`No Z-spreads entered${c.quoteBasis === 'z' ? ', and "Z-spreads only" derives the yields from them' : ''}: enter them in the ${what} of card 3, or choose "Yields only" under Quotes entered.`);
+    if (!nY) throw new Error(`No yields entered${c.quoteBasis === 'y' ? ', and "Yields only" derives the Z-spreads from them' : ''}: enter them in the ${what} of card 3, or choose "Z-spreads only" under Quotes entered.`);
   }
   // Why a scenario curve cannot be priced, and the largest intensity that can (5% steps)
   function prices(p) { try { const R = WW.runCase(p); return R.float.lam.concat(R.fixed.lam).every(Number.isFinite) ? R : null; } catch (e) { return null; } }
@@ -254,8 +281,10 @@
         + (tab !== 'scen' ? '<button type="button" class="st-go" data-goto="scen">Scenarios →</button>' : '');
       return;
     }
-    const f = F.float, x = F.fixed;
-    $('strip').innerHTML = `<span class="st-i"><span class="st-k">Floating</span>${v(f)}</span><span class="st-i"><span class="st-k">Fixed</span>${v(x)}</span><span class="st-u">a year</span>`
+    const f = F.float, x = F.fixed, R = rel();
+    const vr = (r, md) => { const q = R && R.version[md]; return q && asRange(q) ? `<b class="b" title="90% range: ${q.verdict === 'uncertain' ? 'it includes zero' : 'the result rests mostly on the tail rule'}">${rngS(q)}bp</b>` : v(r); };
+    const tailNote = `<span class="st-i st-tail" title="Beyond the last quote: ${esc(RULES[F.R.tailRule][1])}">Tail: ${TAILW[F.R.tailRule]}${F.R.smooth === 'ns' ? ', smoothed' : ''}</span>`;
+    $('strip').innerHTML = `<span class="st-i"><span class="st-k">Floating</span>${vr(f, 'float')}</span><span class="st-i"><span class="st-k">Fixed</span>${vr(x, 'fixed')}</span><span class="st-u">a year</span>` + tailNote + measuring()
       + `<span class="st-i st-m">Average life ${F.common.wal}y · final ${F.common.maturity}y</span>`
       + `<span class="st-i st-m">Curve at signing: <b>${lab}</b></span>`
       + (tab !== 'results' ? '<button type="button" class="st-go" data-goto="results">Results →</button>' : '');
@@ -264,26 +293,363 @@
     const F = BASE, c = F.common, ck = CK, items = [], yl = a => a.length > 2 ? `${a[0]}–${a[a.length - 1]}y` : a.join(' and ') + 'y';
     if (SBAD) items.push(['bad', 'The scenario\'s curve cannot be priced; the checks below are for today\'s curve']);
     items.push([ck.reprice < 1e-6 ? 'ok' : 'bad', `Every bond reprices${ck.reprice < 1e-6 ? '' : `: error ${ck.reprice.toFixed(4)}bp`}`]);
-    items.push(ck.gap <= 1 ? ['ok', `Z-spread and yield agree, gap ${ck.gap.toFixed(2)}bp`]
-      : ['bad', `Z-spread and yield do not agree: the yield implied by the Z-spread differs from the yield entered by ${ck.gap.toFixed(2)}bp. Check the currency, the coupon frequency, and that all quotes come from one snapshot`]);
+    const src = PC && PC._src, basis = cs.quoteBasis;
+    if (basis !== 'both') items.push(['ok', basis === 'z' ? 'Yields derived from the Z-spreads: both loans price one credit curve' : 'Z-spreads derived from the yields: both loans price one credit curve']);
+    else items.push(ck.gap <= 1 ? ['ok', `Z-spread and yield agree, gap ${ck.gap.toFixed(2)}bp`]
+      : ['bad', `Z-spread and yield do not agree: the yield implied by the Z-spread differs from the yield entered by ${ck.gap.toFixed(2)}bp. See Quote quality in tab 2 for the likely cause`]);
+    if (cs.quoteSource === 'bonds' && src && src.rows) {
+      items.push(['ok', `${src.rows.length} bond${src.rows.length === 1 ? '' : 's'} priced${src.corr ? ', each moved to the par bond of its maturity (coupon effect)' : ''}`]);
+      if (src.left && src.left.length) items.push(['bad', `Left out: ${src.left.map(r => `${esc(r.name)} (${LEFTW[r.why] || r.why})`).join(', ')}`]);
+      if (src.order && src.order.note) items.push(['note', src.order.note === 'mixed' ? 'Maturity dates mix day/month and month/day: check the years shown in card 3' : 'Maturity dates read as day/month: check the years shown in card 3']);
+    }
     items.push(['ok', `Schedule OK · average life ${c.wal}y · final ${c.maturity}y`]);
     if (ck.negBelow.length) items.push(['note', `Curve below swaps at ${yl(ck.negBelow)}: negative default intensity there${PC.borrowerType === 'corporate' ? '; unusual for a company, check the data' : ', usual for a strong sovereign'}`]);
     if (ck.negOther.length) items.push(['bad', `Negative default intensity at ${yl(ck.negOther)}: the credit spread falls too steeply with maturity there for a consistent survival curve; read the result with care`]);
     if (F.R.float.maturity > ck.zLast) {
       // λ is how likely default is; the credit cost of a half-year in the tail is what the margin must cover
-      const tl = F.R.float.lam[ck.zLast] * 1e4, tc = F.R.float.per[2 * ck.zLast].c * 1e4, k = Math.min(5, ck.zLast);
-      items.push([tl < 0 ? 'bad' : 'note', `The loan runs to ${c.maturity}y, beyond the last Z-spread quote at ${ck.zLast}y: each later year is priced at the average default intensity of the last ${k} quoted years, ${tl.toFixed(0)}bp, a credit cost of about ${tc.toFixed(0)}bp a year${tl < 0 ? '. Below zero: check the long end of the curve' : ''}`]);
+      const rule = F.R.tailRule, tl = F.R.float.lam[ck.zLast] * 1e4, tc = F.R.float.per[2 * ck.zLast].c * 1e4, k = Math.min({ avg3: 3, last: 1 }[rule] || 5, ck.zLast);
+      const how = rule === 'flatZ' ? `with your last Z-spread, ${(+PC.zspreadBp[ck.zLast]).toFixed(0)}bp, held flat; the first year after it costs about ${tc.toFixed(0)}bp`
+        : `at ${k === 1 ? 'the default intensity of the last quoted year' : `the average default intensity of the last ${k} quoted years`}, ${tl.toFixed(0)}bp, a credit cost of about ${tc.toFixed(0)}bp a year`;
+      items.push([tl < 0 ? 'bad' : 'note', `The loan runs to ${c.maturity}y, beyond the last Z-spread quote at ${ck.zLast}y: each later year is priced ${how}${tl < 0 ? '. Below zero: check the long end of the curve' : ''}`]);
     }
+    const cv = cover(), R = rel();
+    if (cv && cv[mode].tailApplies) { const q = cv[mode], rl = q.grade === 'green' ? 'low' : q.grade === 'amber' ? 'moderate' : 'high';
+      items.push([q.grade === 'green' ? 'ok' : q.grade === 'amber' ? 'note' : 'bad', `${VNAME[mode]}: ${pctS(q.share)} of the exposure lies beyond the last quote, ${RELW[rl].toLowerCase()} tail reliance${rl === 'high' ? ': shown as a range' : ''}`]); }
+    if (R && R.notFitted) items.push(['note', `The whole-year quotes scatter ${R.rms.toFixed(1)}bp around a smooth curve, more than a fitted curve would: see Quote quality in tab 2`]);
     const h = items.map(([s, t]) => `<span class="ck ${s}"><i aria-hidden="true">${s === 'ok' ? '✓' : s === 'bad' ? '!' : 'i'}</i>${t}</span>`).join('');
     $('checks').innerHTML = h; $('checks-in').innerHTML = h;
   }
 
+  /* ---------------- reliability: how far to trust the benefit ----------------
+     WW.reliability measures four sources of uncertainty on the case as priced (scenario included) and combines them into
+     one predictive distribution of the true benefit. It prices the loan some 450 times, so it runs 400ms after the last
+     change and is kept until the case changes; meanwhile the figures show with a "measuring" mark. */
+  const RULES = {
+    avg5: ['5-year average', 'Each year beyond the last quote costs the average default intensity of the last five quoted years: the ISDA convention for the last segment of a credit curve.'],
+    avg3: ['3-year average', 'The same over the last three quoted years: follows the latest slope more closely, and more of its noise.'],
+    last: ['Last year', 'Each later year costs what the last quoted year costs: one quote decides the whole tail.'],
+    flatZ: ['Flat Z-spread', 'The Z-spread stops moving at the last quote. On a rising curve it gives a lower benefit.'],
+  };
+  const TAILW = { avg5: '5-year average', avg3: '3-year average', last: 'last year', flatZ: 'flat Z-spread' };
+  const VNAME = { float: 'Floating', fixed: 'Fixed' }, VLOW = { float: 'floating', fixed: 'fixed' };
+  const VERD = { solid: 'Solid', indicative: 'Indicative', uncertain: 'Uncertain' }, VCLS = { solid: 'g', indicative: 'm', uncertain: 'b' };
+  const RELW = { low: 'Low', moderate: 'Moderate', high: 'High' }, RELC = { low: 'green', moderate: 'amber', high: 'red' };
+  const SRC = { tail: ['Beyond your last quote', 'var(--brass)', 'rc-tail'], noise: ['Random quote errors', 'var(--slate)', 'rc-noise'],
+                gap: ['Gaps between quotes', 'var(--muted)', 'rc-gaps'], cons: ['Z-spread against yield', 'var(--ink)', 'rc-qual'] };
+  let RELK = null, REL = null, relT = null, relBusy = false;
+  function rel() { return REL && RELK === JSON.stringify(cs) ? REL : null; }
+  function scheduleRel() {
+    const key = JSON.stringify(cs); if (!F || SBAD || key === RELK) { relBusy = false; return; }
+    relBusy = true; clearTimeout(relT);
+    relT = setTimeout(() => {
+      const d = resolve(cs), k = cs.scenario.k, scen = d.kind !== 'none' && k !== 0;
+      try { REL = WW.reliability(cs, { prep: c => engineCase(c, scen ? d : NONE, scen ? k : 1) }); } catch (e) { REL = null; }
+      RELK = key; relBusy = false; render();
+    }, 400);
+  }
+  const cover = () => (F && PC ? WW.coverage(F.R, PC) : null);
+  const pctS = v => (v < 0.1 ? (v * 100).toFixed(1) : Math.round(v * 100)) + '%';
+  const rngS = q => { const d = q.p95 - q.p5 < 10 ? 1 : 0; return `${sg(q.p5, d)} to ${sg(q.p95, d)}`; };
+  const asRange = q => !!q && (q.verdict === 'uncertain' || q.reliance === 'high');
+  const psign = q => q.est >= 0 ? { w: 'saving', p: q.pPos } : { w: 'cost', p: 1 - q.pPos };   // the probability of the figure's own sign
+  const pctP = q => { const v = psign(q).p * 100; return (v > 99 && v < 100 ? '>99' : v < 1 && v > 0 ? '<1' : Math.round(v)) + '%'; };
+  const yrsS = t => (Math.abs(t - Math.round(t)) < 0.05 ? Math.round(t) : t.toFixed(1)) + 'y';
+  const b1 = v => (v === null || v === undefined ? '–' : sg(v, Math.abs(v) < 10 ? 1 : 0)) + 'bp';
+  const measuring = () => relBusy ? '<span class="meas">measuring…</span>' : '';
+  // statistical terms: dotted underline, definition on hover, focus or tap
+  const GL = {
+    range90: '<b>90% range:</b> the true benefit lies inside it with 90% probability, given your quotes and the assumptions listed under Methodology. In the validation study, 90% ranges contained the true benefit 89.6% of the time.',
+    range50: '<b>50% range:</b> the middle half of the likely values; the true benefit is as likely inside as outside it.',
+    median: '<b>Median:</b> the middle of the likely values: as likely above as below. It can differ from the figure shown, because the tail rule\'s errors are not symmetric.',
+    figure: '<b>Figure shown:</b> the benefit under the model choices of card 4, the number on every other page.',
+    psign: '<b>Probability of a saving</b> (or <b>of a cost</b>, when the figure is negative): the share of the likely values on the same side of zero as the figure: how sure the loan saves the borrower money, or costs it.',
+    u: '<b>±, one standard deviation:</b> the typical distance between the figure and the true benefit. About two in three outcomes fall within ±1, nine in ten within about ±1.65.',
+    share: '<b>Share of the uncertainty:</b> each source\'s variance (its ± squared) as a share of the total. Independent sources add this way: the total ± is the square root of the sum of their squares, not their sum.',
+    prior: '<b>Prior guess:</b> what we expect before looking at your bonds: about 2bp of scatter for a sovereign\'s bonds, 4bp for a company\'s, worth four bonds\' evidence.',
+    posterior: '<b>Posterior:</b> the prior guess updated with the scatter of your own bonds. With many bonds the data dominate; with few, the guess does.',
+    credible: '<b>90% credible interval:</b> the error size lies inside it with 90% probability, given the prior guess and your bonds.',
+    mc: '<b>Monte Carlo:</b> the quotes are redrawn many times with random errors of the size shown, and the loan is priced again on each; the spread of the results shows what the errors do to the benefit.',
+    antithetic: '<b>In pairs:</b> each random draw is used twice, once as drawn and once with every error reversed; the two cancel in the average, which halves the draws needed for the same precision.',
+    mcprec: '<b>Monte Carlo precision:</b> how much the range ends would move if the analysis were run again with new random draws (a bootstrap over the draws). Far below the rounding of the figures shown.',
+    robust: '<b>Typical scatter:</b> 1.48 × the median distance of the quotes from the smooth curve. Measured with the median, so a single bad quote cannot inflate it and hide itself.',
+    exposure: '<b>Exposure beyond the last quote:</b> the share of the loan\'s value-weighted exposure (balance × discount × survival, half-year by half-year: the weights of the bond-equivalent price) that falls after your last quote. It predicted the tail rule\'s error better than the gap in years.',
+    reliance: '<b>Tail reliance:</b> low up to 5% of the exposure beyond the last quote, moderate to 15%, high beyond. High: the headline becomes the range.',
+    bridge: '<b>Wander between quotes:</b> between two quotes the true curve can drift from the straight line, most in the middle of a wide gap; modelled as a Brownian bridge whose size was measured on the study\'s curves: 2.85% of the spread level per √year.',
+    bound: '<b>Bound:</b> where only the size of a possible error is known, any value up to it is taken as equally likely (a rectangular distribution); its ± is the bound divided by √3.',
+    coupon: '<b>Coupon effect:</b> a bond far from par quotes a different yield, and a slightly different Z-spread, from a par bond of the same issuer and maturity, because its money comes back at different times. The engine reads every quote as a par bond\'s.',
+    ns: '<b>Nelson–Siegel curve:</b> a smooth curve with a level, a slope and one bend, fitted to the quotes by least squares.',
+  };
+  const gl = (k, t) => `<span class="gl" tabindex="0" data-gl="${k}">${t}</span>`;
+  const head = (title, tip, sub) => `<div class="et">${title} ${qi(TIPS[tip])}</div><div class="eh">${sub}</div>`;
+  const tiles = a => `<div class="tiles">${a.filter(Boolean).map(([k, v, s]) => `<div class="tile"><div class="tk">${k}</div><div class="tv">${v}</div>${s ? `<div class="ts">${s}</div>` : ''}</div>`).join('')}</div>`;
+  const take = (find, so, todo, sev) => `<div class="take ${sev || ''}"><p class="tf">${find}</p><p><span class="tl">So what</span>${so}</p><p><span class="tl">What to do</span>${todo}</p></div>`;
+  const asTable = (head2, rows) => `<details class="dash-t"><summary>As a table</summary>${tbl(head2, rows)}</details>`;
+  // card 4: how far the quotes reach, one line per loan
+  function renderCover() {
+    const c = cover(); if (!c) { $('cover').innerHTML = ''; return; }
+    const pos = v => Math.min(v, 0.3) / 0.3 * 100;
+    $('cover').innerHTML = ['float', 'fixed'].map(v => { const q = c[v], rl = q.grade === 'green' ? 'low' : q.grade === 'amber' ? 'moderate' : 'high';
+      return `<div class="cv1"><span class="cv-k">${VNAME[v]}</span><span class="cv-bar" role="img" aria-label="${pctS(q.share)} of the exposure beyond the last quote"><i style="left:${pos(q.share)}%"></i><s style="left:16.67%"></s><s style="left:50%"></s></span>`
+        + `<span class="cv-v">${q.tailApplies ? `<b>${q.share > 0.3 ? '>30%' : pctS(q.share)}</b> beyond the last quote (${yrsS(q.last)}; the loan runs to ${yrsS(q.maturity)})` : `ends at ${yrsS(q.maturity)}, within your quotes (to ${yrsS(q.last)})`} <span class="gb ${q.grade}">${RELW[rl]} ${gl('reliance', 'tail reliance')}</span></span></div>`; }).join('')
+      + `<p class="cv-sc">Scale 0–30% of the loan's ${gl('exposure', 'exposure')}; marks at 5% and 15%.</p>`
+      + '';
+  }
+  // Results: the likely range and where its uncertainty comes from, as one diagram
+  function drawRelDiagram(el, q) {
+    const W = 560, l = 12, rr = 12, lo0 = Math.min(q.p5, 0, q.est), hi0 = Math.max(q.p95, 0, q.est), pad = Math.max(0.5, (hi0 - lo0) * 0.08), lo = lo0 - pad, hi = hi0 + pad;
+    const X = v => l + (v - lo) / (hi - lo) * (W - l - rr), stp = niceStep((hi - lo) / 1.2), H = 210, near0 = lo < 0 && hi > 0 && Math.abs(X(q.est) - X(0)) < 70;
+    let s = `<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Likely range of the benefit and the sources of its uncertainty">`;
+    s += `<text class="pt" x="${l}" y="12">LIKELY RANGE OF THE BENEFIT, BP A YEAR</text>`;
+    for (const t of WW.ticks(Math.ceil(lo / stp) * stp, hi, stp)) s += `<line class="grid" x1="${X(t)}" x2="${X(t)}" y1="36" y2="72"/><text class="tk" x="${X(t)}" y="86" text-anchor="middle">${sg(t, stp < 1 ? 1 : 0)}</text>`;
+    s += `<rect x="${X(q.p5)}" y="42" width="${Math.max(1, X(q.p95) - X(q.p5))}" height="24" rx="4" style="fill:var(--slate);opacity:.28"><title>90% range: ${rngS(q)}bp</title></rect>`;
+    s += `<rect x="${X(q.p25)}" y="42" width="${Math.max(1, X(q.p75) - X(q.p25))}" height="24" rx="4" style="fill:var(--slate);opacity:.6"><title>50% range: ${sg(q.p25, 1)} to ${sg(q.p75, 1)}bp</title></rect>`;
+    if (lo < 0 && hi > 0) s += `<line x1="${X(0)}" x2="${X(0)}" y1="36" y2="72" style="stroke:var(--accent);stroke-width:1.4;stroke-dasharray:3 3"/><text class="lb" x="${X(0)}" y="${near0 ? 102 : 31}" text-anchor="middle" style="fill:var(--accent)">zero</text>`;
+    s += `<line x1="${X(q.est)}" x2="${X(q.est)}" y1="38" y2="70" style="stroke:var(--ink);stroke-width:2.4"/><text class="lb" x="${X(q.est)}" y="31" text-anchor="middle" style="fill:var(--ink)">figure ${sg(q.est, 1)}</text>`;
+    s += `<text class="lb" x="${(X(q.p5) + X(q.p95)) / 2}" y="${near0 ? 116 : 102}" text-anchor="middle" style="fill:var(--muted)">90% range ${rngS(q)} · 50% range ${sg(q.p25, 1)} to ${sg(q.p75, 1)}</text>`;
+    s += `<text class="pt" x="${l}" y="142">WHERE THE UNCERTAINTY COMES FROM</text>`;
+    let x0 = l; const bw = W - l - rr;
+    ['tail', 'noise', 'gap', 'cons'].forEach(k => { const sh = q.shares[k]; if (!(sh > 0.0005)) return; const w = sh * bw;
+      s += `<rect x="${x0}" y="150" width="${Math.max(1, w - 2)}" height="18" style="fill:${SRC[k][1]};opacity:.85"><title>${SRC[k][0]}: ${Math.round(sh * 100)}% (±${q.u[k].toFixed(1)}bp)</title></rect>`;
+      if (w > 70) s += `<text class="lb" x="${x0 + 6}" y="163" style="fill:#fff;font-weight:600">${Math.round(sh * 100)}%</text>`;
+      x0 += w; });
+    let lx = l, ly = 190;
+    ['tail', 'noise', 'gap', 'cons'].forEach(k => { if (!(q.shares[k] >= 0.005)) return; const t = `${SRC[k][0]} ${Math.round(q.shares[k] * 100)}%`, w = t.length * 6.4 + 22;
+      if (lx + w > W) { lx = l; ly += 16; } s += `<rect x="${lx}" y="${ly - 9}" width="10" height="10" style="fill:${SRC[k][1]}"/><text class="lb" x="${lx + 14}" y="${ly}">${t}</text>`; lx += w; });
+    el.innerHTML = s + '</svg>';
+  }
+  function renderRelCard() {
+    const R = rel(), q = R && R.version[mode];
+    if (!q) { $('c-rel').innerHTML = `<p class="cap">${relBusy ? 'Measuring how far to trust the benefit…' : 'Not available for this curve.'}</p>`; return; }
+    drawRelDiagram($('c-rel'), q);
+    $('c-rel').insertAdjacentHTML('beforeend', `<div class="rc-row"><span class="chip ${VCLS[q.verdict]}">${VERD[q.verdict]}</span><span class="rc-p">${pctP(q)} <small>probability of a ${psign(q).w}</small></span><span class="rc-p">±${q.u.total.toFixed(1)}bp <small>one standard deviation</small></span></div>`);
+  }
+  // the verdict, in words
+  function verdictHtml(q, R) {
+    const v = VLOW[mode], save = q.est >= 0;
+    const top = Object.entries(q.shares).sort((a, b) => b[1] - a[1])[0];
+    const line = q.verdict === 'solid' ? `The ${v} loan ${save ? 'saves' : 'costs'} the borrower about <b>${b1(Math.abs(q.est))} a year</b>, with a ${gl('range90', '90% range')} of ${rngS(q)}bp: the figure is solid.`
+      : q.verdict === 'indicative' ? `The ${v} loan ${save ? 'saves' : 'costs'} the borrower money: a ${gl('range90', '90% range')} of <b>${rngS(q)}bp a year</b> around the figure of ${b1(q.est)}. The sign is clear; the size is indicative.`
+      : R.fragile && (q.p5 > 0 || q.p95 < 0) ? `The figure is ${b1(q.est)} a year, but it is fragile: most redrawn versions of your quotes cannot be priced, so the range (${rngS(q)}bp) understates the uncertainty.`
+      : `The figure is ${b1(q.est)} a year, but the ${gl('range90', '90% range')} runs from <b>${b1(q.p5)} to ${b1(q.p95)}</b>: the loan may ${save ? 'cost the borrower rather than save' : 'save the borrower rather than cost'}.`;
+    const seen = new Set(), acts = [];   // the two most material actions, one per card
+    q.biases.filter(b => b.cls === 'material' && BIAS[b.key]).forEach(b => { const t = BIAS[b.key](b, q, R); if (acts.length < 2 && !seen.has(t.card)) { seen.add(t.card); acts.push(t.todo); } });
+    return `<p class="vline"><span class="chip ${VCLS[q.verdict]}">${VERD[q.verdict]}</span> ${line}</p>`
+      + `<p class="vsub">${gl('psign', `Probability of a ${psign(q).w}: <b>${pctP(q)}</b>`)} · main source of uncertainty: <a href="#${SRC[top[0]][2]}">${SRC[top[0]][0].toLowerCase()}</a> (${Math.round(top[1] * 100)}%)${Math.abs(q.shift) >= 0.3 ? ` · the ${gl('median', 'median')} sits ${b1(q.shift)} from the figure` : ''}</p>`
+      + (acts.length ? `<ul class="acts">${acts.map(a => `<li>${a}</li>`).join('')}</ul>` : '');
+  }
+  function renderRel() {
+    const R = rel(), md = mode, isF = md === 'float', scen = F !== BASE;
+    $('rel-intro').innerHTML = `How far to trust the ${VLOW[md]} benefit, measured on your quotes${scen ? ' and the scenario curve selected' : ''}. Four sources can move it without any change in the market; each is measured here, then combined into one ${gl('range90', 'likely range')}. Switch Floating / Fixed above for the other loan. ${measuring()}`;
+    const ids = ['rel-verdict', 'rel-budget', 'rc-tail', 'rc-noise', 'rc-qual', 'rc-gaps', 'rc-leans', 'rel-bias'];
+    if (!R) { ids.forEach((id, i) => { $(id).innerHTML = i ? '' : `<p class="cap">${relBusy ? 'Measuring: the loan is being priced again some 450 times…' : 'The reliability analysis needs a curve that can be priced.'}</p>`; }); $('rel-method').innerHTML = relMethodHtml(); return; }
+    const q = R.version[md], r = F.R[md];
+    // 1 · verdict
+    $('rel-verdict').innerHTML = head('Verdict', 'relVerdict', `The ${VLOW[md]} loan${scen ? ', on the scenario curve' : ''}`) + verdictHtml(q, R) + '<div class="cb" id="c-pred"></div>'
+      + tiles([[gl('figure', 'Figure shown'), b1(q.est)], [gl('median', 'Median'), b1(q.median)], [gl('range90', '90% range'), rngS(q) + 'bp'], [gl('range50', '50% range'), `${sg(q.p25, 1)} to ${sg(q.p75, 1)}bp`],
+               [gl('psign', `Probability of a ${psign(q).w}`), pctP(q)], [gl('u', 'Uncertainty'), `±${q.u.total.toFixed(1)}bp`, 'one standard deviation']]);
+    const h = q.hist, xs = h.bins.map((c, i) => h.lo + (i + 0.5) * h.bw), ymax = Math.max(...h.bins) * 1.18, xlo = Math.min(h.lo, q.est, q.p5) - h.bw, xhi = Math.max(h.lo + h.bw * h.bins.length, q.est, q.p95) + h.bw, st = niceStep((xhi - xlo) / 1.4);
+    WW.chart($('c-pred'), { label: 'Likely values of the true benefit', h: 230, x: { min: xlo, max: xhi, ticks: WW.ticks(Math.ceil(xlo / st) * st, xhi, st), fmt: v => sg(v, st < 1 ? 1 : 0), label: 'True benefit, bp a year' },
+      y: { min: 0, max: ymax, ticks: [], fmt: () => '' }, m: { l: 14, r: 14, t: 22, b: 42 },
+      layers: [{ t: 'rect', x0: q.p5, x1: q.p95, y0: 0, y1: ymax, f: 'var(--slate)', o: .1 }, { t: 'rect', x0: q.p25, x1: q.p75, y0: 0, y1: ymax, f: 'var(--slate)', o: .14 },
+        { t: 'bars', d: h.bins.map((c, i) => ({ x0: xs[i] - h.bw / 2, x1: xs[i] + h.bw / 2, y0: 0, y1: c, f: 'var(--slate)', o: .7 })) }]
+        .concat(xlo < 0 && xhi > 0 ? [{ t: 'v', x: 0, c: 'var(--accent)', lab: 'zero', end: true }] : [])
+        .concat([{ t: 'v', x: q.est, c: 'var(--ink)', lab: 'figure shown', dy: 16 }]) });
+    legend('c-pred', [['b', 'rgba(95,111,131,.7)', 'Likely values of the true benefit'], ['b', 'rgba(95,111,131,.24)', '50% range (darker band)'], ['b', 'rgba(95,111,131,.1)', '90% range (lighter band)']]);
+    // 2 · uncertainty budget
+    const based = { tail: 'validation study', noise: R.sigma.mode === 'bayes' ? 'your bonds and a prior guess' : 'your setting (card 4)', gap: 'your quotes and the study', cons: 'your quotes' };
+    const keys = ['tail', 'noise', 'gap'].concat(R.both ? ['cons'] : []);
+    $('rel-budget').innerHTML = head('Where the uncertainty comes from', 'relBudget', `Each source's typical effect on the ${VLOW[md]} benefit (${gl('u', '± one standard deviation')}) and its ${gl('share', 'share of the total')}`)
+      + `<div class="bud">${keys.map(k => `<div class="bud-r"><span class="bn"><i class="sw" style="background:${SRC[k][1]}"></i><a href="#${SRC[k][2]}">${SRC[k][0]}</a></span><span class="bu">±${q.u[k].toFixed(1)}bp</span>`
+        + `<span class="bb"><i style="width:${(q.shares[k] * 100).toFixed(1)}%;background:${SRC[k][1]}"></i></span><span class="bs">${Math.round(q.shares[k] * 100)}%</span><span class="bf">from ${based[k]}</span></div>`).join('')}
+        <div class="bud-r tot"><span class="bn">Combined</span><span class="bu">±${q.u.total.toFixed(1)}bp</span><span class="bf wide">= √(${keys.map(k => q.u[k].toFixed(1) + '²').join(' + ')}): independent sources add as squares, so the largest one dominates</span></div></div>`
+      + `<p class="cap">The ${gl('range90', '90% range')} (${rngS(q)}bp) is read from 20,000 combined draws of the four sources, not from ±1.65 × the combined figure, because the tail rule's errors are skewed${Math.abs(q.shift) >= 0.3 ? `: the middle of the likely values sits ${b1(q.shift)} from the figure` : ''}.</p>`;
+    // 3 · beyond the last quote
+    const T = q.tail, rv = Object.entries(R.rules).map(([id, w]) => [id, w[md]]), rmin = Math.min(...rv.map(x => x[1]), q.est), rmax = Math.max(...rv.map(x => x[1]), q.est), span = Math.max(rmax - rmin, 0.5);
+    const tens = (PC._src && PC._src.tens ? PC._src.tens[md] : Object.keys(isF ? PC.zspreadBp : PC.ytmPct).map(Number)).slice().sort((a, b) => a - b);
+    $('rc-tail').innerHTML = head('Beyond your last quote', 'relTail', 'How much of the loan lies where there are no quotes, and what the tail rules say about it')
+      + tiles([['Last quote', yrsS(q.last)], ['Loan ends', yrsS(q.maturity)], [gl('exposure', 'Exposure beyond'), pctS(q.share)], [gl('reliance', 'Tail reliance'), `<span class="gb ${RELC[q.reliance]}">${RELW[q.reliance]}</span>`]])
+      + '<div class="cb" id="c-cov"></div>'
+      + (q.tailApplies ? `<div class="rules">${RULE_ORDER.filter(id => R.rules[id]).map(id => { const w = R.rules[id][md], me = id === R.chosen;
+          return `<div class="rl${me ? ' me' : ''}" title="${esc(RULES[id][1])}"><span class="rn">${RULES[id][0]}${me ? ' <small>in use</small>' : ''}</span><span class="rv">${b1(w)}</span><span class="rd">${me ? '' : sg(w - q.est, 1)}</span>`
+            + `<span class="rdot"><i style="left:${((w - rmin) / span * 100).toFixed(1)}%"></i></span></div>`; }).join('')}</div>`
+          + (R.failed.length ? `<p class="cap">Could not be priced: ${R.failed.map(id => RULES[id][0]).join(', ')}.</p>` : '') : '')
+      + (T ? take(`${pctS(q.share)} of the loan's exposure lies beyond your last quote at ${yrsS(q.last)}.`,
+          `There the benefit rests on the ${TAILW[R.chosen]} rule. On loans like this one in the validation study (same share beyond the data, a curve ${T.slope > 0.5 ? `rising ${T.slope.toFixed(1)}bp a year` : T.slope < -0.5 ? `falling ${Math.abs(T.slope).toFixed(1)}bp a year` : 'flat'} at its end, rules ${T.spread.toFixed(1)}bp apart) that rule missed the truth by about ±${q.u.tail.toFixed(1)}bp: ${Math.round(q.shares.tail * 100)}% of the uncertainty.`,
+          q.reliance === 'low' ? 'Nothing needed: the tail rule matters little here.' : 'A longer bond of the borrower, or of a close peer, would cut this most; failing that, quote the range rather than the figure, or consider a shorter loan.', q.reliance === 'high' ? 'bad' : q.reliance === 'moderate' ? 'note' : 'ok')
+        : take(`The loan ends at ${yrsS(q.maturity)}, within your quotes (last at ${yrsS(q.last)}).`, 'No tail rule is needed: every rule gives the same benefit.', 'Nothing needed.', 'ok'));
+    const W = r.per.reduce((a, e) => a + e.w, 0), per = r.per.filter(e => e.O > 0), ys = per.map(e => e.w / W * 100), ymx = Math.max(...ys) * 1.2;
+    const kind = e => e.t > q.last + 1e-9 ? 'beyond' : tens.some(t => Math.abs(t - (e.t - 0.25)) <= 0.75) ? 'quoted' : 'interp';
+    WW.chart($('c-cov'), { label: 'Exposure by half-year against the quotes', h: 190, x: { min: 0, max: r.maturity + 0.5, ticks: WW.ticks(0, r.maturity, r.maturity > 16 ? 4 : 2), fmt: v => v + 'y', label: 'Years from signing' },
+      y: { min: 0, max: ymx, ticks: WW.ticks(0, ymx, niceStep(ymx / 1.5)), fmt: v => +v.toFixed(2) + '%' }, m: { l: 50, r: 14, t: 14, b: 40 },
+      layers: [{ t: 'bars', d: per.map((e, i) => ({ x0: e.t - .5, x1: e.t, y0: 0, y1: ys[i], f: kind(e) === 'beyond' ? 'var(--brass)' : 'var(--slate)', o: kind(e) === 'interp' ? .35 : .8 })) }]
+        .concat(q.tailApplies ? [{ t: 'v', x: q.last, c: 'var(--ink)', lab: 'last quote' }] : []) });
+    legend('c-cov', [['b', 'var(--slate)', 'Near a quote'], ['b', 'rgba(95,111,131,.35)', 'Between quotes'], ['b', 'var(--brass)', 'Beyond the last quote']]);
+    $('rc-tail').insertAdjacentHTML('beforeend', asTable(['Half-year ending', 'Share of exposure', 'Data'], per.map((e, i) => `<tr><td>${e.t}</td><td>${ys[i].toFixed(2)}%</td><td>${{ beyond: 'beyond the last quote', quoted: 'near a quote', interp: 'between quotes' }[kind(e)]}</td></tr>`))
+      + (q.tailApplies ? `<details class="dash-t"><summary>The tail rules as a table</summary>` + tbl(['Tail rule', 'What it assumes', 'Benefit, bp', 'Against the rule in use'], RULE_ORDER.filter(id => R.rules[id]).map(id => `<tr><td>${RULES[id][0]}</td><td>${esc(RULES[id][1])}</td><td>${sg(R.rules[id][md], 2)}</td><td>${id === R.chosen ? 'in use' : sg(R.rules[id][md] - q.est, 2)}</td></tr>`)) + '</details>' : ''));
+    // 4 · random quote errors
+    const S = R.sigma, bay = S.mode === 'bayes', d = q.noiseDraws.map(x => q.est - x).sort((a, b) => a - b);
+    $('rc-noise').innerHTML = head('Random quote errors', 'relNoise', `The benefit over ${R.draws} redrawn versions of your quotes (${gl('mc', 'Monte Carlo')}, ${gl('antithetic', 'in pairs')})`)
+      + tiles([['Error size', `${S.med.toFixed(1)}bp`, bay ? `${gl('credible', '90%')}: ${S.lo.toFixed(1)}–${S.hi.toFixed(1)}bp` : 'your setting, card 4'], ['Error model', R.errModel === 'bonds' ? 'Per bond' : 'Correlated', R.errModel === 'bonds' ? 'independent, with occasional bad quotes' : 'along the curve, over about 2 years'],
+               ['Effect on the benefit', `±${q.u.noise.toFixed(1)}bp`, 'one standard deviation'], R.priced < 0.8 ? ['Redraws priced', `${R.draws} of ${R.drawsAsked}`, '<span class="warnp">the rest cannot be priced</span>'] : [gl('mcprec', 'Precision'), q.mcPrec === null ? '–' : `±${q.mcPrec.toFixed(2)}bp`, 'of the range ends']])
+      + '<div class="cb" id="c-mc"></div>' + (bay ? '<div class="cb" id="c-sig"></div>' : '')
+      + take(`Errors of about ${S.med.toFixed(1)}bp in each quote move the ${VLOW[md]} benefit by ±${q.u.noise.toFixed(1)}bp: ${Math.round(q.shares.noise * 100)}% of the uncertainty.`,
+          bay ? `The error size is ${gl('posterior', 'estimated')} from how far your bonds scatter around a smooth curve (${S.data === null ? 'too few bonds: the prior guess alone' : `${S.data.toFixed(1)}bp`}), combined with a ${gl('prior', 'prior guess')} of ${S.guess}bp.`
+            : `A fitted curve hides its own errors, so their size is your setting; errors of a fitted curve run together along it, so they are drawn ${R.errModel === 'bonds' ? 'bond by bond' : 'correlated over about two years'}.`,
+          bay ? 'More bonds narrow it; check any quote flagged under Quote quality.' : 'If the curve rests on few or illiquid bonds, set 3–4bp in card 4; for one built on many liquid bonds, 1bp.', q.shares.noise > 0.5 ? 'note' : 'ok');
+    const lo = d[0], hi = d[d.length - 1], nb = 24, bw = (hi - lo) / nb || 1, bins = new Array(nb).fill(0); d.forEach(v => { bins[Math.min(nb - 1, Math.floor((v - lo) / bw))]++; });
+    const bmx = Math.max(...bins) * 1.2, st2 = niceStep((hi - lo) || 1);
+    WW.chart($('c-mc'), { label: 'Benefit over redrawn quotes', h: 190, x: { min: lo - bw, max: hi + bw, ticks: WW.ticks(Math.ceil((lo - bw) / st2) * st2, hi + bw, st2), fmt: v => sg(v, st2 < 1 ? 1 : 0), label: 'Benefit, bp a year' },
+      y: { min: 0, max: bmx, ticks: WW.ticks(0, bmx, niceStep(bmx / 1.5)), fmt: v => v }, m: { l: 40, r: 14, t: 14, b: 40 },
+      layers: [{ t: 'bars', d: bins.map((c, i) => ({ x0: lo + i * bw, x1: lo + (i + 1) * bw, y0: 0, y1: c, f: 'var(--slate)', o: .7 })) },
+        { t: 'v', x: q.noiseP5, c: 'var(--brass)', lab: '5%', end: true }, { t: 'v', x: q.noiseP95, c: 'var(--brass)', lab: '95%' }, { t: 'v', x: q.est, c: 'var(--ink)', lab: 'figure', dy: 16 }] });
+    if (bay) drawSigma($('c-sig'), S);
+    $('rc-noise').insertAdjacentHTML('beforeend', asTable(['Percentile of the redrawn benefits', 'Benefit, bp a year'], [[5, q.noiseP5], [50, d.length ? d[Math.floor(d.length / 2)] : q.est], [95, q.noiseP95]].map(([p, v]) => `<tr><td>${p}%</td><td>${sg(v, 2)}</td></tr>`)));
+    // 5 · quote quality
+    const G = R.gapSplit, rs = R.resid, fl = R.flagged;
+    const cause = !G ? '' : Math.abs(G.slope) >= 0.15 ? `The gap changes with maturity (${sg(G.slope, 2)}bp a year): the usual causes are bonds far from par (the ${gl('coupon', 'coupon effect')}: enter them as individual bonds with their coupons), a different swap curve in YAS, or the compounding convention. This kind moves the benefit.`
+      : Math.abs(G.level) >= 1 ? `A gap of about ${b1(G.level)} at every maturity: quotes taken at a different time from the swap curve, or another swap curve in YAS. Harmless: a uniform gap barely moves the benefit.` : 'Z-spreads and yields agree: one consistent snapshot.';
+    $('rc-qual').innerHTML = head('Quote quality', 'relQual', 'Do the Z-spreads and yields agree, and does any quote stand out from a smooth curve?')
+      + tiles([G ? ['Z-spread against yield', b1(G.level), `level; slope ${sg(G.slope, 2)}bp a year`] : ['Z-spread against yield', R.basis === 'both' ? '–' : 'derived', R.basis === 'both' ? 'no tenor has both' : 'one quote type from the other'],
+               R.both ? ['Effect of the disagreement', `±${q.u.cons.toFixed(1)}bp`, 'one standard deviation'] : null,
+               rs.length ? [gl('robust', 'Scatter around a smooth curve'), `${R.rms.toFixed(1)}bp`, `${fl.length} quote${fl.length === 1 ? '' : 's'} flagged`] : ['Scatter around a smooth curve', '–', `needs 7 quotes`]])
+      + '<div class="cb" id="c-qq"></div>'
+      + (fl.length ? `<ul class="flags">${fl.map(f => `<li><b>${esc(f.name)}</b>: ${b1(f.res)} from the smooth curve, ${(Math.abs(f.res) / Math.max(R.robust, 1e-9)).toFixed(1)} times the ${gl('robust', 'typical scatter')}</li>`).join('')}</ul>` : '')
+      + `<p class="cap">A quote is flagged when it sits more than 2.5 times the typical scatter, and at least 4bp, from a ${gl('ns', 'Nelson–Siegel curve')} fitted to all of them. ${R.notFitted ? `<b>These whole-year quotes scatter ${R.rms.toFixed(1)}bp around a smooth curve: more than a fitted curve would.</b>` : ''}</p>`
+      + take(G ? cause : rs.length ? (fl.length ? `${fl.length} quote${fl.length > 1 ? 's stand' : ' stands'} out from the smooth curve.` : 'No quote stands out from the smooth curve.') : 'Too few quotes to judge their scatter.',
+          R.both ? `Pricing the ${VLOW[md]} loan from the other quote type moves the benefit by ${b1(q.consDelta)}.` : fl.length ? 'A flagged quote may be a typo, a stale price or a bond with special features.' : R.basis !== 'both' ? 'One quote type is derived from the other, so the two cannot disagree; the scatter is what matters.' : 'The quotes are mutually consistent.',
+          R.notFitted ? 'Enter the quotes as individual bonds (the error size is then estimated), or set 3–4bp in card 4.' : G && Math.abs(G.slope) >= 0.15 ? 'Enter the bonds individually with their coupons, or choose "Z-spreads only" in card 3.' : fl.length ? 'Check the flagged quotes on Bloomberg (price source, bid/ask, maturity); correct a wrong one, but do not drop a quote only because it moves the result.' : 'Nothing needed.',
+          R.notFitted || (G && Math.abs(G.slope) >= 0.15) || fl.length ? 'note' : 'ok');
+    const gv = Object.fromEntries((R.gaps || []).map(g => [g.t, g.gap])), tq = [...new Set(Object.keys(gv).map(Number).concat(rs.map(x => x.t)))].sort((a, b) => a - b);
+    const vv = tq.flatMap(t => [gv[t] || 0]).concat(rs.map(x => x.res)), am = Math.max(2, ...vv.map(Math.abs)) * 1.25, sq = niceStep(am), tmax = Math.max(...tq, 1);
+    WW.chart($('c-qq'), { label: 'Z-spread against yield, and scatter around a smooth curve', h: 190, x: { min: 0, max: tmax + 1, ticks: WW.ticks(0, tmax, tmax > 16 ? 4 : 2), fmt: v => v + 'y', label: 'Maturity' },
+      y: { min: -am, max: am, ticks: WW.ticks(-Math.floor(am / sq) * sq, am, sq), fmt: v => sg(v, sq < 1 ? 1 : 0) + 'bp' }, m: { l: 50, r: 14, t: 14, b: 40 },
+      layers: [{ t: 'h', y: 0, c: 'var(--muted)', w: 1 }, { t: 'bars', d: Object.keys(gv).map(Number).map(t => ({ x0: t - .35, x1: t + .35, y0: 0, y1: gv[t], f: 'var(--slate)', o: .55 })) }]
+        .concat(G ? [{ t: 'line', p: [[R.gaps[0].t, G.line[0]], [R.gaps[R.gaps.length - 1].t, G.line[1]]], c: 'var(--slate)', w: 1.6, dash: '5 4' }] : [])
+        .concat(rs.length ? [{ t: 'dots', c: 'var(--brass)', r: 3.6, p: rs.map(x => [x.t, x.res, false]) }] : [])
+        .concat(fl.length ? [{ t: 'dots', c: 'var(--accent)', r: 6, p: fl.map(f => [f.t, f.res, true]) }] : []) });
+    legend('c-qq', (R.gaps.length ? [['b', 'var(--slate)', 'Yield implied by the Z-spread minus the yield entered']] : []).concat([['l', 'var(--brass)', 'Z-spread minus the smooth curve'], ['l', 'var(--accent)', 'Flagged']]));
+    $('rc-qual').insertAdjacentHTML('beforeend', asTable(['Maturity', 'Z-spread against yield, bp', 'Against the smooth curve, bp'], tq.map(t => { const x = rs.find(z => Math.abs(z.t - t) < 1e-9);
+      return `<tr><td>${yrsS(t)}</td><td>${t in gv ? sg(gv[t], 2) : '–'}</td><td>${x ? sg(x.res, 2) + (x.flag ? ' · flagged' : '') : '–'}</td></tr>`; })));
+    // 6 · gaps between quotes
+    const zp = R.zPts, nsF = zp.length >= WW.NS_MIN ? WW.nsFit(zp.map(p => p[0]), zp.map(p => p[1])) : null;
+    $('rc-gaps').innerHTML = head('Gaps between quotes', 'relGaps', 'Between two quotes the curve is read as a straight line; how much could that be wrong?')
+      + tiles([['Widest gap', `${q.maxGap.toFixed(1)} years`], ['Years read between quotes', String(q.gapYears)], ['Effect on the benefit', `±${q.u.gap.toFixed(1)}bp`, 'one standard deviation'], [gl('bridge', 'Of which wander'), `±${(q.gapBridge || 0).toFixed(1)}bp`, `bend ${b1(q.gapDelta || 0)}`]])
+      + '<div class="cb" id="c-gap"></div>'
+      + take(q.gapYears ? `Your quotes are up to ${q.maxGap.toFixed(1)} years apart; ${q.gapYears} whole years are read between them.` : 'Every whole year has its own quote: nothing is read between quotes.',
+          q.gapYears ? `The curve's own bend and how far it can ${gl('bridge', 'wander')} between quotes move the ${VLOW[md]} benefit by ±${q.u.gap.toFixed(1)}bp: ${Math.round(q.shares.gap * 100)}% of the uncertainty.` : 'No gap uncertainty.',
+          q.shares.gap > 0.2 ? `A quote inside the widest gap would narrow it most.` : 'Nothing needed.', q.shares.gap > 0.4 ? 'note' : 'ok');
+    if (zp.length >= 2) {
+      const t0 = zp[0][0], t1 = zp[zp.length - 1][0], pts = [], band = [];
+      const at = t => { let i = 1; while (i < zp.length - 1 && zp[i][0] < t) i++; const [a, va] = zp[i - 1], [b, vb] = zp[i]; return va + (vb - va) * (t - a) / (b - a); };
+      for (let t = t0; t <= t1 + 1e-9; t += Math.max(0.25, (t1 - t0) / 120)) pts.push([t, at(t)]);
+      R.bridge.forEach(g => { const sd = g.k * Math.sqrt((g.Y - g.a) * (g.b - g.Y) / (g.b - g.a)); band.push([g.Y, at(g.Y), sd]); });
+      const vals = zp.map(p => p[1]).concat(band.flatMap(b => [b[1] + 1.65 * b[2], b[1] - 1.65 * b[2]])), vlo = Math.min(...vals), vhi = Math.max(...vals), sv = niceStep((vhi - vlo) || 10), plo = Math.floor(vlo / sv) * sv - sv / 2, phi = Math.ceil(vhi / sv) * sv;
+      WW.chart($('c-gap'), { label: 'Quotes, straight lines between them, and how far the curve can wander', h: 190, x: { min: 0, max: t1 + 1, ticks: WW.ticks(0, t1, t1 > 16 ? 4 : 2), fmt: v => v + 'y', label: 'Maturity' },
+        y: { min: plo, max: phi, ticks: WW.ticks(plo, phi, sv), fmt: v => Math.round(v) + 'bp' }, m: { l: 50, r: 14, t: 14, b: 40 },
+        layers: band.map(b => ({ t: 'bars', d: [{ x0: b[0] - 0.3, x1: b[0] + 0.3, y0: b[1] - 1.65 * b[2], y1: b[1] + 1.65 * b[2], f: 'var(--muted)', o: .22 }] }))
+          .concat([{ t: 'line', p: pts, c: 'var(--slate)', w: 1.8 }])
+          .concat(nsF ? [{ t: 'line', p: pts.map(([t]) => [t, nsF(t)]), c: 'var(--brass)', w: 1.4, dash: '5 4' }] : [])
+          .concat([{ t: 'dots', c: 'var(--ink)', r: 3.4, p: zp.map(([t, v]) => [t, v, false]) }]) });
+      legend('c-gap', [['l', 'var(--ink)', 'Quote (Z-spread)'], ['l', 'var(--slate)', 'Straight line between quotes'], ['d', 'var(--brass)', 'Smooth curve (the bend)'], ['b', 'rgba(111,91,96,.22)', 'Where the curve may wander, 90%']]);
+    } else $('c-gap').innerHTML = '<p class="cap">Fewer than two quotes.</p>';
+    // 7 · what the result leans on
+    const stl = [['level', 'Every quote +5bp (a parallel move)'], ['tilt', 'Long end +5bp, short end unchanged (a tilt)'], ['bend', 'Middle +5bp, both ends unchanged (a bend)'], ['up', `Last quote${q.lastName ? ` (${esc(q.lastName)})` : ''} +5bp`], ['down', `Last quote${q.lastName ? ` (${esc(q.lastName)})` : ''} −5bp`], ['stale', 'Swap rates +10bp, quotes as entered (quotes older than the swaps)']];
+    const sv2 = { level: q.stress.level, tilt: q.stress.tilt, bend: q.stress.bend, up: q.lastUp, down: q.lastDown, stale: q.stress.stale }, inf = q.influence.filter(x => x.d !== null), big = inf.length ? inf.reduce((a, b) => Math.abs(b.d) > Math.abs(a.d) ? b : a) : null;
+    if (big) { stl.push(['loo', `Largest single quote left out: ${esc(big.name)}`]); sv2.loo = big.d; }
+    const smx = Math.max(0.5, ...Object.values(sv2).filter(v => v !== null).map(Math.abs));
+    $('rc-leans').innerHTML = head('What the result leans on', 'relLeans', 'The benefit with the quotes moved in set ways, and with each quote left out')
+      + `<div class="stress">${stl.map(([k, lab]) => { const v = sv2[k]; return `<div class="sr"><span class="sl">${lab}</span><span class="sbar"><i class="${v >= 0 ? 'p' : 'n'}" style="${v >= 0 ? 'left:50%' : `right:50%`};width:${v === null ? 0 : Math.abs(v) / smx * 50}%"></i></span><span class="sv">${v === null ? '–' : b1(v)}</span></div>`; }).join('')}</div>`
+      + '<div class="cb" id="c-infl"></div>'
+      + take(`The benefit depends on the curve's shape, not its level: a parallel 5bp move changes it by ${b1(q.stress.level)}, a 5bp tilt by ${b1(q.stress.tilt)}.`,
+          q.lastUp !== null ? `The last quote matters most, because the tail is built from it: ±5bp there moves the benefit by ${b1(q.lastDown)} / ${b1(q.lastUp)}.${big ? ` Leaving out ${esc(big.name)} would move it by ${b1(big.d)}.` : ''}` : 'Too few quotes to test single quotes.',
+          'Double-check the last quote and those with the largest bars below. A large bar is not a sign of an error: never drop a quote only because it moves the result.', 'ok');
+    if (inf.length) { const im = Math.max(0.5, ...inf.map(x => Math.abs(x.d))) * 1.25, si = niceStep(im), tm = Math.max(...inf.map(x => x.t));
+      WW.chart($('c-infl'), { label: 'Change in the benefit with each quote left out', h: 170, x: { min: 0, max: tm + 1, ticks: WW.ticks(0, tm, tm > 16 ? 4 : 2), fmt: v => v + 'y', label: 'Quote left out (maturity)' },
+        y: { min: -im, max: im, ticks: WW.ticks(-Math.floor(im / si) * si, im, si), fmt: v => sg(v, si < 1 ? 1 : 0) }, m: { l: 44, r: 14, t: 14, b: 40 },
+        layers: [{ t: 'h', y: 0, c: 'var(--muted)', w: 1 }, { t: 'bars', d: inf.map(x => ({ x0: x.t - .3, x1: x.t + .3, y0: 0, y1: x.d, f: 'var(--slate)', o: .75 })) }] });
+    } else $('c-infl').innerHTML = '<p class="cap">Too few quotes to leave one out (at least six).</p>';
+    $('rc-leans').insertAdjacentHTML('beforeend', asTable(['Test', 'Change in benefit, bp a year'], stl.map(([k, lab]) => `<tr><td>${lab}</td><td>${sv2[k] === null ? '–' : sg(sv2[k], 2)}</td></tr>`).concat(inf.map(x => `<tr><td>Leave out ${esc(x.name)}</td><td>${sg(x.d, 2)}</td></tr>`))));
+    // 8 · biases in this case
+    const mat = q.biases.filter(b => b.cls !== 'negligible'), neg = q.biases.filter(b => b.cls === 'negligible');
+    const row = b => { const t = BIAS[b.key] ? BIAS[b.key](b, q, R) : null; if (!t) return '';
+      return `<div class="bi ${b.cls}"><div class="bi-h"><span class="chip ${b.cls === 'material' ? 'b' : b.cls === 'minor' ? 'm' : 'g'}">${{ material: 'Material', minor: 'Minor', negligible: 'Negligible' }[b.cls]}</span><b>${t.what}</b></div>`
+        + `<dl><dt>How much</dt><dd>${t.much}</dd><dt>So what</dt><dd>${t.so}</dd><dt>What to do</dt><dd>${t.todo}</dd></dl>${t.card ? `<a class="bi-l" href="#${t.card}">details</a>` : ''}</div>`; };
+    $('rel-bias').innerHTML = head('Biases in your case', 'relBias', `What could push the ${VLOW[md]} figure one way, how much on these quotes, and what to do about it`)
+      + (mat.length ? mat.map(row).join('') : '<p class="cap">Nothing material for this case.</p>')
+      + (neg.length ? `<details class="dash-t"><summary>Checked and negligible (${neg.length})</summary>${neg.map(row).join('')}</details>` : '');
+    $('rel-method').innerHTML = relMethodHtml();
+  }
+  const RULE_ORDER = ['avg5', 'avg3', 'last', 'flatZ'];
+  // σ: prior guess, the bonds' own scatter, and the posterior (bonds on Auto)
+  function drawSigma(el, S) {
+    const W = 560, l = 120, rr = 16, H = 96, hiX = Math.max(S.prior.hi, S.hi, S.data || 0) * 1.12, X = v => l + v / hiX * (W - l - rr), st = niceStep(hiX / 1.4);
+    let s = `<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Quote error size: prior guess, your bonds, and the estimate">`;
+    for (const t of WW.ticks(0, hiX, st)) s += `<line class="grid" x1="${X(t)}" x2="${X(t)}" y1="6" y2="70"/><text class="tk" x="${X(t)}" y="84" text-anchor="middle">${t}bp</text>`;
+    const row = (y, lab, a, b, m2, c) => `<text class="lb" x="${l - 10}" y="${y + 4}" text-anchor="end" style="fill:var(--ink)">${lab}</text>` + (a !== null ? `<line x1="${X(a)}" x2="${X(b)}" y1="${y}" y2="${y}" style="stroke:${c};stroke-width:6;stroke-linecap:round;opacity:.6"/>` : '') + `<circle cx="${X(m2)}" cy="${y}" r="5" style="fill:${c}"/>`;
+    s += row(18, 'Prior guess', S.prior.lo, S.prior.hi, S.guess, 'var(--muted)');
+    if (S.data !== null) s += row(40, 'Your bonds', null, null, S.data, 'var(--brass)');
+    s += row(62, 'Estimate, 90%', S.lo, S.hi, S.med, 'var(--slate)');
+    el.innerHTML = s + '</svg>';
+  }
+  // each bias: what it is, how much on this case, so what, what to do (b.d: its effect in bp; null when it cannot be measured)
+  const pctOf = (d, q) => Math.abs(q.est) >= 0.5 ? ` (${Math.round(Math.abs(d / q.est) * 100)}% of the figure)` : '';
+  const BIAS = {
+    tailRule: (b, q, R) => ({ what: `Beyond ${yrsS(q.last)} the curve is an assumption: your Z-spreads ${b.data.slope > 0.5 ? `still rise ${b.data.slope.toFixed(1)}bp a year at the end` : b.data.slope < -0.5 ? `fall ${Math.abs(b.data.slope).toFixed(1)}bp a year at the end` : 'are flat at the end'}.`,
+      much: `The rule furthest from yours (${TAILW[b.data.rule]}) gives ${b1(q.est + b.d)}: ${b1(b.d)} from yours${pctOf(b.d, q)}.`, so: b.data.slope > 0.5 ? `The ${TAILW[R.chosen]} rule ${R.chosen === 'flatZ' ? 'stops the rise at the last quote' : 'continues the rise'}; if the curve beyond your data ${R.chosen === 'flatZ' ? 'keeps rising, the benefit is higher' : 'flattens, as many do, the benefit is lower'}.` : 'Which rule is right depends on the curve beyond your data, which no quote shows.',
+      todo: 'Look for a longer bond of the borrower or a close peer; otherwise quote the range.', card: 'rc-tail' }),
+    reliance: (b, q) => ({ what: `${pctS(q.share)} of the loan's exposure lies beyond your last quote.`, much: `The tail alone spans about ±${Math.abs(b.d).toFixed(1)}bp either way at 90%.`, so: 'The figure leans on an assumption for that part of the loan.', todo: 'A longer bond, or a shorter loan, would cut it; until then the range is the honest number.', card: 'rc-tail' }),
+    consistency: (b, q, R) => ({ what: `Your Z-spreads and yields describe slightly different curves (gap ${b1(b.data.level || 0)} on average${b.data.slope ? `, changing ${sg(b.data.slope, 2)}bp a year with maturity` : ''}).`,
+      much: `Pricing the ${VLOW[mode]} loan from the other quote type moves it by ${b1(b.d)}${pctOf(b.d, q)}.`, so: 'Floating and fixed are priced on slightly different credit curves.', todo: 'Choose "Z-spreads only" (or "Yields only") in card 3, or check the tenors off the line under Quote quality.', card: 'rc-qual' }),
+    gaps: (b, q) => ({ what: `Between quotes the curve is read as straight lines; the widest gap is ${q.maxGap.toFixed(1)} years.`, much: `About ±${Math.abs(b.d).toFixed(1)}bp at 90%${pctOf(b.d, q)}.`, so: 'The curve could bend or wander inside the gaps.', todo: 'A quote inside the widest gap would narrow it most.', card: 'rc-gaps' }),
+    flagged: (b, q) => ({ what: `${esc(b.data.name)} sits ${b1(b.data.res)} from the smooth curve, far beyond the typical scatter.`, much: `Leaving it out would move the benefit by ${b1(b.d)}${pctOf(b.d, q)}.`, so: 'It may be a typo, a stale price or a bond with special features.', todo: 'Check it on Bloomberg (price source, bid/ask, maturity); correct it if wrong, keep it if right.', card: 'rc-qual' }),
+    left: b => ({ what: `${b.data.rows.length} bond${b.data.rows.length > 1 ? 's were' : ' was'} left out: ${b.data.rows.map(r => `${esc(r.name)} (${LEFTW[r.why] || r.why})`).join(', ')}.`, much: 'Not measurable: the bond is not priced.', so: 'The curve rests on the other bonds.', todo: 'Complete the row in card 3 (a coupon from Bloomberg field CPN, or "par").', card: '' }),
+    smoothing: (b, q) => ({ what: 'Curve smoothing is on: the bond-equivalent price uses a Nelson–Siegel fit of your quotes.', much: `Turning it off moves the benefit by ${b1(-b.d)}${pctOf(b.d, q)}.`, so: 'Smoothing removes scatter, and any genuine bend the smooth curve cannot follow.', todo: 'Keep it for noisy individual bonds; turn it off for a fitted curve.', card: 'rc-noise' }),
+    lastQuote: (b, q) => ({ what: `The tail is built from the last quotes; the last${q.lastName ? ` (${esc(q.lastName)})` : ''} carries the most weight.`, much: `±5bp on it moves the benefit by about ±${Math.abs(b.d).toFixed(1)}bp.`, so: 'An error in the last quote passes straight into the tail.', todo: 'Double-check it.', card: 'rc-leans' }),
+    noiseSetting: (b, q, R) => ({ what: `The quote error is set to ${R.sigma.med.toFixed(1)}bp, not measured: a fitted curve hides its own errors.`, much: `At twice that, the 90% range would widen by about ${Math.abs(b.d).toFixed(1)}bp.`, so: 'The range is only as good as this setting.', todo: 'Raise the quote error in card 4 if the curve rests on few or illiquid bonds.', card: 'rc-noise' }),
+    fragile: b => ({ what: `Only ${b.data.draws} of ${b.data.asked} redrawn versions of your quotes could be priced: small changes in the quotes push the curve outside what the model can price (a default probability below 0% or above 100% somewhere).`,
+      much: 'Not measurable: the range shown understates the uncertainty.', so: b.data.priced < 0.5 ? 'The figure is fragile, so the verdict is Uncertain whatever the range says.' : 'The figure is close to fragile; read the range with care.',
+      todo: 'Check the quotes where the curve falls steeply with maturity, or sits far below swaps: a typo there is the usual cause.', card: 'rc-noise' }),
+    notFitted: (b, q, R) => ({ what: `Your whole-year quotes scatter ${R.rms.toFixed(1)}bp around a smooth curve: more than a fitted curve would.`, much: 'Not measurable directly.', so: 'The quote error set in card 4 may be too small, and the range too narrow.', todo: 'Enter the quotes as individual bonds (the error size is then estimated), or set 3–4bp in card 4.', card: 'rc-qual' }),
+    level: (b, q) => ({ what: 'Every quote off by the same amount (for example quotes taken at another time of day).', much: `+5bp everywhere moves the benefit by ${b1(b.d)}.`, so: 'Harmless: the benefit depends on the shape of the curve, not its level.', todo: 'Nothing needed.', card: 'rc-leans' }),
+    stale: (b, q) => ({ what: 'Swap rates 10bp higher with your quotes unchanged (quotes older than the swap curve).', much: `It moves the benefit by ${b1(b.d)}.`, so: 'Timing differences between quotes and swaps matter little.', todo: 'Nothing needed.', card: 'rc-leans' }),
+  };
+  const LEFTW = { maturity: 'maturity unreadable', asOf: 'no readable "Market data as of" date in card 2', short: 'under 6 months', long: 'beyond 30 years', coupon: 'no coupon', quote: 'no Z-spread or yield' };
+  // the methodology, one section per card, and the validation study behind the ranges
+  function relMethodHtml() {
+    return `<h4>Verdict and the 90% range</h4><p>The analysis asks: given your quotes, what values could the true benefit take? It measures four sources of uncertainty (below) and draws each 20,000 times; the sum gives a distribution of the true benefit, from which the 90% and 50% ranges and the probability of a saving are read. Technically a Bayesian predictive distribution: the noise is learned from your data where it can be, the rest comes from a validation study; the sources are taken as independent. <b>Verdict:</b> <i>Solid</i> when the 90% range excludes zero (so the sign has at least 95% probability) and is within ±25% of the median (or ±2bp); <i>Indicative</i> when it excludes zero but is wider; <i>Uncertain</i> when it includes zero. These cut-offs are presentation choices, not statistics.</p>`
+      + `<h4>Where the uncertainty comes from</h4><p>Each source's typical effect (± one standard deviation) and its share of the variance. Independent sources add as squares (as in the ISO Guide to the Expression of Uncertainty in Measurement, JCGM 100:2008): combined ± = √(sum of squares), so the shares add to 100% and the largest source dominates.</p>`
+      + `<h4>Beyond your last quote</h4><p><b>Exposure beyond the last quote:</b> the share of the loan's exposure (balance × discount × survival, half-year by half-year) after the last quote. <b>Tail error:</b> a model fitted on 24,000 simulated loans (6,000 issuer curves in eight shape families, three swap curves, random loans, last quote at 8–25 years, clean quotes): the error of each rule grows with the exposure beyond the data, the spread level, the slope at the end of the curve and the spread between the rules; its size follows a log-linear fit on these, and its shape the observed errors (skewed: rules miss more on one side). Widened by 30% so that it still held on curve shapes the fit had never seen. Out of sample: 90% ranges from the tail alone covered 94–95% on familiar shapes and 85–90% on new ones.</p>`
+      + tbl(['Tail rule', 'Typical error, floating', 'Typical error, fixed', 'Average bias, floating'], [['5-year average (recommended)', '5.4bp', '8.2bp', '−0.3bp'], ['3-year average', '5.8bp', '8.5bp', '+0.2bp'], ['Last year', '6.2bp', '8.8bp', '+0.5bp'], ['Flat Z-spread', '6.4bp', '8.6bp', '−2.1bp: understates'], ['Nelson–Siegel extension (tested, not offered)', '14.6bp', '15.6bp', '+0.9bp']].map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`))
+      + `<p class="cap">Loans that run beyond the data, 12,348 of 24,000; root-mean-square error against the true benefit on the full curve. <b>Why there is no Nelson–Siegel tail rule:</b> continuing a fitted Nelson–Siegel curve was never the most accurate rule in any situation tested. It tied the best only where a smooth curve had visibly levelled off by the last quote, and missed by 15–35bp on plateaus, humps and curves still steep at their end. An earlier study favoured it only because three of its eight test curves had Nelson–Siegel shapes. It also added noise, not information, to the disagreement between rules that the tail model uses.</p>`
+      + `<h4>Random quote errors</h4><p>The quotes are redrawn 400 times (200 pairs, each drawn and reversed) and the loan priced again each time. <b>Fitted curve:</b> errors correlated along the curve over about 2 years (a fitted curve's errors run together); their size is your setting, because a fitted curve hides them. <b>Individual bonds:</b> errors independent per bond, Student-t with 4 degrees of freedom (occasional bad quotes). On Auto their size is Bayesian: a prior guess (2bp sovereign, 4bp company, worth four bonds) updated with the scatter of your bonds around a Nelson–Siegel curve (scaled-inverse-χ² prior and posterior; Gelman et al., <i>Bayesian Data Analysis</i>). The curve is refitted without clear outliers (beyond 3.5 × the typical scatter and 6bp), which are left out of the scatter; other flagged quotes count at the flag threshold. Each draw takes its own error size from the posterior, so its uncertainty is carried through.</p>`
+      + `<h4>Quote quality</h4><p><b>Z-spread against yield:</b> the yield a par bond would have at each Z-spread, on your swap curve, minus the yield entered; split into a level (average), a slope (by regression on maturity) and spikes (over 3bp off the line). A level is harmless; a slope or spikes move the benefit. <b>Scatter:</b> distance of each Z-spread from a Nelson–Siegel curve (Nelson and Siegel, <i>Journal of Business</i>, 1987); flagged above 2.5 × the typical scatter (1.48 × the median distance) and 4bp, after a refit without clear outliers so that a bad quote cannot bend the curve towards itself. In tests a 15bp bad quote among 10–20 bonds was flagged 89% of the time; leaving quotes out one by one is a poor detector. <b>Disagreement:</b> the benefit priced from the other quote type, taken as a bound either way.</p>`
+      + `<h4>Gaps between quotes</h4><p>Two parts: the curve's own <b>bend</b> (a Nelson–Siegel curve and a monotone cubic through the quotes, against straight lines; the larger effect, as a bound), and how far it can <b>wander</b> between quotes (a Brownian bridge, 2.85% of the spread level per √year, measured on the study's curves, carried through the benefit's sensitivity to each year).</p>`
+      + `<h4>What the result leans on</h4><p>Deterministic tests: every quote moved 5bp (level), a tilt and a bend of 5bp, the last quote ±5bp, swaps +10bp with the quotes as entered, and each quote left out (with at least five left). They show sensitivity, not error: a large bar is not a sign that a quote is wrong.</p>`
+      + `<h4>Biases in your case</h4><p>Each item is measured on your quotes: material when it moves the benefit by 1bp or more, or by 20% of the figure (and at least 0.3bp); minor from 0.3bp; negligible below.</p>`
+      + `<h4>The validation study (one-off, not about your case)</h4><p><b>Purpose:</b> check that the ranges mean what they say. <b>Design:</b> fresh issuer curves (not used to fit anything), quoted three ways — BVAL-like fitted curves (noisy bonds smoothed by a different method, read at whole years), benchmark tenors only, and 4–20 individual bonds (coupons 0.5–6%, errors 1–6bp, 1 bond in 20 off by 10–20bp, a swap-basis gap in 1 case in 5) — 1,600 loan cases in all, each compared with the true benefit on the full clean curve. <b>Result:</b> 90% ranges contained the truth 89.6% of the time, 50% ranges 50.7%.</p>`
+      + tbl(['Data', '90% range contained the truth', '50% range'], [['Fitted curve, floating / fixed', '90.7% / 91.7%', '52.0% / 48.3%'], ['Benchmarks only', '91.5% / 87.0%', '57.0% / 49.0%'], ['Individual bonds', '91.0% / 85.3%', '52.3% / 47.0%'], ['Tail reliance low / moderate / high', '87.8% / 93.0% / 94.0%', ''], ['Verdict solid / indicative / uncertain', '84.7% / 86.9% / 94.2%', '']].map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`))
+      + `<p><b>Probability of a saving:</b> when it said 0–10%, a saving happened 3% of the time; 10–30%: 19%; 30–50%: 49%; 50–70%: 61%; 70–90%: 78%; 90–99%: 96%; above 99%: 99% (Brier score 0.083). <b>Quote-error setting</b> for a fitted curve: at the true error the 90% range covered 91.2%; at the 2bp default 86.5%; at half the true error 67%, at double 98.8% — the setting matters. <b>Coupons:</b> par quotes recovered within 0.5bp even at 500bp spreads; on clean data the benefit's error fell from 1.17 to 0.94bp (floating) and from 1.74 to 1.38bp (fixed) with coupons entered. <b>Error size from bonds:</b> on bonds with a known error around a smooth curve, its 90% credible interval contained the true error 87% of the time (75% with one 15bp bad quote, which was flagged 89% of the time). <b>Limits:</b> on the study's rougher curves the estimate runs about 15% above the pure noise, because it also absorbs local shape the smooth curve cannot follow; this errs towards wider ranges. The weakest cell, cases rated Solid, covered 84.7%; the study's curves are simulated, so treat the ranges as calibrated on realistic shapes, not on every possible market. Scoring rules used to choose the tail model: interval score and CRPS (Gneiting and Raftery, <i>JASA</i>, 2007).</p>`
+      + `<h4>References</h4><p>ISDA CDS standard model, flat hazard on the last segment (<a href="https://quant.opengamma.io/Pricing-and-Risk-Management-of-Credit-Default-Swaps-OpenGamma.pdf" target="_blank" rel="noopener">OpenGamma's documentation</a>); EIOPA's averaging of long-end forwards before extrapolating (<a href="https://www.eiopa.europa.eu/document/download/7da8a1f3-e395-4789-bdc1-76984f8510b2_en?filename=EIOPA-BoS-26-198+-+RFR+Technical+Documentation+SII+Review.pdf" target="_blank" rel="noopener">technical documentation</a>); JCGM 100:2008 (GUM); Nelson and Siegel (1987); Gelman et al., <i>Bayesian Data Analysis</i> (3rd ed., 2013); Gneiting and Raftery (2007).</p>`;
+  }
+  // card 4's fold: what each model choice does
+  function modelMethodHtml() {
+    return `<h4>Where the quotes come from</h4><p><b>A fitted curve</b> (Bloomberg BVAL issuer curve or similar): one Z-spread and/or yield per whole year, read as a par bond's quotes, as the engine always has. <b>Individual bonds:</b> each bond's maturity, coupon and quotes. A bond far from par quotes a different yield, and a slightly different Z-spread, from a par bond of the same issuer and maturity (the ${gl('coupon', 'coupon effect')}: on a curve rising from 6 to 78bp, a 15-year 1% bond yields about 8bp more and has a Z-spread about 6bp higher). The tool prices each bond from its own cash flows, fits one smooth spread-by-date curve to all of them, and moves each bond's quote by its coupon effect on that curve to the par bond of the same maturity (within 0.5bp in tests). It then reads the curve at whole years: straight lines between bonds for Z-spreads, and for yields straight lines in the spread over the par swap rate, so the swap curve keeps its own bend. Bonds within 0.05 years are averaged.</p>`
+      + `<h4>Which quotes drive the curve</h4><p><b>Both:</b> the floating loan prices off the Z-spreads, the fixed one off the yields, each as entered. <b>Z-spreads only:</b> yields are derived from the Z-spreads on your swap curve (the YAS bridge), so both loans price one credit curve; safer when the quotes may be older than the swap curve, because spreads move much less than yields when rates move. <b>Yields only:</b> Z-spreads derived from the yields; safer when unsure which swap curve YAS used, because a yield needs no curve. A gap that is the same at every maturity barely matters (6bp moves the fixed benefit by 0.1bp on the sample); a gap that grows with maturity does (0 to 6bp: 0.65bp).</p>`
+      + `<h4>Beyond the last quote: the tail rules</h4><p>Each year after your last quote needs a price; a rule supplies it. The default intensity is the credit cost per year that the curve implies.</p>`
+      + tbl(['Rule', 'What it assumes', 'Typical error, floating / fixed'], [['5-year average (recommended)', 'the average default intensity of the last five quoted years, held flat (the ISDA convention for a curve\'s last segment)', '5.4 / 8.2bp'], ['3-year average', 'the same over three years', '5.8 / 8.5bp'], ['Last year', 'the last quoted year\'s intensity', '6.2 / 8.8bp'], ['Flat Z-spread', 'the last Z-spread held: the curve stops rising', '6.4 / 8.6bp, understates by about 2bp']].map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`))
+      + `<p class="cap">From the validation study under Methodology in tab 2: loans running beyond the data, 6,000 simulated issuer curves. A Nelson–Siegel extension was tested too and is not offered: it missed by 15–35bp on long tails (14.6 / 15.6bp typical).</p>`
+      + `<h4>Curve smoothing (individual bonds)</h4><p>Off: the quotes as entered. Nelson–Siegel: a smooth curve with a level, a slope and one bend, fitted to your bonds at their own maturities, replaces the Z-spreads up to the last quote (yields follow tenor by tenor). It removes the zig-zag of individual bonds, and any genuine bend it cannot follow. The price you pay always reads the quotes as entered. A fitted curve is already smooth, so the option is hidden for it.</p>`
+      + `<h4>Quote error for the analysis</h4><p>How far each quote may sit from the borrower's true curve: bid/ask, stale prices, issue quirks, fitting. Used only by the reliability analysis in tab 2, never by the figures. <b>Fitted curve:</b> the curve hides its own errors, so the size is set: 2bp typical; 1bp for a curve built on many liquid bonds (a high BVAL score is a guide); 3–4bp for few or illiquid bonds. <b>Individual bonds:</b> Auto estimates it from how far your bonds scatter around a smooth curve, combined with a prior guess (2bp sovereign, 4bp company): a Bayesian estimate, explained under Methodology in tab 2.</p>`;
+  }
+
   /* ---------------- results ---------------- */
   function card(md) {
-    const f = F[md], b = BASE[md], r = F.R[md], isF = md === 'float', c = F.common, scen = F !== BASE;
+    const f = F[md], b = BASE[md], r = F.R[md], isF = md === 'float', c = F.common, scen = F !== BASE, R = rel(), q = R && R.version[md];
     const dv = (r.wedge - BASE.R[md].wedge) * 1e4;
-    return `<div class="ac-h"><span class="ac-k">${isF ? 'Floating' : 'Fixed rate'}</span><span class="ac-s">${isF ? 'margin over ' + c.ref : 'swap-based fixed rate'}</span></div>
-      <div class="ac-big ${f.positive ? 'g' : 'b'}">${f.wedgeS}<span>bp a year</span></div><div class="ac-d">${f.positive ? 'Benefit to the borrower' : 'Cost to the borrower'} of average-life pricing${scen ? ` · today's curve ${b.wedgeP}, change ${fmt.sbp(dv)}` : ''}</div>
+    const big = q && asRange(q) ? `<div class="ac-big b">${rngS(q)}<span>bp a year, ${gl('range90', '90% range')}</span></div><div class="ac-why">The figure under your model choices is ${f.wedgeP}; ${q.verdict === 'uncertain' ? 'the range includes zero, so the sign is not settled' : 'it rests mostly on the tail rule'}.</div>`
+      : `<div class="ac-big ${f.positive ? 'g' : 'b'}">${f.wedgeS}<span>bp a year</span></div>` + (q ? `<div class="ac-rng${q.verdict === 'indicative' ? ' strong' : ''}">${gl('range90', '90% range')} ${rngS(q)}bp</div>` : `<div class="ac-rng">${measuring()}</div>`);
+    return `<div class="ac-l"><div class="ac-h"><span class="ac-k">${isF ? 'Floating' : 'Fixed rate'}</span><span class="ac-s">${isF ? 'margin over ' + c.ref : 'swap-based fixed rate'}</span>${q ? `<span class="chip ${VCLS[q.verdict]}">${VERD[q.verdict]}</span>` : ''}</div>
+      ${big}<div class="ac-d">${f.positive ? 'Benefit to the borrower' : 'Cost to the borrower'} of average-life pricing${scen ? ` · today's curve ${b.wedgeP}, change ${fmt.sbp(dv)}` : ''}${q ? ` · ${gl('psign', `${pctP(q)} probability of a ${psign(q).w}`)}` : ''}</div></div>
       <dl class="res-t">
         <dt>Price you pay ${qi(TIPS.pay)}</dt><dd>${f.charged2}</dd>
         <dt>Bond-equivalent price ${qi(TIPS.fair)}</dt><dd>${f.fair2}</dd>
@@ -298,8 +664,7 @@
     b.classList.toggle('warn', !!SBAD); b.classList.toggle('scen', !SBAD);
     if (SBAD) { b.innerHTML = `<p><b>Curve at signing: ${esc(d.name)}${d.when ? ', ' + esc(d.when) : ''}${k !== 1 ? `, at ${Math.round(k * 100)}%` : ''}.</b></p>` + failHtml(d, k); return; }
     if (!b.hidden) b.innerHTML = `<b>Curve at signing: ${esc(d.name)}${d.when ? ', ' + esc(d.when) : ''}${k !== 1 ? `, at ${Math.round(k * 100)}%` : ''}.</b> Every figure below prices the loan on the reshaped curve. On today's curve the benefit is ${BASE.float.wedgeP} floating and ${BASE.fixed.wedgeP} fixed.`;
-    $('ac-float').innerHTML = card('float'); $('ac-fixed').innerHTML = card('fixed');
-    $('ac-float').classList.toggle('on', mode === 'float'); $('ac-fixed').classList.toggle('on', mode === 'fixed');
+    $('ac-main').innerHTML = card(mode);
     const f = F[mode], c = F.common, isF = mode === 'float', X = isF ? cs.marginFloatBp : cs.marginFixedBp;
     $('t-fair').textContent = f.fair; $('t-bul').textContent = f.bullet; $('t-avg').textContent = f.avgLife;
     $('t-refd').textContent = `a ${c.wal}-year bullet, valued the same way`; $('t-avgd').textContent = `the curve read at ${c.wal} years`;
@@ -310,12 +675,17 @@
     $('t-comp').hidden = isF;
     if (!isF) $('t-comp').innerHTML = `<b>Split by component.</b> Credit effect <b>${f.creditEffect}</b>, from the credit curve; interest-rate effect <b>${f.rfEffect}</b>, from the shape of the swap curve alone${f.rfNeg ? `, negative here because swap rates peak at ${c.swapPeak} years and fall after while the loan is still outstanding` : ''}. The credit premium in the yield at the average life is ${f.creditPremium}.`;
     $('h-curve').textContent = isF ? `Z-spread curve, read at the average life of ${c.wal} years` : `Bond yields and swap rates, read at the average life of ${c.wal} years`;
-    WW.drawCurve($('c-curve'), F, mode); legend('c-curve', isF ? [['l', 'var(--accent)', 'Z-spread (YAS); hollow points interpolated'], ['d', 'var(--brass)', 'Reading at the average life']]
-      : [['l', 'var(--accent)', 'Bond yield (YTM); hollow points interpolated'], ['d', 'var(--muted)', 'Swap curve'], ['d', 'var(--brass)', 'Reading at the average life']]);
+    // individual bonds: each at its own maturity (par-equivalent), the line the whole years read from them
+    const src = PC && PC._src, bpts = cs.quoteSource === 'bonds' && src && src.rows ? src.rows.map(r0 => [r0.T, isF ? (r0.zp !== null ? r0.zp : r0.zfp) * 1e4 : r0.yp !== null ? r0.yp * 100 : null]).filter(p => Number.isFinite(p[1])) : [];
+    WW.drawCurve($('c-curve'), F, mode, { pts: bpts });
+    legend('c-curve', (bpts.length ? [['l', 'var(--accent)', `${isF ? 'Z-spread' : 'Bond yield'} read at whole years`], ['l', 'var(--slate)', 'Bond, par-equivalent, at its own maturity']] : [['l', 'var(--accent)', isF ? 'Z-spread (YAS); hollow points interpolated' : 'Bond yield (YTM); hollow points interpolated']])
+      .concat(isF ? [] : [['d', 'var(--muted)', 'Swap curve']], [['d', 'var(--brass)', 'Reading at the average life']]));
     WW.drawProfile($('c-profile'), F); legend('c-profile', [['b', 'var(--accent)', 'Loan balance'], ['b', 'var(--brass)', 'Bond with the same average life']]);
     WW.drawCost($('c-cost'), F, mode); legend('c-cost', [['b', 'var(--accent)', 'Costs more than the price'], ['b', 'var(--slate)', 'Costs less than the price']]);
     WW.drawRunning($('c-run'), F, mode);
     WW.drawWaterfall($('c-wf'), F, mode);
+    WW.drawStrip($('c-strip'), F, mode, { compact: true, wide: true }); $('strip-lg').hidden = !WW.strip(F.R[mode], F.cs).ok;
+    renderRelCard();
     resultsTables();
     renderSens();
   }
@@ -326,40 +696,52 @@
       : `<span><i class="${t === 'b' ? 'b' : ''}" style="background:${c}"></i>${s}</span>`).join('');
   }
   function resultsTables() {
-    const N = F.cs.amount, sym = F.common.sym, a = F.R.float, b = F.R.fixed, ck = CK;
-    const bp = v => fmt.bp(v * 1e4), pct = v => fmt.pct(v), mon = v => fmt.money(v, sym);
-    // two blocks a side, in pairs of the same length, so the tables line up row by row (6 + 4 rows each)
+    const md = mode, isF = md === 'float', N = F.cs.amount, sym = F.common.sym, a = F.R[md], ck = CK, cvr = cover(), R = rel(), q = R && R.version[md];
+    const bp = v => fmt.bp(v * 1e4), pct = v => fmt.pct(v), mon = v => fmt.money(v, sym), px = v => isF ? bp(v) : pct(v), src = PC && PC._src;
     const left = [
       ['grp', 'The loan and the data'],
-      [7, 'Final maturity, years', fmt.yrs(a.maturity), fmt.yrs(b.maturity)],
-      [8, 'Average life (WAL), years', a.WAL.toFixed(4), b.WAL.toFixed(4)],
-      [9, 'Risky annuity', a.B.toFixed(4), b.B.toFixed(4)],
-      ['', 'Agreed margin X', fmt.sbp(cs.marginFloatBp), fmt.sbp(cs.marginFixedBp)],
-      [43, 'Max repricing error, bp', ck.reprice.toExponential(1), ''],
-      [54, 'Max Z-spread vs yield gap, bp', ck.gap.toFixed(3), ''],
+      [7, 'Final maturity, years', fmt.yrs(a.maturity)],
+      [8, 'Average life (WAL), years', a.WAL.toFixed(4)],
+      [9, 'Risky annuity', a.B.toFixed(4)],
+      ['', 'Agreed margin X', fmt.sbp(isF ? cs.marginFloatBp : cs.marginFixedBp)],
+      [43, 'Max repricing error, bp', ck.reprice.toExponential(1)],
+      [54, 'Max Z-spread vs yield gap, bp', ck.gap.toFixed(3)],
       ['grp', 'The prices'],
-      [11, 'Curve read at the average life', bp(a.quote), pct(b.quote)],
-      ['', 'Average-life price (semi-annual)', bp(a.shortcut), pct(b.shortcut)],
-      [12, 'Price you pay', bp(a.charged), pct(b.charged)],
-      [13, 'Bond-equivalent price', bp(a.fair), pct(b.fair)],
+      [11, 'Curve read at the average life', px(a.quote)],
+      ['', 'Average-life price (semi-annual)', px(a.shortcut)],
+      [12, 'Price you pay', px(a.charged)],
+      [13, 'Bond-equivalent price', px(a.fair)],
+      ['grp', 'Reliability'],
+      ['', 'Exposure beyond the last quote', cvr ? pctS(cvr[md].share) : '–'],
+      ['', 'Tail reliance', cvr ? RELW[cvr[md].grade === 'green' ? 'low' : cvr[md].grade === 'amber' ? 'moderate' : 'high'] : '–'],
+      ['', '90% range, bp a year', q ? rngS(q) : '–'],
+      ['', q && q.est < 0 ? 'Probability of a cost' : 'Probability of a saving', q ? pctP(q) : '–'],
+      ['', 'Verdict', q ? VERD[q.verdict] : '–'],
     ];
     const right = [
       ['grp', 'The benefit'],
-      [15, 'Benefit, bp a year', fmt.sbp(a.wedge * 1e4, 4), fmt.sbp(b.wedge * 1e4, 4), 'hl'],
-      [20, 'Nominal benefit', mon(a.wedge * N * a.WAL), mon(b.wedge * N * b.WAL)],
-      [21, 'Value today', mon(a.pv * N), mon(b.pv * N)],
-      [22, 'Nominal benefit a year', mon(a.wedge * N * a.WAL / a.maturity), mon(b.wedge * N * b.WAL / b.maturity)],
-      [24, 'Value today, signing to the average life', mon(a.pvBefore * N), mon(b.pvBefore * N)],
-      [25, 'Value today, after the average life', mon(a.pvAfter * N), mon(b.pvAfter * N)],
+      [15, 'Benefit, bp a year', fmt.sbp(a.wedge * 1e4, 4), 'hl'],
+      [20, 'Nominal benefit', mon(a.wedge * N * a.WAL)],
+      [21, 'Value today', mon(a.pv * N)],
+      [22, 'Nominal benefit a year', mon(a.wedge * N * a.WAL / a.maturity)],
+      [24, 'Value today, signing to the average life', mon(a.pvBefore * N)],
+      [25, 'Value today, after the average life', mon(a.pvAfter * N)],
       ['grp', 'Where it comes from'],
-      [56, 'Timing effect', fmt.sbp(a.timing * 1e4), fmt.sbp(b.timing * 1e4)],
-      [57, 'Quote-convention effect', fmt.sbp(a.convention * 1e4), fmt.sbp(b.convention * 1e4)],
-      [34, 'Interest-rate effect (fixed)', '–', fmt.sbp((b.wf - b.rfPar) * 1e4)],
-      [35, 'Credit effect (fixed)', '–', fmt.sbp((b.wedge - b.wf + b.rfPar) * 1e4)],
-    ];
-    const tb = rows => '<thead><tr><th>Result</th><th>Row</th><th>Floating</th><th>Fixed</th></tr></thead><tbody>' + rows.map(r => r[0] === 'grp'
-      ? `<tr class="grp"><td colspan="4">${r[1]}</td></tr>` : `<tr${r[4] ? ' class="hl"' : ''}><td>${r[1]}</td><td class="rw">${r[0]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('') + '</tbody>';
+      [56, 'Timing effect', fmt.sbp(a.timing * 1e4)],
+      [57, 'Quote-convention effect', fmt.sbp(a.convention * 1e4)],
+    ].concat(isF ? [] : [[34, 'Interest-rate effect', fmt.sbp((a.wf - a.rfPar) * 1e4)], [35, 'Credit effect', fmt.sbp((a.wedge - a.wf + a.rfPar) * 1e4)]]).concat([
+      ['grp', 'Model choices'],
+      ['', 'Borrower quotes', cs.quoteSource === 'bonds' ? 'individual bonds' : 'fitted curve'],
+      ['', 'Quotes entered', { both: 'Z-spreads and yields', z: 'Z-spreads only', y: 'yields only' }[cs.quoteBasis]],
+      ['', 'Coupon correction', cs.quoteSource !== 'bonds' ? 'not applicable' : src && src.corr ? 'on' : 'all bonds near par'],
+      ['', 'Beyond the last quote', TAILW[F.R.tailRule]],
+      ['', 'Curve smoothing', F.R.smooth === 'ns' ? 'Nelson–Siegel' : 'off'],
+      ['', 'Quote error assumed, bp', R ? R.sigma.med.toFixed(1) : '–'],
+    ]);
+    const tb = rows => `<thead><tr><th>Result</th><th>Row</th><th>${VNAME[md]}</th></tr></thead><tbody>` + rows.map(r => r[0] === 'grp'
+      ? `<tr class="grp"><td colspan="3">${r[1]}</td></tr>` : `<tr${r[3] ? ' class="hl"' : ''}><td>${r[1]}</td><td class="rw">${r[0]}</td><td>${r[2]}</td></tr>`).join('') + '</tbody>';
     $('res-tab').innerHTML = tb(left); $('res-tab2').innerHTML = tb(right);
+    $('nums-h').textContent = `Results for the ${VLOW[md]} loan; "Row" is the row of the workbook's Results sheet`;
   }
 
   /* ---------------- sensitivity: the loan priced again with its inputs changed ----------------
@@ -505,7 +887,7 @@
     RUNS.set(id, r); return r;
   }
   function headline(d) {   // the short effect tag of a row: what the scenario does to your curves at 2, 10 and 30 years
-    const z = zCurve(cs), parts = [];
+    const z = zCurve(WW.effective(cs)), parts = [];
     const sl = swapLvl(cs), sw = [2, 10, 30].map(T => swapMove(d, 1, T, sl[T - 1])), cr = [2, 10, 30].map(T => creditMove(d, 1, T, z[T - 1]));
     if (d.swap) parts.push(`swaps ${sw.map(v => sg(v)).join(' / ')}`);
     if (d.cr || d.p) parts.push(`your spread ${cr.map(v => sg(v)).join(' / ')}`);
@@ -624,21 +1006,44 @@
     pv: `<b>Value today:</b> the benefit in every half-year, discounted on the swap curve and weighted by survival, summed over the loan's life.`,
     fee: `<b>As an upfront fee:</b> the value today expressed as a one-off fee at signing, in bp of the amount.`,
     be: `<b>Break-even year:</b> when the running value of the benefit turns positive. Before it the borrower pays more than the bond-equivalent price; after it, less.`,
+    tail: `<b>Beyond the last quote.</b> When the loan runs past your longest quote, its later years have no market price; a rule fills them in. On long loans these years can earn much of the benefit, so the rule matters. Typical errors from our validation study (6,000 simulated issuer curves; floating / fixed):<br>`
+      + `<b>5-year average</b> (recommended): each later year costs the average default intensity of the last five quoted years, the ISDA convention for a credit curve's last segment (5.4 / 8.2bp).<br>`
+      + `<b>3-year average:</b> follows the latest slope more closely, and more of its noise (5.8 / 8.5bp).<br>`
+      + `<b>Last year:</b> one quote decides the whole tail (6.2 / 8.8bp).<br>`
+      + `<b>Flat Z-spread:</b> the curve stops rising at the last quote; understates the benefit by about 2bp on average (6.4 / 8.6bp).<br>`
+      + `A Nelson–Siegel extension was tested and is not offered: it missed by 15–35bp on long tails (14.6 / 15.6bp).<br>`
+      + `No rule makes up for quotes that stop far from maturity: see the coverage lines below, and Reliability in tab 2.`,
+    smooth: `<b>Curve smoothing</b> (individual bonds). Off: the quotes as entered. Nelson–Siegel: a smooth curve with a level, a slope and one bend, fitted to your bonds at their own maturities, replaces the Z-spreads up to the last quote (yields follow), removing the zig-zag of individual bonds. It also removes any genuine bend it cannot follow. The price you pay always reads the quotes as entered.`,
+    noise: `<b>Quote error for the analysis:</b> how far each quote may sit from the borrower's true curve (bid/ask, stale prices, issue quirks, fitting). Used only by the reliability analysis in tab 2, never by the figures.<br>`
+      + `<b>Fitted curve:</b> its errors cannot be seen in the curve, because it has been smoothed, so the size is set: 2bp typical; 1bp for a curve built on many liquid bonds; 3–4bp for few or illiquid bonds. A wrong setting matters: in the validation study, half the true error left 90% ranges covering only 67% of cases.<br>`
+      + `<b>Individual bonds:</b> Auto estimates it from how far your bonds scatter around a smooth curve, combined with a prior guess (2bp sovereign, 4bp company): a Bayesian estimate, explained under Methodology in tab 2.`,
+    source: `<b>Borrower quotes.</b> <b>A fitted curve:</b> one Z-spread and/or yield per whole year, read off a fitted issuer curve (Bloomberg BVAL or similar), taken as par-bond quotes. <b>Individual bonds:</b> each bond's maturity, coupon and quotes; the tool moves each bond to the par bond of the same maturity (the coupon effect) and reads the curve at whole years. Use it when you have the bonds rather than a fitted curve.`,
+    qbasis: `<b>Quotes entered.</b> <b>Both:</b> floating priced off the Z-spreads, fixed off the yields, each as entered; any gap between them is checked. <b>Z-spreads only:</b> yields derived from the Z-spreads on your swap curve, so both loans price one credit curve; safer when quotes may be older than the swap curve, since spreads move much less than yields. <b>Yields only:</b> Z-spreads derived from the yields; safer when unsure which swap curve YAS used, since a yield needs no curve. A gap equal at every maturity barely matters; one that grows with maturity does.`,
+    bonds: `<b>Why the coupon is needed.</b> A yield is one rate for all of a bond's payments, so a 1% bond (most of its money at maturity) yields more on a rising curve than a par bond of the same issuer and maturity; its Z-spread differs too, by less. The engine reads every quote as a par bond's. With the coupon, each bond is priced from its own cash flows, a smooth spread-by-date curve is fitted to all of them, and each bond's quote is moved by its coupon effect on that curve to the par bond's: within 0.5bp in tests, even at 500bp spreads. Bloomberg field: CPN.`,
+    relCard: `<b>How reliable is this number.</b> The bar: the likely values of the true benefit (light: 90% range; dark: 50% range), the figure shown, and zero. Below: which sources make up the uncertainty, as shares of the total. The verdict and the probability of a saving follow from the range. Everything is explained in tab 2, Reliability.`,
+    relVerdict: `<b>Verdict.</b> <b>Context:</b> every input carries some error, and part of the loan may lie beyond your quotes. <b>Purpose:</b> say how far the figure can be trusted. <b>How:</b> four sources of uncertainty are measured on your case and combined into the likely values of the true benefit (the chart). <b>How to read:</b> Solid: the range excludes zero and is tight (within ±25%); Indicative: the sign is clear, the size less so; Uncertain: the range includes zero.`,
+    relBudget: `<b>Where the uncertainty comes from.</b> Each source's typical effect on the benefit (one standard deviation) and its share of the total. Independent sources combine as the square root of the sum of squares, so the shares add to 100% and the largest source dominates: improving a small source barely narrows the range.`,
+    relTail: `<b>Beyond your last quote.</b> <b>Context:</b> years after your last quote have no market price. <b>Purpose:</b> show how much of the loan lies there and what the assumption costs. <b>How:</b> the share of the loan's exposure beyond the last quote; the benefit under each tail rule; and the error the rule in use made on similar loans in the validation study. <b>How to read:</b> the higher the share, the more the figure rests on an assumption.`,
+    relNoise: `<b>Random quote errors.</b> <b>Context:</b> each quote may be a little off. <b>Purpose:</b> measure what such errors do to the benefit. <b>How:</b> your quotes are redrawn 400 times with random errors of the size shown, and the loan priced again each time (Monte Carlo). For bonds the errors are independent, with occasional bad quotes; for a fitted curve they run together along it. <b>How to read:</b> the spread of the histogram is this source's share of the uncertainty.`,
+    relQual: `<b>Quote quality.</b> <b>Context:</b> Z-spreads and yields describe one curve only if they come from one snapshot on one swap curve; single quotes can be off. <b>Purpose:</b> find inconsistencies and quotes that stand out. <b>How:</b> each Z-spread is turned into the yield a par bond would have, against the yield entered; and each quote is compared with a smooth curve fitted to all of them. <b>How to read:</b> a gap equal at every maturity is harmless; one that grows with maturity, or a flagged quote, deserves a check.`,
+    relGaps: `<b>Gaps between quotes.</b> <b>Context:</b> between two quotes the curve is read as a straight line. <b>Purpose:</b> measure what that could miss. <b>How:</b> the curve's own bend (a smooth curve against straight lines), and how far it can wander between quotes, more in the middle of a wide gap. <b>How to read:</b> large when the quotes are far apart; a quote in the widest gap narrows it most.`,
+    relLeans: `<b>What the result leans on.</b> <b>Purpose:</b> show which kind of error matters. <b>How:</b> the benefit with every quote moved 5bp, with a tilt and a bend, with the last quote moved, with swaps moved and quotes not, and with each quote left out. <b>How to read:</b> the benefit depends on the curve's shape, not its level; a large bar is sensitivity, not proof of an error.`,
+    relBias: `<b>Biases in your case.</b> Each item is something that could push this figure one way: what it is, how much it moves the benefit on your quotes, what it means, and what to do. Material: 1bp or more, or 20% of the figure; minor: from 0.3bp; negligible below (folded).`,
   };
   const qi = (html, lab) => `<button type="button" class="qi" aria-label="${lab || 'Explain'}">?<span class="tip" hidden>${html}</span></button>`;
   const TIPBOX = document.createElement('div'); TIPBOX.id = 'tipbox'; TIPBOX.setAttribute('role', 'tooltip'); TIPBOX.hidden = true; document.body.appendChild(TIPBOX);
   let tipFor = null;
   function showTip(b) {
-    TIPBOX.innerHTML = b.querySelector('.tip').innerHTML; TIPBOX.hidden = false; tipFor = b;
+    TIPBOX.innerHTML = b.classList.contains('gl') ? GL[b.dataset.gl] || '' : b.querySelector('.tip').innerHTML; TIPBOX.hidden = false; tipFor = b;
     const r = b.getBoundingClientRect(), w = Math.min(380, window.innerWidth - 24); TIPBOX.style.width = w + 'px';
     const left = Math.max(12, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 12)), h = TIPBOX.offsetHeight;
     const top = r.bottom + 8 + h > window.innerHeight - 8 && r.top - h - 8 > 0 ? r.top - h - 8 : r.bottom + 8;
     TIPBOX.style.left = left + window.scrollX + 'px'; TIPBOX.style.top = top + window.scrollY + 'px';
   }
   function hideTip() { TIPBOX.hidden = true; tipFor = null; }
-  document.addEventListener('mouseover', e => { const b = e.target.closest('.qi'); if (b) { if (b !== tipFor) showTip(b); } else if (tipFor && !e.target.closest('#tipbox')) hideTip(); });
-  document.addEventListener('focusin', e => { const b = e.target.closest('.qi'); if (b) showTip(b); });
-  document.addEventListener('focusout', e => { if (e.target.closest('.qi')) hideTip(); });
+  document.addEventListener('mouseover', e => { const b = e.target.closest('.qi, .gl'); if (b) { if (b !== tipFor) showTip(b); } else if (tipFor && !e.target.closest('#tipbox')) hideTip(); });
+  document.addEventListener('focusin', e => { const b = e.target.closest('.qi, .gl'); if (b) showTip(b); });
+  document.addEventListener('focusout', e => { if (e.target.closest('.qi, .gl')) hideTip(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') hideTip(); });
   window.addEventListener('scroll', () => { if (tipFor) hideTip(); }, { passive: true });
   function fillTips(root) { (root || document).querySelectorAll('[data-qi]').forEach(el => { if (!el.dataset.done) { el.outerHTML = qi(TIPS[el.dataset.qi]); } }); }
@@ -829,7 +1234,7 @@
       const v = key === 'p' ? src.p : key === 'ps' ? src.ps || 0 : src[key][i], el = $(id);
       if (document.activeElement !== el) el.value = key === 'p' ? fromP(v) : v;
       // the proportional moves in % of today's level, with what that means in bp at 10 years for this case
-      const lvl10 = key === 'p' ? z10(cs) : sw10;
+      const lvl10 = key === 'p' ? z10(WW.effective(cs)) : sw10;
       $(id + '-v').textContent = key === 'p' || key === 'ps' ? sg(v * 100) + '%' + (v ? ` = ${sbp(v * Math.max(lvl10, 0))} at 10y` : '') : sbp(v);
     });
     const bf = $('b-from'), key = cs.currency + cs.peer + cs.scenario.h;
@@ -847,10 +1252,12 @@
     ['i-client', 'client', 's'], ['i-btype', 'borrowerType', 's'], ['i-region', 'region', 's'], ['i-asof', 'asOf', 's'], ['i-ccy', 'currency', 's'], ['i-basis', 'swapBasis', 's'],
     ['i-amt', 'amount', 'n'], ['i-rec', 'recovery', 'pct'], ['i-freq', 'couponFreq', 'i'], ['i-fix', 'fixing6mPct', 'n?'], ['i-g10', 'gSpread10Bp', 'n?'],
     ['i-x', 'drawdownYears', 'n'], ['i-y', 'repaymentYears', 'n'], ['i-xf', 'marginFloatBp', 'n'], ['i-xx', 'marginFixedBp', 'n'],
+    ['i-src', 'quoteSource', 's'], ['i-qbasis', 'quoteBasis', 's'], ['i-tail', 'tailRule', 's'], ['i-smooth', 'smooth', 's'], ['i-noise', 'noiseBp', 'n?'],
   ];
   const showNum = (v, t) => v === null || v === undefined ? '' : t === 'pct' ? +(v * 100).toFixed(6) + '%' : t === 'n' && Math.abs(v) >= 1e5 ? v.toLocaleString('en-GB') : String(+v.toFixed(8));
   function renderInputs(light) {
     const p = cs.profile, cust = p.type === 'custom';
+    noiseOptions();
     const rg = $('i-region'); if (rg.dataset.for !== cs.borrowerType) { rg.innerHTML = REGIONS[cs.borrowerType].map(r => `<option value="${r[0]}">${esc(r[1])}</option>`).join(''); rg.dataset.for = cs.borrowerType; }
     $('i-set').innerHTML = setText();
     IN.forEach(([id, key, t]) => { const el = $(id); if (document.activeElement === el) return; el.value = t === 's' || t === 'i' ? cs[key] : showNum(cs[key], t); el.classList.remove('bad'); });
@@ -860,27 +1267,95 @@
     $('i-basis-l').hidden = cs.currency !== 'EUR';
     [['lv-b', 'i-b', p.type !== 'balloon'], ['lv-y', 'i-y', cust], ['lv-x', 'i-x', cust]].forEach(([a, b, off]) => { $(a).disabled = $(b).disabled = off; $(a).closest('.lv').classList.toggle('off', off); });
     $('sched-box').hidden = !cust;
+    // Nelson–Siegel smoothing needs at least WW.NS_MIN points (four parameters): individual bonds, or whole-year Z-spreads
+    const E = WW.effective(cs), bonds = cs.quoteSource === 'bonds', fewZ = (E.nsPts && E.nsPts.length ? E.nsPts.length : Object.keys(E.zspreadBp).length) < WW.NS_MIN;
+    $('i-smooth').querySelector('option[value="ns"]').disabled = fewZ;
+    // card 4 follows card 3: smoothing is for individual bonds (a fitted curve is already smooth)
+    $('smooth-l').hidden = !bonds && cs.smooth !== 'ns'; $('bonds-box').hidden = !bonds; $('cv-cap').hidden = bonds;
+    if (!$('model-method').dataset.done) { $('model-method').innerHTML = modelMethodHtml(); $('model-method').dataset.done = '1'; }
     if (light) return;
-    curveGrid(); if (cust) schedGrid();
+    curveGrid(); if (bonds) bondGrid(); if (cust) schedGrid(); renderCover();
+  }
+  // the quote-error options depend on where the quotes come from; a saved value outside the list is kept
+  function noiseOptions() {
+    const el = $('i-noise'), bonds = cs.quoteSource === 'bonds', key = (bonds ? 'b' : 'c') + '|' + cs.noiseBp; if (el.dataset.for === key) return;
+    const o = bonds ? [['', 'Auto: estimated from your bonds (recommended)'], ['2', '2bp'], ['4', '4bp'], ['6', '6bp']] : [['', '2bp: typical for a fitted curve (default)'], ['1', '1bp'], ['3', '3bp'], ['4', '4bp']];
+    if (cs.noiseBp !== null && !o.some(x => x[0] !== '' && +x[0] === cs.noiseBp)) o.push([String(cs.noiseBp), cs.noiseBp + 'bp (saved with the case)']);
+    el.innerHTML = o.map(([v, t]) => `<option value="${v}">${t}</option>`).join(''); el.dataset.for = key;
   }
   const CV = [['zspreadBp', 'Z-spread, bp'], ['ytmPct', 'YTM, %'], ['swapPct', 'Swap, %']];
   function curveGrid(force) {
-    const t = $('cv-tab');
+    const t = $('cv-tab'), E = WW.effective(cs), bonds = cs.quoteSource === 'bonds', qb = cs.quoteBasis;
     if (!t.dataset.built) {
       let h = '<thead><tr><th>Tenor</th>' + CV.map(c => `<th>${c[1]}</th>`).join('') + '<th>Yield implied, %</th><th>Gap, bp</th></tr></thead><tbody>';
       for (let T = 1; T <= 30; T++) h += `<tr><td>${T}y</td>` + CV.map((c, j) => `<td><input data-cv="${c[0]}" data-t="${T}" data-r="${T - 1}" data-c="${j}" inputmode="decimal" aria-label="${c[1]} at ${T} years"></td>`).join('') + `<td class="ro" data-br="${T}"></td><td class="ro" data-gp="${T}"></td></tr>`;
       t.innerHTML = h + '</tbody>'; t.dataset.built = '1';
     }
-    t.querySelectorAll('input[data-cv]').forEach(el => { if (!force && document.activeElement === el) return; const v = cs[el.dataset.cv][el.dataset.t]; el.value = v === undefined ? '' : String(v); el.classList.remove('bad'); });
+    // derived values (from the bonds, or from the other quote type) are shown greyed and cannot be typed over
+    t.querySelectorAll('input[data-cv]').forEach(el => {
+      const k = el.dataset.cv, der = k !== 'swapPct' && (bonds || (k === 'ytmPct' && qb === 'z') || (k === 'zspreadBp' && qb === 'y'));
+      el.readOnly = der; el.tabIndex = der ? -1 : 0; el.classList.toggle('derived', der);
+      if (!force && !der && document.activeElement === el) return;
+      const v = der ? E[k][el.dataset.t] : cs[k][el.dataset.t];
+      el.value = v === undefined ? '' : der ? String(+v.toFixed(k === 'ytmPct' ? 4 : 2)) : String(v); el.classList.remove('bad');
+    });
     let g = null; try { g = dfgOf(cs); } catch (e) { /* shown elsewhere */ }
     for (let T = 1; T <= 30; T++) {
-      const z = cs.zspreadBp[T], y = cs.ytmPct[T], br = t.querySelector(`[data-br="${T}"]`), gp = t.querySelector(`[data-gp="${T}"]`);
-      if (g && z !== undefined && Object.keys(cs.swapPct).length) { const b = WW.bridge(g, z / 1e4, T, cs.couponFreq) * 100; br.textContent = b.toFixed(3);
+      const z = E.zspreadBp[T], y = E.ytmPct[T], br = t.querySelector(`[data-br="${T}"]`), gp = t.querySelector(`[data-gp="${T}"]`);
+      if (g && g.every(Number.isFinite) && z !== undefined && Object.keys(cs.swapPct).length) { const b = WW.bridge(g, z / 1e4, T, cs.couponFreq) * 100; br.textContent = b.toFixed(3);
         gp.textContent = y !== undefined ? (Math.abs((b - y) * 100) < 0.005 ? 0 : (b - y) * 100).toFixed(2).replace('-', MINUS) : ''; gp.classList.toggle('bad', y !== undefined && Math.abs((b - y) * 100) > 1); }
       else { br.textContent = ''; gp.textContent = ''; }
     }
-    const n = CV.map(c => Object.keys(cs[c[0]]).length);
-    $('cv-msg').textContent = `${n[0]} Z-spreads, ${n[1]} yields, ${n[2]} swap rates` + (n[2] && Object.values(cs.swapPct).every(v => Math.abs(v) < 0.3) ? ' · swap rates look like decimals: enter 3.25 for 3.25%' : '');
+    const n = [Object.keys(E.zspreadBp).length, Object.keys(E.ytmPct).length, Object.keys(cs.swapPct).length];
+    $('cv-msg').textContent = (bonds ? `From the bonds: ${n[0]} whole-year Z-spreads, ${n[1]} yields (greyed); ${n[2]} swap rates` : `${n[0]} Z-spreads, ${n[1]} yields${qb !== 'both' ? ` (${qb === 'z' ? 'yields' : 'Z-spreads'} derived, greyed)` : ''}, ${n[2]} swap rates`)
+      + (n[2] && Object.values(cs.swapPct).every(v => Math.abs(v) < 0.3) ? ' · swap rates look like decimals: enter 3.25 for 3.25%' : '');
+  }
+  // individual bonds: one row each, plus three empty rows to type into
+  const BD = [['name', 'Bond'], ['mat', 'Maturity'], ['cpn', 'Coupon, %'], ['z', 'Z-spread, bp'], ['y', 'YTM, %']];
+  function bondGrid(force) {
+    const t = $('bd-tab'), E = WW.effective(cs), src = E._src || {}, rows = cs.bonds, n = rows.length + 3, qb = cs.quoteBasis;
+    if (+t.dataset.n !== n) {
+      let h = '<thead><tr><th></th>' + BD.map(c => `<th>${c[1]}</th>`).join('') + '<th>Years</th><th>Par Z, bp</th><th>Par YTM, %</th><th></th></tr></thead><tbody>';
+      for (let i = 0; i < n; i++) h += `<tr data-row="${i}"><td>${i + 1}</td>` + BD.map((c, j) => `<td><input data-bd="${c[0]}" data-i="${i}" data-r="${i}" data-c="${j}"${j >= 2 ? ' inputmode="decimal"' : ''} aria-label="${c[1]}, bond ${i + 1}"></td>`).join('')
+        + `<td class="ro" data-yr="${i}"></td><td class="ro" data-pz="${i}"></td><td class="ro" data-py="${i}"></td><td>${i < rows.length ? `<button type="button" class="bd-x" data-bdx="${i}" aria-label="Remove bond ${i + 1}">×</button>` : ''}</td></tr>`;
+      t.innerHTML = h + '</tbody>'; t.dataset.n = n;
+    }
+    t.querySelectorAll('input[data-bd]').forEach(el => {
+      const i = +el.dataset.i, k = el.dataset.bd, ign = (k === 'z' && qb === 'y') || (k === 'y' && qb === 'z');
+      el.classList.toggle('derived', ign); el.title = ign ? `Not used: ${qb === 'z' ? 'yields are derived from the Z-spreads' : 'Z-spreads are derived from the yields'} (card 3, Quotes entered)` : '';
+      if (!force && document.activeElement === el) return; const b = rows[i], v = b ? b[k] : '';
+      el.value = v === null || v === undefined ? '' : String(v); el.classList.remove('bad');
+    });
+    const byI = {}; (src.rows || []).forEach(r => { byI[r.i] = r; }); const left = {}; (src.left || []).forEach(r => { left[r.i] = r.why; });
+    for (let i = 0; i < n; i++) {
+      const r = byI[i], tr = t.querySelector(`tr[data-row="${i}"]`);
+      t.querySelector(`[data-yr="${i}"]`).textContent = r ? r.T.toFixed(2) : '';
+      t.querySelector(`[data-pz="${i}"]`).textContent = r && r.zp !== null ? (r.zp * 1e4).toFixed(1) : r && Number.isFinite(r.zfp) ? (r.zfp * 1e4).toFixed(1) : '';
+      t.querySelector(`[data-py="${i}"]`).textContent = r && r.yp !== null ? (r.yp * 100).toFixed(3) : '';
+      tr.classList.toggle('left', i in left); tr.title = i in left ? 'Left out: ' + (LEFTW[left[i]] || left[i]) : '';
+    }
+    const used = (src.rows || []).length, nl = (src.left || []).length, ord = src.order || {};
+    $('bd-msg').textContent = `${used} bond${used === 1 ? '' : 's'} used${nl ? `, ${nl} left out (hover the row)` : ''}${ord.note === 'ambiguous' ? ' · dates read as day/month' : ord.order === 'md' ? ' · dates read as month/day' : ''}`;
+  }
+  // a bond cell typed: coupons accept "par" and fractions such as 4 1/8
+  function bondValue(k, raw) {
+    raw = raw.trim(); if (k === 'name' || k === 'mat') return raw;
+    if (k === 'cpn' && /^par$/i.test(raw)) return 'par';
+    const fr = raw.match(/^(\d+)\s+(\d+)\/(\d+)$/); if (k === 'cpn' && fr) return +fr[1] + fr[2] / fr[3];
+    if (raw === '') return null; const v = parseNum(raw); return Number.isFinite(v) ? v : undefined;
+  }
+  // paste a block of bonds; a header row with recognisable names sets the columns
+  const BDH = [[/^(bond|name|ticker|security|isin|issue)/i, 'name'], [/^mat/i, 'mat'], [/^(cpn|coupon)/i, 'cpn'], [/z.?spr|^z$|zspread/i, 'z'], [/ytm|yield|yld/i, 'y']];
+  function pasteBonds(e) {
+    const el = e.target; if (!el.dataset || !el.dataset.bd) return;
+    const rows = parseBlock((e.clipboardData || window.clipboardData).getData('text')); if (!rows.length || (rows.length === 1 && rows[0].length === 1)) return;
+    e.preventDefault();
+    let cols = null; const hd = rows[0].map(c => { const m = BDH.find(([re]) => re.test(String(c).trim())); return m ? m[1] : null; });
+    if (hd.filter(Boolean).length >= 2) { cols = hd; rows.shift(); }
+    const i0 = +el.dataset.i, c0 = +el.dataset.c; let n = 0;
+    rows.forEach((r, j) => { const i = i0 + j; if (i >= 60) return; while (cs.bonds.length <= i) cs.bonds.push({ name: '', mat: '', cpn: null, z: null, y: null });
+      r.forEach((v, c) => { const k = cols ? cols[c] : (BD[c0 + c] || [])[0]; if (!k) return; const x = bondValue(k, String(v)); if (x !== undefined) { cs.bonds[i][k] = x; n++; } }); });
+    $('bd-msg').textContent = `Pasted ${n} values`; changed({ data: true }); bondGrid(true);
   }
   function schedGrid(force) {
     const t = $('sch-tab'), p = cs.profile;
@@ -954,23 +1429,26 @@
     if (document.activeElement !== $('case-name')) $('case-name').value = curName || cs.client || '';
   }
   let msgT = null;
-  function say(t) { $('case-msg').textContent = t; clearTimeout(msgT); msgT = setTimeout(caseStatus, 4000); }
+  function say(t, ms) { $('case-msg').textContent = t; clearTimeout(msgT); msgT = setTimeout(caseStatus, ms || 4000); }
   function caseStatus() {
     clearTimeout(msgT);
     const dirty = JSON.stringify(cs) !== JSON.stringify(saved);
     $('case-msg').textContent = dirty ? (curName ? 'Changed since saved' : '') : curName ? 'Saved' : '';
   }
   function loadCase(c, name) { cs = normalise(c); saved = clone(cs); curName = name; $('r-data').value = ''; delete $('b-from').dataset.for; render(); caseList(); autosave(); caseStatus(); }
+  // the Nelson–Siegel tail rule was dropped: a case saved with it prices with the 5-year average
+  function droppedRule(c) { if (c && c.tailRule === 'ns') say('This case used the Nelson–Siegel tail rule, no longer offered: it now uses the 5-year average (see How the model choices work, card 4)', 12000); }
   function download(name, text, type) {
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }
   const fileStem = s => (s || 'case').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'case';
   function pitchFile() {
-    const c = cs, obj = o => '{' + Object.keys(o).map(Number).sort((a, b) => a - b).map(k => `${k}: ${+o[k].toFixed(6)}`).join(', ') + '}';
+    const c = cs, E = WW.effective(cs), obj = o => '{' + Object.keys(o).map(Number).sort((a, b) => a - b).map(k => `${k}: ${+o[k].toFixed(6)}`).join(', ') + '}';
+    const from = cs.quoteSource === 'bonds' ? 'whole-year quotes derived from individual bonds (each moved to the par bond of its maturity)' : cs.quoteBasis !== 'both' ? `whole-year quotes, ${cs.quoteBasis === 'z' ? 'yields derived from the Z-spreads' : 'Z-spreads derived from the yields'}` : 'today\'s curves as entered';
     return `/* WAL Wedge client templates — THE CASE. Exported from the WAL Wedge simulator${curName ? ` (case "${curName.replace(/\*\//g, '')}")` : ''} on ${new Date().toISOString().slice(0, 10)}.
    Replace walWedge/clientCase.js with this file to build the client pitch, one-pager and Meeting Playbook from this case.
-   Today's curves as entered; simulator scenarios are not carried into the pitch. */
+   Quotes: ${from}; simulator scenarios are not carried into the pitch. */
 window.WW_CASE = {
   illustrative: ${!!c.illustrative},
   client: ${JSON.stringify(c.client)},
@@ -988,9 +1466,11 @@ window.WW_CASE = {
   recovery: ${c.recovery},
   couponFreq: ${c.couponFreq},
   fixing6mPct: ${c.fixing6mPct === null ? 'null' : c.fixing6mPct},
+  tailRule: ${JSON.stringify(c.tailRule)},          // beyond the last quote: 'avg5' (recommended), 'avg3', 'last', 'flatZ'
+  smooth: ${JSON.stringify(c.smooth)},
 
-  zspreadBp: ${obj(c.zspreadBp)},
-  ytmPct: ${obj(c.ytmPct)},
+  zspreadBp: ${obj(E.zspreadBp)},
+  ytmPct: ${obj(E.ytmPct)},${E.nsPts && E.nsPts.length ? `\n  nsPts: ${JSON.stringify(E.nsPts.map(([t, v]) => [+t.toFixed(4), +v.toFixed(4)]))},   // the bonds a Nelson–Siegel fit uses (maturity, par Z-spread)` : ''}
   swapPct: ${obj(c.swapPct)}
 };
 `;
@@ -1014,8 +1494,10 @@ window.WW_CASE = {
   }
   function wire() {
     document.addEventListener('click', e => {
-      const q = e.target.closest('.qi'); if (q) { e.preventDefault(); e.stopPropagation(); if (tipFor === q) hideTip(); else showTip(q); return; }
+      const q = e.target.closest('.qi, .gl'); if (q) { e.preventDefault(); e.stopPropagation(); if (tipFor === q) hideTip(); else showTip(q); return; }
       if (tipFor && !e.target.closest('#tipbox')) hideTip();
+      const vw = e.target.closest('[data-view]'); if (vw) { view = vw.dataset.view; render(); autosave(); return; }
+      if (e.target.closest('[data-rel]')) { view = 'rel'; setTab('scen', true); return; }
       const tb = e.target.closest('[data-tab],[data-goto]'); if (tb) { setTab(tb.dataset.tab || tb.dataset.goto, true); return; }
       const lb = e.target.closest('[data-loan]'); if (lb) { mode = lb.dataset.loan; render(); autosave(); return; }
       const sc = e.target.closest('[data-sc]'); if (sc) { setScenario(sc.dataset.sc); return; }
@@ -1024,7 +1506,6 @@ window.WW_CASE = {
         changed(); return; }
       const fx = e.target.closest('[data-fixk],[data-fixref]'); if (fx) { if (fx.dataset.fixk) cs.scenario.k = +fx.dataset.fixk; if (fx.dataset.fixref) cs.scenario.ref = fx.dataset.fixref; changed(); return; }
       const bm = e.target.closest('[data-bmode]'); if (bm) { bmode = bm.dataset.bmode; renderBuilder(resolve(cs)); return; }
-      const ac = e.target.closest('.acard'); if (ac) { mode = ac.id === 'ac-fixed' ? 'fixed' : 'float'; render(); autosave(); }
     });
     // loan levers: slider and number box in step
     const lv = (id, f) => $(id).addEventListener('input', e => { f(+e.target.value); changed(); });
@@ -1065,7 +1546,8 @@ window.WW_CASE = {
         if (key === 'repaymentYears' && v + cs.drawdownYears > 30) cs.drawdownYears = 30 - v;
         if (key === 'borrowerType' || key === 'region') { if (!REGIONS[cs.borrowerType].some(r => r[0] === cs.region)) cs.region = defaultRegion(cs); cs.peer = regionRow(cs)[2]; }
         if (!applies(cs.scenario.id)) cs.scenario.id = 'none';   // a scenario of another currency or peer group no longer applies
-        changed({ data: ['currency', 'swapBasis', 'couponFreq', 'fixing6mPct', 'gSpread10Bp'].includes(key) });
+        if (key === 'quoteSource' && v !== 'bonds' && cs.smooth === 'ns') cs.smooth = 'off';   // smoothing is for individual bonds
+        changed({ data: ['currency', 'swapBasis', 'couponFreq', 'fixing6mPct', 'gSpread10Bp', 'quoteSource', 'quoteBasis'].includes(key) });
       });
     });
     $('i-b').addEventListener('input', e => { const raw = e.target.value, v = parseNum(raw); if (!Number.isFinite(v)) { e.target.classList.add('bad'); return; }
@@ -1077,8 +1559,18 @@ window.WW_CASE = {
       el.classList.remove('bad'); cs[el.dataset.cv][T] = v; changed({ data: true });
     });
     $('cv-tab').addEventListener('paste', pasteCurves);
+    $('bd-tab').addEventListener('input', e => {
+      const el = e.target; if (!el.dataset.bd) return; const i = +el.dataset.i, k = el.dataset.bd, x = bondValue(k, el.value);
+      if (x === undefined) { el.classList.add('bad'); return; } el.classList.remove('bad');
+      while (cs.bonds.length <= i) cs.bonds.push({ name: '', mat: '', cpn: null, z: null, y: null });
+      cs.bonds[i][k] = x; changed({ data: true });
+    });
+    $('bd-tab').addEventListener('paste', pasteBonds);
+    $('bd-tab').addEventListener('keydown', gridKeys);
+    $('bd-tab').addEventListener('click', e => { const b = e.target.closest('[data-bdx]'); if (!b) return; cs.bonds.splice(+b.dataset.bdx, 1); changed({ data: true }); bondGrid(true); });
+    $('bd-clear').addEventListener('click', e => confirmClick(e.target, 'Clear all the bonds?', () => { cs.bonds = []; changed({ data: true }); bondGrid(true); }));
     $('cv-tab').addEventListener('keydown', gridKeys);
-    $('cv-clear').addEventListener('click', e => confirmClick(e.target, 'Clear all three curves?', () => { cs.zspreadBp = {}; cs.ytmPct = {}; cs.swapPct = {}; changed({ data: true }); }));
+    $('cv-clear').addEventListener('click', e => confirmClick(e.target, cs.quoteSource === 'bonds' ? 'Clear the curves and the bonds?' : 'Clear all three curves?', () => { cs.zspreadBp = {}; cs.ytmPct = {}; cs.swapPct = {}; if (cs.quoteSource === 'bonds') cs.bonds = []; changed({ data: true }); }));
     $('sch-tab').addEventListener('input', e => {
       const el = e.target; if (!el.dataset.scK) return; const raw = el.value.trim(), v = raw === '' ? 0 : parseNum(raw);
       if (!Number.isFinite(v)) { el.classList.add('bad'); return; } el.classList.remove('bad'); cs.profile[el.dataset.scK][+el.dataset.i] = v / 100; changed(); schedGrid();
@@ -1110,7 +1602,7 @@ window.WW_CASE = {
     $('case-sel').addEventListener('change', e => {
       const v = e.target.value; if (v === '__cur') return;
       if (v === '__sample') loadCase(sample(), null); else { const c = listCases()[v]; if (c) loadCase(c.case, v); }
-      say(v === '__sample' ? 'Sample case loaded' : `Loaded "${v}"`);
+      say(v === '__sample' ? 'Sample case loaded' : `Loaded "${v}"`); if (v !== '__sample') droppedRule((listCases()[v] || {}).case);
     });
     $('case-save').addEventListener('click', () => {
       const name = $('case-name').value.trim() || cs.client.trim(); if (!name) { $('case-name').focus(); say('Give the case a name first'); return; }
@@ -1131,13 +1623,20 @@ window.WW_CASE = {
       const f = e.target.files && e.target.files[0]; if (!f) return; const rd = new FileReader();
       rd.onload = () => { try { const j = JSON.parse(rd.result), c = j && j.case ? j.case : j; if (!c || typeof c !== 'object' || !c.swapPct) throw new Error('no case in the file');
         const name = typeof j.name === 'string' && j.name.trim() ? j.name.trim().slice(0, 80) : f.name.replace(/\.json$/i, '');
-        loadCase(c, null); $('case-name').value = name; say(`Imported "${name}": press Save to keep it in this browser`); } catch (err) { say('Not a simulator case file: ' + err.message); } e.target.value = ''; };
+        loadCase(c, null); $('case-name').value = name; say(`Imported "${name}": press Save to keep it in this browser`); droppedRule(c); } catch (err) { say('Not a simulator case file: ' + err.message); } e.target.value = ''; };
       rd.readAsText(f);
     });
     $('case-pitch').addEventListener('click', () => {
       if (cs.profile.type !== 'linear') { say('The client pitch describes linear repayment only; set the profile to Linear to export'); return; }
       if (!F) { say('Fix the inputs first: the case does not price'); return; }
-      download('clientCase.js', pitchFile(), 'text/javascript'); say('clientCase.js downloaded: today\'s curves, no scenario');
+      const go = () => { download('clientCase.js', pitchFile(), 'text/javascript'); say('clientCase.js downloaded: today\'s curves, no scenario'); };
+      const R = cs.scenario.id === 'none' || cs.scenario.k === 0 ? rel() : null, warn = [], src = WW.effective(cs)._src;
+      if (cs.tailRule !== 'avg5' || cs.smooth === 'ns') warn.push('the pitch describes the recommended tail rule');
+      if (R && ['float', 'fixed'].some(v => R.version[v].verdict === 'uncertain')) warn.push('a result is uncertain: its range includes zero');
+      if (R && ['float', 'fixed'].some(v => R.version[v].reliance === 'high')) warn.push('a result rests mostly on the tail rule');
+      if (src && src.left && src.left.length) warn.push(`${src.left.length} bond${src.left.length > 1 ? 's are' : ' is'} left out`);
+      if (warn.length) { confirmClick($('case-pitch'), `Note: ${warn.join('; ')}. Export anyway?`, go); return; }
+      go();
     });
   }
   // two-step confirmation inside the page (no browser dialogs)
@@ -1155,6 +1654,6 @@ window.WW_CASE = {
   }
 
   fillTips(); initState(); wire(); caseList();
-  setTab(tab);
-  window.WWSIM = { get case() { return cs; }, get figures() { return F; }, render, resolve, shocked, engineCase, checksOf, normalise, creditTransfer, NONE };   // for tests
+  setTab(tab); droppedRule((store.get(LS_CUR) || {}).case);
+  window.WWSIM = { get case() { return cs; }, set case(c) { cs = normalise(c); }, get figures() { return F; }, render, resolve, shocked, engineCase, checksOf, normalise, creditTransfer, pitchFile, NONE };   // for tests
 })();

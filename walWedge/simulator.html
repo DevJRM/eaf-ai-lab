@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="clientStyle.css?v=20261111a">
+<link rel="stylesheet" href="clientStyle.css?v=20261113a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23800020'/%3E%3Cg fill='%23fff' opacity='.9'%3E%3Crect x='11' y='16' width='5' height='36'/%3E%3Crect x='18' y='21' width='5' height='31'/%3E%3Crect x='25' y='26' width='5' height='26'/%3E%3Crect x='32' y='31' width='5' height='21'/%3E%3Crect x='39' y='36' width='5' height='16'/%3E%3Crect x='46' y='41' width='5' height='11'/%3E%3C/g%3E%3Cpolygon points='30.3,30 54,16 54,30' fill='%23E2A940' opacity='.85'/%3E%3Cline x1='9' y1='42' x2='54' y2='16' stroke='%23E2A940' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 
 
@@ -12,7 +12,7 @@
   <div class="left"><div class="nm">WAL Wedge <span>simulator</span></div></div>
   <div class="tog" role="group" aria-label="Step">
     <button type="button" data-tab="inputs" aria-pressed="true">1 · Inputs &amp; data</button>
-    <button type="button" data-tab="scen" aria-pressed="false">2 · Scenarios</button>
+    <button type="button" data-tab="scen" aria-pressed="false">2 · Scenarios &amp; reliability</button>
     <button type="button" data-tab="results" aria-pressed="false">3 · Results</button>
   </div>
   <a class="back-btn" href="index.html" title="Back to the WAL Wedge Tool Set">&larr; Tool Set</a>
@@ -78,16 +78,41 @@
       <p class="cap">Currency chooses the interest-rate scenarios; borrower type and region choose the credit scenarios. Recovery: 40% is the market convention for senior unsecured debt; the result is insensitive to it. The coupon frequency is that of the borrower's bonds in this currency.</p>
     </div>
 
-    <div class="ex"><div class="et">3 · Curves</div><div class="eh">One row per year; leave blank where there is no quote</div>
-      <p class="cap">Paste a block straight from Excel or a Bloomberg export: Tenor, Z-spread, YTM and swap columns, or start in any cell. The last two columns check that the Z-spreads and yields belong to one snapshot: the yield implied by each Z-spread should match the quoted yield within 1bp <span data-qi="implied"></span>.</p>
+    <div class="ex" id="curves-c"><div class="et">3 · Curves</div><div class="eh">The borrower's quotes and the swap curve</div>
+      <div class="form wide src">
+        <label><span>Borrower quotes <span data-qi="source"></span></span> <select id="i-src"><option value="curve">A fitted curve, one quote per year (BVAL or similar)</option><option value="bonds">Individual bonds, each with its maturity and coupon</option></select></label>
+        <label><span>Quotes entered <span data-qi="qbasis"></span></span> <select id="i-qbasis"><option value="both">Z-spreads and yields</option><option value="z">Z-spreads only: yields derived from them</option><option value="y">Yields only: Z-spreads derived from them</option></select></label>
+      </div>
+      <div id="bonds-box" hidden>
+        <p class="cap">One row per fixed-coupon bond of the borrower (leave out floaters, callables and inflation-linked bonds). Maturity as a date (15/06/2033, 2033-06-15 or 15 Jun 2033, counted from "Market data as of" in card 2) or in years; coupon in %, or <b>par</b> for a bond trading close to 100. Paste a block from Excel or a Bloomberg export: a header row with Maturity, Cpn, Z-spread, YTM is recognised. Each bond is moved to the par bond of the same maturity, then read at whole years in the table below <span data-qi="bonds"></span>.</p>
+        <div class="brow"><button type="button" class="sbtn ghost" id="bd-clear">Clear bonds</button><span class="msg" id="bd-msg"></span></div>
+        <div class="tbl tall"><table class="grid bd" id="bd-tab"></table></div>
+      </div>
+      <p class="cap" id="cv-cap">Paste a block straight from Excel or a Bloomberg export: Tenor, Z-spread, YTM and swap columns, or start in any cell. The last two columns check that the Z-spreads and yields belong to one snapshot: the yield implied by each Z-spread should match the quoted yield within 1bp <span data-qi="implied"></span>.</p>
       <div class="brow"><button type="button" class="sbtn ghost" id="cv-clear">Clear curves</button><span class="msg" id="cv-msg"></span></div>
       <div class="tbl tall"><table class="grid" id="cv-tab"></table></div>
+    </div>
+
+    <div class="ex" id="model-c"><div class="et">4 · Model choices and data coverage</div><div class="eh">How the years beyond your last quote are priced, and how far your quotes reach</div>
+      <div class="form wide">
+        <label><span>Beyond the last quote <span data-qi="tail"></span></span> <select id="i-tail">
+          <option value="avg5">5-year average intensity (recommended)</option>
+          <option value="avg3">3-year average intensity</option>
+          <option value="last">Last quoted year's intensity</option>
+          <option value="flatZ">Last Z-spread held flat</option></select></label>
+        <label id="smooth-l"><span>Curve smoothing <span data-qi="smooth"></span></span> <select id="i-smooth"><option value="off">Off: quotes as entered (recommended)</option><option value="ns">Nelson–Siegel fit of the quotes</option></select></label>
+        <label><span id="noise-lab">Quote error for the analysis <span data-qi="noise"></span></span> <select id="i-noise"></select></label>
+      </div>
+      <div class="cover" id="cover"></div>
+      <details class="about" id="model-fold"><summary>How the model choices work</summary><div id="model-method"></div></details>
     </div>
   </section>
 
   <!-- 2 SCENARIOS -->
   <section class="tab" id="tab-scen" hidden>
-    <div class="tabhead"><h2>What if the curve at signing looked different?</h2><div class="tog small" role="group" aria-label="Loan"><button type="button" data-loan="float" aria-pressed="true">Floating</button><button type="button" data-loan="fixed" aria-pressed="false">Fixed</button></div></div>
+    <div class="tog views" role="group" aria-label="View"><button type="button" data-view="mkt" aria-pressed="true">Market scenarios</button><button type="button" data-view="rel" aria-pressed="false">Reliability of the result</button></div>
+    <div class="tabhead"><h2 id="scen-h">What if the curve at signing looked different?</h2><div class="tog small" role="group" aria-label="Loan"><button type="button" data-loan="float" aria-pressed="true">Floating</button><button type="button" data-loan="fixed" aria-pressed="false">Fixed</button></div></div>
+    <div id="v-mkt">
     <p class="intro">Each scenario applies moves of the swap curve and of your borrower's credit spread, measured on official data, to today's curves; the loan is then priced as if it were signed on the result. <b>Ordinary moves</b> show what a normal 3, 6 or 12 months did over the last ten years; <b>episodes</b> replay dated market events at their most severe. They show which market conditions help or hurt the benefit: history, not forecasts. The <b>?</b> marks explain where each number comes from.</p>
     <details class="about"><summary>Where the numbers come from, and how far to trust them</summary><div id="about"></div></details>
 
@@ -152,6 +177,22 @@
     </details>
 
     <details class="about" id="srcs-d"><summary>Sources, data rights and disclaimer</summary><div id="srcs"></div></details>
+    </div>
+
+    <div id="v-rel" hidden>
+      <p class="intro" id="rel-intro"></p>
+      <div class="ex" id="rel-verdict"></div>
+      <div class="ex" id="rel-budget"></div>
+      <div class="grid2 relg">
+        <div class="ex" id="rc-tail"></div>
+        <div class="ex" id="rc-noise"></div>
+        <div class="ex" id="rc-qual"></div>
+        <div class="ex" id="rc-gaps"></div>
+      </div>
+      <div class="ex" id="rc-leans"></div>
+      <div class="ex" id="rel-bias"></div>
+      <details class="about" id="rel-meth-d"><summary>Methodology: how each part is measured, and the validation study behind it</summary><div id="rel-method"></div></details>
+    </div>
   </section>
 
   <!-- 3 RESULTS -->
@@ -161,10 +202,7 @@
       <div class="tog small" role="group" aria-label="Loan"><button type="button" data-loan="float" aria-pressed="true">Floating</button><button type="button" data-loan="fixed" aria-pressed="false">Fixed</button></div>
     </div>
     <div class="ribbon scen" id="scen-banner" hidden></div>
-    <div class="cards">
-      <div class="acard" id="ac-float"></div>
-      <div class="acard" id="ac-fixed"></div>
-    </div>
+    <div class="acard one" id="ac-main"></div>
     <div class="checks" id="checks"></div>
     <div class="ex split-c"><div class="et">Where the benefit comes from</div><div class="eh">From the bond-equivalent price to the average-life price, in two steps</div>
     <figure class="split3" id="three">
@@ -178,13 +216,20 @@
     <p class="split3-x" id="t-x" hidden></p>
     <p class="note" id="t-comp" hidden></p>
     </div>
+    <div class="ex" id="strip-c"><div class="et">The loan as mini-bonds</div><div class="eh">Each mini-bond's own price on your curve, against the one price the loan charges</div><div class="cb" id="c-strip"></div>
+      <div class="lg" id="strip-lg"><span><i class="b" style="background:var(--accent)"></i>Mini-bonds the loan charges less than their own bond price</span><span><i class="b" style="background:var(--slate);opacity:.5"></i>Charged more than their own bond price</span></div>
+      <p class="cap">The loan is a strip of bullet bonds, one per repayment. Each dot is that mini-bond's own price on the borrower's curve; the line is the one price the loan charges all of them. The bond-equivalent price is the average of the dots, weighted by the dot size (size × how long and how safely each is outstanding).</p></div>
     <div class="grid2">
       <div class="ex"><div class="et">The price</div><div class="eh" id="h-curve"></div><div class="cb" id="c-curve"></div></div>
       <div class="ex"><div class="et">The profile</div><div class="eh">Loan balance against a bond with the same average life</div><div class="cb" id="c-profile"></div></div>
       <div class="ex"><div class="et">Why</div><div class="eh">What the curve implies for each half-year, against the price</div><div class="cb" id="c-cost"></div></div>
       <div class="ex"><div class="et">When</div><div class="eh">Running present value of the benefit</div><div class="cb" id="c-run"></div></div>
     </div>
-    <div class="ex"><div class="et">Net</div><div class="eh">Before and after the average life</div><div class="cb wf" id="c-wf"></div></div>
+    <div class="grid2 net2">
+      <div class="ex"><div class="et">Net</div><div class="eh">Before and after the average life</div><div class="cb wf" id="c-wf"></div></div>
+      <div class="ex" id="rel-card"><div class="et">How reliable is this number <span data-qi="relCard"></span></div><div class="eh">The likely range of the benefit, and where its uncertainty comes from</div><div class="cb" id="c-rel"></div>
+        <button type="button" class="sbtn ghost" data-rel="1">Full analysis →</button></div>
+    </div>
     <div class="ex" id="sens"><div class="et">Sensitivity</div><div class="eh">How the benefit moves when the loan's terms or the curves change</div>
       <p class="cap" id="sens-cap"></p>
       <div class="sens-g">
@@ -195,7 +240,7 @@
           <details class="dash-t"><summary>As a table</summary><div class="tbl"><table class="d mini" id="tor-tab"></table></div></details></div>
         <div class="sens-b sg-r"><div class="tbl"><table class="hm" id="hm"></table></div></div>
       </div></div>
-    <div class="ex"><div class="et">All the numbers</div><div class="eh">Results, both loans; "Row" is the row of the workbook's Results sheet</div>
+    <div class="ex"><div class="et">All the numbers</div><div class="eh" id="nums-h">Results; "Row" is the row of the workbook's Results sheet</div>
       <div class="grid2 nums"><div class="tbl"><table class="d" id="res-tab"></table></div><div class="tbl"><table class="d" id="res-tab2"></table></div></div></div>
   </section>
 
@@ -204,7 +249,7 @@
   </div>
 </div>
 
-<script src="clientCase.js?v=20261111a"></script>
-<script src="clientKit.js?v=20261111a"></script>
-<script src="scenarioLibrary.js?v=20261111a"></script>
-<script src="simulator.js?v=20261111b"></script>
+<script src="clientCase.js?v=20261113a"></script>
+<script src="clientKit.js?v=20261113a"></script>
+<script src="scenarioLibrary.js?v=20261113a"></script>
+<script src="simulator.js?v=20261113a"></script>
