@@ -58,7 +58,8 @@
     return { draw, repay };
   }
   // kind 'float': curve = YAS Z-spreads; 'fixed': curve = YAS YTMs (decimals). m = bond coupon frequency.
-  // tailYears: beyond the last quote, λ = the average of the last tailYears quoted years, held flat.
+  // tailYears: beyond the last quote, λ = the average of the last tailYears quoted years, held flat; or an array of
+  // λ by year (index 0 = year 1) whose entries beyond the last quote are used as they are (the 'blend' rule).
   // asEntered: the curve as entered, for the average-life reading and the last real quote, when `curve`
   // has been smoothed or extended (runCase); the bond-equivalent price uses `curve`.
   function model(curve, kind, dfg, R, x, y, Xbp, m, prof, tailYears = 5, asEntered) {
@@ -74,8 +75,8 @@
         const q2 = D2 * Sp * (g2 - R), q1 = Sp * (D1 * (g1 - R) + D2 * R), q0 = K + D1 * Sp * R - 1;
         const u = (-q1 + Math.sqrt(q1 * q1 - 4 * q2 * q0)) / (2 * q2); l = -2 * Math.log(u);
       } else {   // beyond the last quote: the average λ of the last tailYears quoted years, held flat
-        if (tail === undefined) { const k = Math.min(tailYears, last); tail = -Math.log(S[2 * last] / S[2 * (last - k)]) / k; }
-        l = tail;
+        if (Array.isArray(tailYears)) l = tailYears[b - 1];
+        else { if (tail === undefined) { const k = Math.min(tailYears, last); tail = -Math.log(S[2 * last] / S[2 * (last - k)]) / k; } l = tail; }
       }
       lam.push(l);
       for (const i of [2 * b - 1, 2 * b]) {
@@ -150,12 +151,13 @@
   /* ---------------- tail rules and curve smoothing ----------------
      Beyond the last quote the curve is unknown; a tail rule decides how those years are priced.
      λ rules hold a default intensity flat (the average of the last 5, 3 or 1 quoted years: the ISDA
-     convention of a flat hazard rate on the last quoted segment); flatZ holds the last Z-spread flat.
+     convention of a flat hazard rate on the last quoted segment); flatZ holds the last Z-spread flat; blend gives each
+     year the average of the default intensities the 5-year average, the last year and the flat Z-spread give it.
      (A Nelson–Siegel extension was tested and dropped: it missed by 15–35bp on long tails; a case saved
      with it prices with the 5-year average.) Smoothing replaces the Z-spreads up to the last quote by their
      Nelson–Siegel fit. Yields always follow the Z-spreads through the YAS bridge, so the floating and the
      fixed loan see one consistent curve. */
-  const TAIL_RULES = { avg5: 5, avg3: 3, last: 1, flatZ: 5 };
+  const TAIL_RULES = { avg5: 5, avg3: 3, last: 1, flatZ: 5, blend: 5 };
   const NS_MIN = 5;   // Nelson–Siegel has four parameters: fewer quotes than this would only interpolate them
   // Nelson–Siegel fit of values (bp) at tenors (years): level, slope and curvature loadings, τ on a grid.
   function nsFit(tenors, values) {
@@ -187,9 +189,11 @@
     const P = pts && pts.length ? pts : zt.map(t => [t, z[t - 1] * 1e4]);
     const fit = P.length >= NS_MIN && smooth === 'ns' ? nsFit(P.map(p => p[0]), P.map(p => p[1])) : null;
     if (smooth === 'ns' && fit) {
-      for (let t = 1; t <= zL; t++) zs[t - 1] = fit(t) / 1e4;
+      // only between the first and the last quote: before the first, the fit is an extrapolation (it can dive at
+      // short maturities), so those years keep the first smoothed value, as unsmoothed quotes keep the first quote
+      for (let t = zt[0]; t <= zL; t++) zs[t - 1] = fit(t) / 1e4;
       const yf = fill(y).out;   // yields follow the Z-spreads tenor by tenor, keeping each tenor's Z/YTM relation
-      for (let t = 1; t <= Math.min(yL, zL); t++) if (yf[t - 1] !== undefined) ys[t - 1] = yf[t - 1] + b(zs[t - 1], t) - b(zf[t - 1], t);
+      for (let t = zt[0]; t <= Math.min(yL, zL); t++) if (yf[t - 1] !== undefined) ys[t - 1] = yf[t - 1] + b(zs[t - 1], t) - b(zf[t - 1], t);
     }
     const used = TAIL_RULES[rule] ? rule : 'avg5';
     if (used === 'flatZ') {
@@ -207,10 +211,14 @@
     const dfg = swapDfs(s, cv.alpha, r6, cv.basis);
     const rule = TAIL_RULES[cs.tailRule] ? cs.tailRule : 'avg5', smooth = cs.smooth || 'off', plain = rule in { avg5: 1, avg3: 1, last: 1 } && smooth !== 'ns';
     const pts = cs.nsPts && cs.nsPts.length ? cs.nsPts : null;
-    const P = plain ? { z, y, rule } : prepare(z, y, dfg, m, rule, smooth, pts), ty = TAIL_RULES[P.rule] || 5;
+    const P = plain ? { z, y, rule } : prepare(z, y, dfg, m, rule, smooth, pts);
+    const run = (kind, c, tailYears, asEntered) => model(c, kind, dfg, cs.recovery, cs.drawdownYears, cs.repaymentYears, kind === 'float' ? cs.marginFloatBp : cs.marginFixedBp, m, cs.profile, tailYears, asEntered);
+    // blend: λ beyond the last quote, year by year, the average of the 5-year average, last-year and flat Z-spread rules
+    const blendLam = (kind, c, cz) => { const a = run(kind, c, 5).lam, b = run(kind, c, 1).lam, f = run(kind, cz, 5).lam; return a.map((v, i) => (v + b[i] + f[i]) / 3); };
+    const Pf = P.rule === 'blend' ? prepare(z, y, dfg, m, 'flatZ', smooth, pts) : null, ty = TAIL_RULES[P.rule] || 5;
     return {
-      float: model(P.z, 'float', dfg, cs.recovery, cs.drawdownYears, cs.repaymentYears, cs.marginFloatBp, m, cs.profile, ty, plain ? undefined : z),
-      fixed: model(P.y, 'fixed', dfg, cs.recovery, cs.drawdownYears, cs.repaymentYears, cs.marginFixedBp, m, cs.profile, ty, plain ? undefined : y),
+      float: run('float', P.z, Pf ? blendLam('float', P.z, Pf.z) : ty, plain ? undefined : z),
+      fixed: run('fixed', P.y, Pf ? blendLam('fixed', P.y, Pf.y) : ty, plain ? undefined : y),
       dfg, cv, inputs: { s, z, y }, tailRule: P.rule, smooth: smooth === 'ns' && (pts ? pts.length : quoted(z).length) >= NS_MIN ? 'ns' : 'off'
     };
   }
@@ -456,16 +464,16 @@
        gaps between quotes: straight lines against the curve's own bend;
        Z-spread vs yield: the other quote type driving the curve.
      Stress tests, leave-one-out and diagnostics come with it. The simulator's Reliability view explains each part. */
-  const RULE_IDS = ['avg5', 'avg3', 'last', 'flatZ'];
+  const RULE_IDS = ['avg5', 'avg3', 'last', 'flatZ', 'blend'];
   const GRADE = [0.05, 0.15];   // tail reliance: low up to 5% of the exposure beyond the last quote, moderate to 15%, high beyond
-  // Tail error by rule and version, fitted on 6,000 simulated issuer curves (8 shape families, 3 swap curves, random loans,
-  // last quote 8–25 years, noise-free and gap-free quotes): error = b·share + scale·Z, scale = exp(beta · [1, ln share,
-  // ln max(|Z-spread at the last quote|, 5), ln(|slope over the last 3 years| + 0.5), ln(spread across the four rules + 0.3)]),
-  // Z from the standardised errors' quantiles at TAIL_Q. TAIL_K widens it so that 90% ranges still covered at least 85%
-  // on curve families left out of the fit (93–94% on families in it).
-  const TAIL_K = 1.3;
+  // Tail error by rule and version, fitted on the tail-rule study: 34,600 simulated
+  // loans on 21 issuer-curve shapes, 3 swap curves, last quote 8–25 years, noise-free and gap-free quotes. error = b·share + scale·Z,
+  // scale = exp(beta · [1, ln share, ln max(|Z-spread at the last quote|, 5), ln(|slope over the last 3 years| + 0.5),
+  // ln(spread across the rules + 0.3)]), Z from the standardised errors' quantiles at TAIL_Q. TAIL_K widens it: with each
+  // shape left out of the fit in turn, the tail's 90% ranges then held the truth 91% of the time on the shape left out.
+  const TAIL_K = 1.1;
   const TAIL_Q = [0.005, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.975, 0.995];
-  const TAIL_MODEL = {float:{avg5:{b:-0.4697,beta:[-1.147,0.3376,0.2307,-0.2515,1.035],z:[-7.104,-4.128,-3.33,-2.607,-1.723,-1.035,-0.4692,-0.0223,0.2053,0.5998,1.152,1.875,2.455,2.987,4.472]},avg3:{b:2.69,beta:[0.1877,0.5659,0.09087,0.0968,0.6488],z:[-7.952,-4.249,-3.142,-2.443,-1.769,-1.311,-0.9274,-0.6453,-0.3725,-0.06559,0.4607,1.346,2.035,2.877,4.706]},last:{b:5.349,beta:[1.044,0.6994,0.0275,0.128,0.4348],z:[-7.081,-3.958,-2.794,-2.118,-1.577,-1.267,-1.016,-0.8193,-0.6314,-0.399,-0.006167,0.928,1.896,2.865,5.388]},flatZ:{b:-11.18,beta:[0.7074,0.6743,0.2244,0.3294,0.192],z:[-6.75,-4.144,-3.167,-2.224,-1.09,-0.3827,0.1116,0.4943,0.875,1.239,1.625,2.052,2.364,2.636,3.234]}},fixed:{avg5:{b:10.72,beta:[2.257,0.7875,-0.05596,0.1472,0.3713],z:[-5.996,-3.853,-2.967,-2.26,-1.514,-1.229,-1.008,-0.8263,-0.61,-0.2758,0.2494,1.388,2.546,3.543,6.26]},avg3:{b:13.86,beta:[2.51,0.837,-0.05143,0.1788,0.2493],z:[-5.768,-3.504,-2.769,-2.049,-1.408,-1.174,-1.021,-0.8813,-0.7288,-0.4582,0.03248,1.186,2.375,3.222,4.919]},last:{b:16.51,beta:[2.668,0.8648,-0.04405,0.1444,0.1949],z:[-5.145,-3.181,-2.476,-1.815,-1.305,-1.132,-1.016,-0.9151,-0.8016,-0.5882,-0.2133,0.9684,2.176,3.065,4.558]},flatZ:{b:0.02717,beta:[1.123,0.7142,0.1015,0.3848,0.4576],z:[-7.183,-4.328,-3.411,-2.587,-1.785,-1.277,-0.8576,-0.4267,-0.06729,0.3228,0.8576,1.721,2.974,5.39,14.12]}}};
+  const TAIL_MODEL = {float:{avg5:{b:-6.789,beta:[0.006812,0.5956,0.2644,-0.01898,0.5129],z:[-9.718,-4.821,-3.374,-2.129,-1.043,-0.4068,0.07162,0.4419,0.7572,1.089,1.494,2.042,2.52,3.009,4.458]},avg3:{b:-3.718,beta:[-0.3232,0.5324,0.2212,-0.01881,0.6851],z:[-12.45,-5.852,-3.772,-2.274,-1.189,-0.5765,-0.09294,0.2814,0.5862,0.9089,1.32,1.944,2.507,3.113,4.988]},last:{b:-0.8009,beta:[-0.7106,0.4069,0.1145,-0.1591,1.051],z:[-19.91,-7.958,-4.812,-2.758,-1.457,-0.8856,-0.4288,-0.05595,0.196,0.4535,0.8749,1.629,2.284,3.011,5.701]},flatZ:{b:-16.34,beta:[0.9089,0.6919,0.2475,0.2046,0.2232],z:[-7.13,-4.35,-3.304,-2.258,-1.182,-0.5135,0.01431,0.452,0.8098,1.148,1.521,2.004,2.394,2.726,3.436]},blend:{b:-7.819,beta:[0.1801,0.6101,0.2412,0.06584,0.4399],z:[-9.546,-4.732,-3.425,-2.225,-1.147,-0.49,0.009897,0.4255,0.7595,1.072,1.422,1.908,2.326,2.715,3.797]}},fixed:{avg5:{b:2.911,beta:[1.417,0.7323,0.03488,0.07621,0.6161],z:[-10.18,-5.355,-3.767,-2.543,-1.599,-1.141,-0.8455,-0.5875,-0.3564,-0.02247,0.5396,1.598,2.914,4.742,10.4]},avg3:{b:5.966,beta:[1.922,0.7949,-0.0116,0.1176,0.4724],z:[-9.448,-4.891,-3.502,-2.352,-1.485,-1.099,-0.8972,-0.7312,-0.5467,-0.253,0.3183,1.394,2.646,3.978,7.679]},last:{b:8.866,beta:[2.189,0.8371,-0.01666,0.04925,0.3999],z:[-8.765,-4.373,-3.158,-2.163,-1.356,-1.068,-0.9271,-0.815,-0.678,-0.4377,0.09578,1.218,2.517,3.607,6.286]},flatZ:{b:-6.632,beta:[0.8585,0.6992,0.2171,0.2088,0.4935],z:[-7.265,-4.269,-3.274,-2.377,-1.552,-1.059,-0.6091,-0.1894,0.2384,0.6583,1.117,1.691,2.953,5.149,12.13]},blend:{b:1.873,beta:[1.284,0.6823,0.01552,0.1244,0.6677],z:[-10.81,-5.451,-3.829,-2.612,-1.693,-1.23,-0.9017,-0.607,-0.3471,-0.04409,0.4438,1.4,2.742,4.974,12.11]}}};
   // Bayesian quote-error size for bonds on Auto: scaled-inverse-χ² prior with 4 degrees of freedom, its median σ set to a prior
   // guess (2bp sovereign, 4bp company): the median of σ is 1.0916 × the prior scale at 4 degrees of freedom
   const PRIOR_DF = 4, PRIOR_MED = 1.0916, PRIOR_GUESS = { sovereign: 2, corporate: 4 };
@@ -647,11 +655,11 @@
         const x = [1, Math.log(c.share), Math.log(Math.max(Math.abs(zL), 5)), Math.log(Math.abs(slope) + 0.5), Math.log(spread + 0.3)];
         T = { bias: M.b * c.share, scale: TAIL_K * Math.exp(x.reduce((a, xi, j) => a + xi * M.beta[j], 0)), z: M.z, zL, slope, spread };
       }
-      const dg = gapW ? gapW[v] : 0, dc = cons ? cons[v] : 0, sb = Math.sqrt(bridgeVar[v]), tot = new Float64Array(NC), tl = new Float64Array(NC), ni = new Int32Array(NC);
+      const dg = gapW ? gapW[v] : 0, dc = cons ? cons[v] : 0, sb = Math.sqrt(bridgeVar[v]), tot = new Float64Array(NC), tl = new Float64Array(NC), ni = new Int32Array(NC), gd = new Float64Array(NC), cd = new Float64Array(NC);
       for (let k = 0; k < NC; k++) {
         const j = nd.length ? Math.floor(r2() * nd.length) : 0, n = nd.length ? nd[j] : 0, t = T ? T.bias + T.scale * tailQ(T.z, r2()) : 0; ni[k] = j;
         const g = (dg ? (2 * r2() - 1) * Math.abs(dg) : 0) + (sb ? sb * gauss2() : 0), cc = dc ? (2 * r2() - 1) * Math.abs(dc) : 0;
-        tl[k] = t; tot[k] = est[v] - n - t + g + cc;
+        tl[k] = t; gd[k] = g; cd[k] = cc; tot[k] = est[v] - n - t + g + cc;
       }
       const s = Float64Array.from(tot).sort(), uN = Math.sqrt(variance(nd)), uT = Math.sqrt(variance(Array.from(tl))), uG = Math.sqrt(dg * dg / 3 + bridgeVar[v]), uC = Math.abs(dc) / Math.sqrt(3);
       const sum = uN * uN + uT * uT + uG * uG + uC * uC, uTot = Math.sqrt(sum), sh = x => sum > 0 ? x * x / sum : 0;
@@ -668,11 +676,16 @@
       // histogram of the predictive distribution, for the verdict chart
       const lo = sortedP(s, 0.005), hi = sortedP(s, 0.995), nb = 48, bw = (hi - lo) / nb || 1, bins = new Array(nb).fill(0);
       tot.forEach(x => { if (x >= lo && x <= hi) bins[Math.min(nb - 1, Math.floor((x - lo) / bw))]++; });
+      // each source's own spread, as its effect on the benefit: the central 68%, 90% and 95% of its draws
+      const spanOf = a => { const x = Float64Array.from(a).sort(); return { p68: [sortedP(x, 0.16), sortedP(x, 0.84)], p90: [sortedP(x, 0.05), sortedP(x, 0.95)], p95: [sortedP(x, 0.025), sortedP(x, 0.975)] }; };
+      const spans = { noise: spanOf(nd.length ? nd.map(x => -x) : [0]), tail: spanOf(Array.from(tl, x => -x)), gap: spanOf(gd), cons: spanOf(cd) };
       const lt = lastIt(v), up = lt ? shiftOne(lt, 5) : null, dn = lt ? shiftOne(lt, -5) : null;
+      // each driving quote 5bp higher on its own: where an error in the data would move the benefit most
+      const sens = items.filter(it => (v === 'float' ? (moveZ ? it.z : it.y) : (moveY ? it.y : it.z))).map(it => { const w = shiftOne(it, 5); return { k: it.k, t: it.t, name: it.name, d: w ? w[v] - est[v] : null }; });
       const infl = items.length - 1 >= 5 ? items.filter(it => (v === 'float' ? (moveZ ? it.z : it.y) : (moveY ? it.y : it.z))).map(it => { const w = dropOne(it); return { k: it.k, t: it.t, name: it.name, d: w ? w[v] - est[v] : null }; }) : [];
       const st = {}; Object.entries(stress).forEach(([key, w]) => { st[key] = w ? w[v] - est[v] : null; });
       out.version[v] = Object.assign({}, c, {
-        est: est[v], median: med, p5, p25: sortedP(s, 0.25), p75: sortedP(s, 0.75), p95, pPos, shift: med - est[v], verdict, sdDraws: Math.sqrt(variance(Array.from(tot))),
+        est: est[v], median: med, p5, p25: sortedP(s, 0.25), p75: sortedP(s, 0.75), p95, pPos, p2_5: sortedP(s, 0.025), p16: sortedP(s, 0.16), p84: sortedP(s, 0.84), p97_5: sortedP(s, 0.975), spans, sens, shift: med - est[v], verdict, sdDraws: Math.sqrt(variance(Array.from(tot))),
         reliance: c.grade === 'green' ? 'low' : c.grade === 'amber' ? 'moderate' : 'high',
         u: { noise: uN, tail: uT, gap: uG, cons: uC, total: uTot }, shares: { noise: sh(uN), tail: sh(uT), gap: sh(uG), cons: sh(uC) },
         mcPrec: bs5.length ? Math.max(Math.sqrt(variance(bs5)), Math.sqrt(variance(bs95))) : null,
